@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Register.css';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supabaseClient'; // adjust path if needed
+import { supabase } from '../supabaseClient';
 
 const validateEmail = (email: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -60,7 +60,14 @@ export default function Register() {
 
       if (signUpError) {
         setError(signUpError.message);
-      } else if (data?.user) {
+      } else if (data && data.user) {
+        // Insert a row into profiles for the new user
+        await supabase.from('profiles').upsert({
+          id: data.user.id,
+          username: '',
+          updated_at: new Date().toISOString(),
+        });
+
         alert('Registration successful! Please check your email to confirm your account.');
         navigate('/login');
       } else {

@@ -1,78 +1,260 @@
-.dashboard-page {
-  max-width: 900px;
-  margin: 2rem auto 4rem auto;
-  padding: 3rem 4rem;
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  color: #282c34;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Montserrat:wght@700&display=swap');
+
+:root {
+  --color-bg: #f4f6fb;
+  --color-surface: #fff;
+  --color-accent: #2563eb;
+  --color-accent-light: #3b82f6;
+  --color-accent-faint: #e0e7ff;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+  --color-danger: #ef4444;
+  --font-family-base: 'Inter', 'Montserrat', sans-serif;
+  --border-radius: 16px;
+  --transition-fast: 0.22s cubic-bezier(.4,0,.2,1);
+  --shadow: 0 6px 32px rgba(37,99,235,0.10);
 }
 
-.dashboard-page h2 {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+body {
+  background: var(--color-bg);
+  font-family: var(--font-family-base);
+  color: var(--color-text-primary);
+  margin: 0;
 }
 
-.dashboard-info {
-  margin-top: 2rem;
+.dashboard-container {
+  max-width: 720px;
+  margin: 3rem auto;
+  background: var(--color-surface);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow);
+  padding: 2.5rem 2.5rem 2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.dashboard-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.7rem;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-header h1 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 2.2rem;
+  margin: 0;
+  color: var(--color-text-primary);
+}
+
+.accent-text {
+  color: var(--color-accent);
+}
+
+.dashboard-header p {
+  font-weight: 500;
   font-size: 1.1rem;
-  color: #444;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.btn-logout {
+  align-self: flex-end;
+  margin-top: -2.5rem;
+  margin-bottom: 0.5rem;
+  background: var(--color-danger);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.3rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(239,68,68,0.10);
+}
+.btn-logout:hover,
+.btn-logout:focus-visible {
+  background: #dc2626;
+  outline: none;
+  transform: translateY(-2px) scale(1.04);
+}
+
+.dashboard-userinfo {
+  background: #f1f5f9;
+  border-radius: var(--border-radius);
+  padding: 1.5rem 2rem;
+  box-shadow: 0 1px 6px rgba(37,99,235,0.07);
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.dashboard-userinfo h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--color-accent);
+  margin: 0 0 0.5rem 0;
+}
+
+.dashboard-userinfo ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 0.5rem 0;
+  color: var(--color-text-secondary);
+  font-size: 1.08rem;
+}
+
+.dashboard-userinfo li {
+  margin-bottom: 0.3rem;
+}
+
+.dashboard-userinfo button {
+  align-self: flex-end;
+  margin-top: 0.5rem;
 }
 
 .dashboard-actions {
-  margin-top: 3rem;
   display: flex;
   justify-content: center;
   gap: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .btn-primary,
 .btn-secondary {
-  padding: 0.75rem 1.5rem;
-  font-size: 1.1rem;
-  border-radius: 10px;
+  font-weight: 600;
+  font-size: 1.08rem;
+  padding: 0.85rem 2.1rem;
+  border-radius: 8px;
   border: none;
   cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: background-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  user-select: none;
+  min-width: 130px;
+  font-family: var(--font-family-base);
+  box-shadow: 0 3px 12px rgba(37,99,235,0.10);
 }
 
 .btn-primary {
-  background-color: #61dafb;
-  color: #282c34;
-  box-shadow: 0 6px 12px rgba(97, 218, 251, 0.5);
-}
-
-.btn-primary:hover {
-  background-color: #21a1f1;
+  background: var(--color-accent);
   color: #fff;
-  box-shadow: 0 8px 16px rgba(33, 161, 241, 0.8);
+}
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  background: var(--color-accent-light);
+  outline: none;
+  transform: translateY(-2px) scale(1.03);
 }
 
 .btn-secondary {
-  background-color: #eee;
-  color: #555;
+  background: var(--color-accent-faint);
+  color: var(--color-accent);
+}
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+  background: #c7d2fe;
+  outline: none;
+  transform: translateY(-2px) scale(1.03);
 }
 
-.btn-secondary:hover {
-  background-color: #ddd;
+.btn-primary:active,
+.btn-secondary:active,
+.btn-logout:active {
+  transform: translateY(0.5px) scale(0.98);
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-  .dashboard-page {
-    padding: 2rem;
-    margin: 1rem;
+.dashboard-widgets {
+  background: #f8fafc;
+  border-radius: var(--border-radius);
+  padding: 1.2rem 1.5rem;
+  box-shadow: 0 1px 6px rgba(37,99,235,0.06);
+  text-align: left;
+  margin-top: 0.5rem;
+}
+
+.dashboard-widgets h2 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--color-accent);
+  margin: 0 0 0.5rem 0;
+}
+
+.dashboard-widgets p {
+  color: var(--color-text-muted);
+  margin: 0;
+  font-size: 1.01rem;
+}
+
+.dashboard-widgets > div {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.loading-text,
+.error-text {
+  font-size: 1.2rem;
+  color: var(--color-text-secondary);
+  margin: 2.5rem 0;
+}
+
+.error-text {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+@media (max-width: 700px) {
+  .dashboard-container {
+    padding: 1.2rem 0.5rem;
+    margin: 1.2rem 0.2rem;
+    max-width: 98vw;
   }
-
+  .dashboard-header h1 {
+    font-size: 1.5rem;
+  }
+  .dashboard-userinfo,
+  .dashboard-widgets {
+    padding: 1rem 0.7rem;
+  }
   .dashboard-actions {
     flex-direction: column;
+    gap: 1rem;
   }
-
   .btn-primary,
   .btn-secondary {
     width: 100%;
+    min-width: unset;
+  }
+  .btn-logout {
+    align-self: stretch;
+    margin-top: 0.5rem;
+  }
+  .dashboard-widgets > div {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

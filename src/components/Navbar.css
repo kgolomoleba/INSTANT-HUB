@@ -1,0 +1,118 @@
+/* Improved Navbar styles for Instant Hub */
+
+:root {
+  --color-accent: #2563eb;
+  --color-accent-light: #3b82f6;
+  --color-accent-faint: #e0e7ff;
+  --color-bg: #fff;
+  --color-text: #1e293b;
+  --color-nav-bg: #f8fafc;
+  --color-nav-shadow: rgba(37,99,235,0.07);
+}
+
+.navbar {
+  background: var(--color-nav-bg);
+  padding: 0.7rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 8px var(--color-nav-shadow);
+  border-radius: 0 0 16px 16px;
+  min-height: 60px;
+  z-index: 10;
+}
+
+.nav-list {
+  display: flex;
+  gap: 1.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-list li {
+  display: flex;
+  align-items: center;
+}
+
+.navbar a {
+  color: var(--color-text);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.08rem;
+  padding: 0.4rem 0.7rem;
+  border-radius: 6px;
+  transition: background 0.18s, color 0.18s;
+}
+
+.navbar a:hover,
+.navbar a:focus-visible {
+  background: var(--color-accent-faint);
+  color: var(--color-accent);
+  outline: none;
+}
+
+.navbar a.active {
+  color: var(--color-accent);
+  background: var(--color-accent-faint);
+  font-weight: 700;
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.nav-user-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.nav-avatar {
+  background: var(--color-accent-faint);
+  color: var(--color-accent);
+  border-radius: 50%;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-right: 0.2rem;
+  box-shadow: 0 1px 4px var(--color-nav-shadow);
+}
+
+.logout-button {
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1.1rem;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.18s;
+  box-shadow: 0 2px 8px var(--color-nav-shadow);
+}
+.logout-button:hover,
+.logout-button:focus-visible {
+  background: var(--color-accent-light);
+  outline: none;
+  transform: translateY(-2px) scale(1.04);
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.7rem 0.7rem;
+    border-radius: 0 0 12px 12px;
+  }
+  .nav-list {
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    justify-content: center;
+  }
+  .nav-user-actions {
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+  }
+}
