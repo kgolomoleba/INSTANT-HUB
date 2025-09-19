@@ -1,17 +1,26 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom'
 
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import ProductsPage from './pages/ProductsPage';
-import ServicesPage from './pages/ServicesPage';
-import FeedPage from './pages/FeedPage';
-import PrivateRoute from './components/PrivateRoute';
-import Navbar from './components/Navbar';
+import Home from './pages/Home'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import Dashboard from './pages/Dashboard'
+import Profile from './pages/Profile'
+import ProductsPage from './pages/ProductsPage'
+import ServicesPage from './pages/ServicesPage'
+import FeedPage from './pages/FeedPage'
+import PrivateRoute from './components/PrivateRoute'
+import Navbar from './components/Navbar'
 
-import './App.css';
+import './App.css'
+import { Suspense } from 'react'
+
+// Example: Lazy load less-frequently used pages for performance
+const NotFound = () => (
+  <div className="page" role="alert" aria-live="assertive">
+    <h2>Page Not Found</h2>
+    <p>The page you are looking for does not exist.</p>
+  </div>
+)
 
 function App() {
   return (
@@ -21,72 +30,84 @@ function App() {
       </header>
 
       <main className="container" tabIndex={-1} aria-live="polite" role="main">
-        <Routes>
-          <Route path="/" element={<div className="page"><Home /></div>} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+        <Suspense fallback={<div className="page">Loading...</div>}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <div className="page">
+                  <Home />
+                </div>
+              }
+            />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          <Route
-            path="/dashboard"
-            element={
-              <PrivateRoute>
-                <div className="page"><Dashboard /></div>
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <div className="page">
+                    <Dashboard />
+                  </div>
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/profile"
-            element={
-              <PrivateRoute>
-                <div className="page"><Profile /></div>
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <div className="page">
+                    <Profile />
+                  </div>
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/products"
-            element={
-              <PrivateRoute>
-                <div className="page"><ProductsPage /></div>
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/products"
+              element={
+                <PrivateRoute>
+                  <div className="page">
+                    <ProductsPage />
+                  </div>
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/services"
-            element={
-              <PrivateRoute>
-                <div className="page"><ServicesPage /></div>
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/services"
+              element={
+                <PrivateRoute>
+                  <div className="page">
+                    <ServicesPage />
+                  </div>
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="/feed"
-            element={
-              <PrivateRoute>
-                <div className="page"><FeedPage /></div>
-              </PrivateRoute>
-            }
-          />
+            <Route
+              path="/feed"
+              element={
+                <PrivateRoute>
+                  <div className="page">
+                    <FeedPage />
+                  </div>
+                </PrivateRoute>
+              }
+            />
 
-          <Route
-            path="*"
-            element={
-              <div className="page" role="alert" aria-live="assertive">
-                <h2>Page Not Found</h2>
-              </div>
-            }
-          />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
       </main>
 
       <footer className="footer" role="contentinfo">
         &copy; {new Date().getFullYear()} Instant Hub. All rights reserved.
       </footer>
     </>
-  );
+  )
 }
 
-export default App;
+export default App

@@ -1,0 +1,47 @@
+/* FeedPage styles */
+.feed-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  background: #181a20;
+  color: #f3f3f3;
+}
+.feed-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+}
+.feed-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.feed-posts {
+  margin-bottom: 2rem;
+}
+.feed-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+}
+.feed-info {
+  background: #23262f;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+.highlights-list {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+.highlight {
+  background: #2d313a;
+  color: #f3f3f3;
+  border-radius: 999px;
+  padding: 0.3rem 1rem;
+  font-size: 0.95rem;
+}

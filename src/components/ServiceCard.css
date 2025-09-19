@@ -1,0 +1,96 @@
+/* Premium ServiceCard additions */
+.service-avatar-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 0.7rem;
+}
+.service-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #181a20;
+  box-shadow: 0 2px 12px #00000022;
+  margin-right: 0.7rem;
+}
+.service-badge {
+  position: absolute;
+  top: 8px;
+  left: 60px;
+  background: linear-gradient(90deg, #00b0ff 60%, #61f8ff 100%);
+  color: #23262f;
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.35rem 1rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px #00b0ff44;
+  z-index: 2;
+}
+.service-extra {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.service-rating {
+  color: #ffd700;
+  font-weight: 700;
+  font-size: 1.05rem;
+  background: #23262f;
+  padding: 0.2rem 0.7rem;
+  border-radius: 0.8rem;
+  box-shadow: 0 1px 6px #ffd70033;
+}
+.service-availability {
+  color: #00b0ff;
+  font-weight: 600;
+  font-size: 1.05rem;
+  background: #23262f;
+  padding: 0.2rem 0.7rem;
+  border-radius: 0.8rem;
+  box-shadow: 0 1px 6px #00b0ff33;
+}
+/* ServiceCard styles */
+
+.service-card {
+  background: linear-gradient(135deg, #23262f 60%, #2d313a 100%);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 32px 0 #00000033;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+  cursor: pointer;
+  min-height: 250px;
+  border: 1px solid #292c36;
+}
+.service-card:hover {
+  box-shadow: 0 8px 40px 0 #00000055;
+  transform: translateY(-6px) scale(1.03);
+  border-color: #00b0ff;
+}
+.service-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0.5rem 0 0.2rem 0;
+  color: #fff;
+}
+.service-description {
+  color: #b0b0b0;
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+}
+.service-meta {
+  font-size: 1rem;
+  color: #8e8e8e;
+  margin-bottom: 0.5rem;
+}
+.service-price {
+  font-size: 1.15rem;
+  color: #00b0ff;
+  font-weight: bold;
+  letter-spacing: 1px;
+}

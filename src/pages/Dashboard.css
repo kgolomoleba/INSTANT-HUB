@@ -12,8 +12,8 @@
   --color-danger: #ef4444;
   --font-family-base: 'Inter', 'Montserrat', sans-serif;
   --border-radius: 16px;
-  --transition-fast: 0.22s cubic-bezier(.4,0,.2,1);
-  --shadow: 0 6px 32px rgba(37,99,235,0.10);
+  --transition-fast: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow: 0 6px 32px rgba(37, 99, 235, 0.1);
 }
 
 body {
@@ -77,8 +77,11 @@ body {
   font-weight: 600;
   font-size: 1rem;
   cursor: pointer;
-  transition: background var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
-  box-shadow: 0 2px 8px rgba(239,68,68,0.10);
+  transition:
+    background var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
 }
 .btn-logout:hover,
 .btn-logout:focus-visible {
@@ -91,7 +94,7 @@ body {
   background: #f1f5f9;
   border-radius: var(--border-radius);
   padding: 1.5rem 2rem;
-  box-shadow: 0 1px 6px rgba(37,99,235,0.07);
+  box-shadow: 0 1px 6px rgba(37, 99, 235, 0.07);
   text-align: left;
   display: flex;
   flex-direction: column;
@@ -140,11 +143,14 @@ body {
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  transition: background-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
   user-select: none;
   min-width: 130px;
   font-family: var(--font-family-base);
-  box-shadow: 0 3px 12px rgba(37,99,235,0.10);
+  box-shadow: 0 3px 12px rgba(37, 99, 235, 0.1);
 }
 
 .btn-primary {
@@ -179,7 +185,7 @@ body {
   background: #f8fafc;
   border-radius: var(--border-radius);
   padding: 1.2rem 1.5rem;
-  box-shadow: 0 1px 6px rgba(37,99,235,0.06);
+  box-shadow: 0 1px 6px rgba(37, 99, 235, 0.06);
   text-align: left;
   margin-top: 0.5rem;
 }

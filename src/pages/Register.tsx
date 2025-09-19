@@ -1,89 +1,96 @@
-import React, { useState, useRef, useEffect } from 'react';
-import './Register.css';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '../supabaseClient';
+import React, { useState, useRef, useEffect } from 'react'
+import './Register.css'
+import { useNavigate } from 'react-router-dom'
+import { supabase } from '../supabaseClient'
 
 const validateEmail = (email: string): boolean =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
 
 export default function Register() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const errorRef = useRef<HTMLDivElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (error && errorRef.current) {
-      errorRef.current.focus();
+      errorRef.current.focus()
     }
-  }, [error]);
+  }, [error])
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError('');
+    e.preventDefault()
+    setError('')
 
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim()
 
     if (!trimmedEmail || !password || !confirmPassword) {
-      setError('Please fill in all fields.');
-      return;
+      setError('Please fill in all fields.')
+      return
     }
 
     if (!validateEmail(trimmedEmail)) {
-      setError('Please enter a valid email address.');
-      return;
+      setError('Please enter a valid email address.')
+      return
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters.');
-      return;
+      setError('Password must be at least 6 characters.')
+      return
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
-      return;
+      setError('Passwords do not match.')
+      return
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
       // Supabase signup
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: trimmedEmail,
         password,
-      });
+      })
 
       if (signUpError) {
-        setError(signUpError.message);
+        setError(signUpError.message)
       } else if (data && data.user) {
         // Insert a row into profiles for the new user
         await supabase.from('profiles').upsert({
           id: data.user.id,
           username: '',
           updated_at: new Date().toISOString(),
-        });
+        })
 
-        alert('Registration successful! Please check your email to confirm your account.');
-        navigate('/login');
+        alert(
+          'Registration successful! Please check your email to confirm your account.'
+        )
+        navigate('/login')
       } else {
-        setError('Registration failed. Please try again.');
+        setError('Registration failed. Please try again.')
       }
     } catch {
-      setError('Something went wrong. Please try again later.');
+      setError('Something went wrong. Please try again later.')
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
     <div className="register-container page">
       <h2>Register</h2>
-      <form onSubmit={handleSubmit} className="register-form" noValidate aria-describedby="error-message">
+      <form
+        onSubmit={handleSubmit}
+        className="register-form"
+        noValidate
+        aria-describedby="error-message"
+      >
         {error && (
           <div
             className="error-msg"
@@ -102,12 +109,14 @@ export default function Register() {
           type="email"
           placeholder="you@example.com"
           value={email}
-          onChange={e => setEmail(e.target.value)}
+          onChange={(e) => setEmail(e.target.value)}
           required
           autoComplete="email"
           disabled={isSubmitting}
           aria-invalid={!!error && !validateEmail(email)}
-          aria-describedby={error && !validateEmail(email) ? 'error-message' : undefined}
+          aria-describedby={
+            error && !validateEmail(email) ? 'error-message' : undefined
+          }
         />
 
         <label htmlFor="password">Password</label>
@@ -116,13 +125,15 @@ export default function Register() {
           type="password"
           placeholder="Create a password"
           value={password}
-          onChange={e => setPassword(e.target.value)}
+          onChange={(e) => setPassword(e.target.value)}
           required
           autoComplete="new-password"
           disabled={isSubmitting}
           minLength={6}
           aria-invalid={!!error && password.length < 6}
-          aria-describedby={error && password.length < 6 ? 'error-message' : undefined}
+          aria-describedby={
+            error && password.length < 6 ? 'error-message' : undefined
+          }
         />
 
         <label htmlFor="confirmPassword">Confirm Password</label>
@@ -131,13 +142,15 @@ export default function Register() {
           type="password"
           placeholder="Confirm your password"
           value={confirmPassword}
-          onChange={e => setConfirmPassword(e.target.value)}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           required
           autoComplete="new-password"
           disabled={isSubmitting}
           minLength={6}
           aria-invalid={!!error && password !== confirmPassword}
-          aria-describedby={error && password !== confirmPassword ? 'error-message' : undefined}
+          aria-describedby={
+            error && password !== confirmPassword ? 'error-message' : undefined
+          }
         />
 
         <button type="submit" className="btn-primary" disabled={isSubmitting}>
@@ -145,5 +158,5 @@ export default function Register() {
         </button>
       </form>
     </div>
-  );
+  )
 }
