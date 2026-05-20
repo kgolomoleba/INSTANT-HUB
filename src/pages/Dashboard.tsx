@@ -1,104 +1,141 @@
-
 import { useEffect, useState, useRef } from 'react'
 import type { User } from '@supabase/auth-js'
 import { supabase } from '../supabaseClient'
 import './Dashboard.css'
-import './ProductsPage.css'
+
+interface Stats {
+  products: number
+  services: number
+  posts: number
+}
+
+interface RecentItem {
+  type: 'product' | 'service' | 'post'
+  name: string
+  date: string
+}
+
+interface Profile {
+  username: string
+  bio: string
+  role: string
+  location: string
+}
+
+const ROLE_LABELS: Record<string, string> = {
+  buyer: '🛒 Buyer',
+  seller: '🏪 Seller',
+  supplier: '🏭 Supplier',
+  manufacturer: '⚙️ Manufacturer',
+  worker: '🔧 Worker',
+  hr: '👥 HR Professional',
+  entrepreneur: '🚀 Entrepreneur',
+  investor: '💰 Investor',
+}
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null)
-  const [username, setUsername] = useState<string | null>(null)
+  const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [stats, setStats] = useState<any>(null)
-  const [recent, setRecent] = useState<any[]>([])
-  const [notifications, setNotifications] = useState<string[]>([])
+  const [stats, setStats] = useState<Stats>({ products: 0, services: 0, posts: 0 })
+  const [recent, setRecent] = useState<RecentItem[]>([])
   const mainRef = useRef<HTMLElement>(null)
 
-  // Fetch user and dashboard data
-  const fetchUser = async () => {
+  const fetchDashboard = async () => {
     setLoading(true)
     setError(null)
     try {
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser()
-      if (error) throw error
-      if (!user) {
-        window.location.href = '/login'
-        return
-      }
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (authError || !user) { window.location.href = '/login'; return }
       setUser(user)
-      // Fetch username
-      const { data: profile, error: profileError } = await supabase
+
+      // Fetch profile
+      const { data: profileData } = await supabase
         .from('profiles')
-        .select('username')
+        .select('username, bio, role, location')
         .eq('id', user.id)
         .single()
-      if (profileError) throw profileError
-      setUsername(profile?.username ?? null)
+      setProfile(profileData ?? null)
 
-      // Fetch stats (mocked for now)
+      // Fetch real stats in parallel
+      const [
+        { count: productCount },
+        { count: serviceCount },
+        { count: postCount },
+      ] = await Promise.all([
+        supabase.from('products').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('services').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('posts').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+      ])
+
       setStats({
-        products: Math.floor(Math.random() * 10),
-        services: Math.floor(Math.random() * 8),
-        posts: Math.floor(Math.random() * 12),
-        profileComplete: Math.random() > 0.5 ? 'Yes' : 'No',
+        products: productCount ?? 0,
+        services: serviceCount ?? 0,
+        posts: postCount ?? 0,
       })
 
-      // Fetch recent activity (mocked)
-      setRecent([
-        { type: 'product', name: 'Logo Design', date: '2025-09-15' },
-        { type: 'service', name: 'Tutoring', date: '2025-09-14' },
-        { type: 'post', name: 'Shared a tip', date: '2025-09-13' },
+      // Fetch real recent activity
+      const [
+        { data: recentProducts },
+        { data: recentServices },
+        { data: recentPosts },
+      ] = await Promise.all([
+        supabase.from('products').select('title, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(2),
+        supabase.from('services').select('title, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(2),
+        supabase.from('posts').select('title, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(2),
       ])
 
-      // Notifications (mocked)
-      setNotifications([
-        'Your product "Logo Design" received a new inquiry.',
-        'Profile 80% complete. Add a bio to finish!',
-      ])
+      const formatDate = (iso: string) =>
+        new Date(iso).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })
+
+      const allRecent: RecentItem[] = [
+        ...(recentProducts ?? []).map(p => ({ type: 'product' as const, name: p.title, date: formatDate(p.created_at) })),
+        ...(recentServices ?? []).map(s => ({ type: 'service' as const, name: s.title, date: formatDate(s.created_at) })),
+        ...(recentPosts ?? []).map(p => ({ type: 'post' as const, name: p.title, date: formatDate(p.created_at) })),
+      ]
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 5)
+
+      setRecent(allRecent)
+
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch user.')
+      setError(err.message || 'Failed to load dashboard.')
     } finally {
       setLoading(false)
-      setTimeout(() => {
-        mainRef.current?.focus()
-      }, 100)
+      setTimeout(() => mainRef.current?.focus(), 100)
     }
   }
 
-  useEffect(() => {
-    fetchUser()
-    // eslint-disable-next-line
-  }, [])
+  useEffect(() => { fetchDashboard() }, [])
 
-  if (loading)
-    return (
-      <main className="dashboard-container" role="main" tabIndex={-1} ref={mainRef}>
-        <p className="loading-text">Loading your dashboard…</p>
-      </main>
-    )
+  const profileComplete = !!(profile?.bio && profile?.role && profile?.location)
 
-  if (error)
-    return (
-      <main className="dashboard-container" role="main" tabIndex={-1} ref={mainRef}>
-        <p className="error-text">Error: {error}</p>
-        <button className="btn-secondary" onClick={fetchUser} aria-label="Retry loading dashboard">
-          Retry
-        </button>
-      </main>
-    )
+  if (loading) return (
+    <main className="dashboard-container" role="main" tabIndex={-1} ref={mainRef}>
+      <p className="loading-text">Loading your dashboard...</p>
+    </main>
+  )
+
+  if (error) return (
+    <main className="dashboard-container" role="main" tabIndex={-1} ref={mainRef}>
+      <p className="error-text">{error}</p>
+      <button className="btn-secondary" onClick={fetchDashboard}>Retry</button>
+    </main>
+  )
 
   return (
     <main className="dashboard-container" role="main" tabIndex={-1} ref={mainRef}>
+
+      {/* Header */}
       <header className="dashboard-header">
         <h1>
-          👋 Welcome back,{' '}
-          <span className="accent-text">{username ? username : (user?.email ?? 'Guest')}</span>!
+          ⚡ Welcome back, <span className="accent-text">{profile?.username || user?.email}</span>
         </h1>
-        <p>Here’s your personalized dashboard. Track your hustle, connect with the community, and discover new opportunities!</p>
+        <p>Track your hustle, connect with the community, and discover new opportunities.</p>
+        {profile?.role && (
+          <span className="dashboard-role">{ROLE_LABELS[profile.role] || profile.role}</span>
+        )}
         <div className="dashboard-actions">
           <button className="btn-primary" onClick={() => window.location.href = '/products'}>Browse Products</button>
           <button className="btn-primary" onClick={() => window.location.href = '/services'}>Find Services</button>
@@ -106,119 +143,83 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Profile Summary */}
-      <section className="dashboard-profile-summary">
-        <h2>Profile Summary</h2>
-        <div className="profile-summary-grid">
-          <div className="profile-avatar">
-            <img
-              src={`https://api.dicebear.com/7.x/identicon/svg?seed=${username || user?.email}`}
-              alt="User avatar"
-              width={60}
-              height={60}
-              style={{ borderRadius: '50%', marginBottom: '0.5rem' }}
-            />
-          </div>
-          <ul>
-            <li>Email: <strong>{user?.email}</strong></li>
-            <li>Username: <strong>{username}</strong></li>
-            <li>Profile Complete: <strong>{stats?.profileComplete}</strong></li>
-          </ul>
+      {/* Profile completeness nudge */}
+      {!profileComplete && (
+        <div className="dashboard-nudge">
+          <span>⚡ Your profile is incomplete — add your bio, role and location to get discovered.</span>
+          <a href="/profile" className="nudge-link">Complete Profile →</a>
         </div>
-        <a href="/profile" className="btn-secondary">Edit Profile</a>
-      </section>
+      )}
 
-      {/* User Stats */}
+      {/* Stats */}
       <section className="dashboard-stats">
         <h2>Your Stats</h2>
         <div className="stats-grid">
           <div className="stat-card">
-            <strong>{stats?.products}</strong>
+            <strong>{stats.products}</strong>
             <span>Products Listed</span>
             <span className="stat-icon">🛒</span>
           </div>
           <div className="stat-card">
-            <strong>{stats?.services}</strong>
+            <strong>{stats.services}</strong>
             <span>Services Offered</span>
             <span className="stat-icon">🤝</span>
           </div>
           <div className="stat-card">
-            <strong>{stats?.posts}</strong>
+            <strong>{stats.posts}</strong>
             <span>Posts Shared</span>
             <span className="stat-icon">💬</span>
           </div>
         </div>
       </section>
 
+      {/* Profile Summary */}
+      <section className="dashboard-profile-summary">
+        <h2>Profile Summary</h2>
+        <div className="profile-summary-grid">
+          <div className="profile-avatar-circle">
+            {(profile?.username || user?.email || '?')[0].toUpperCase()}
+          </div>
+          <ul>
+            <li>Email: <strong>{user?.email}</strong></li>
+            <li>Username: <strong>{profile?.username || '—'}</strong></li>
+            {profile?.location && <li>Location: <strong>{profile.location}</strong></li>}
+            {profile?.bio && <li>Bio: <strong>{profile.bio}</strong></li>}
+            <li>Profile Complete: <strong style={{ color: profileComplete ? '#22c55e' : '#f59e0b' }}>{profileComplete ? 'Yes ✓' : 'Incomplete'}</strong></li>
+          </ul>
+        </div>
+        <a href="/profile" className="btn-secondary">Edit Profile</a>
+      </section>
+
       {/* Recent Activity */}
       <section className="dashboard-recent">
         <h2>Recent Activity</h2>
-        <ul>
-          {recent.map((item, idx) => (
-            <li key={idx}>
-              <span className={`recent-type recent-type-${item.type}`}>[{item.type}]</span> {item.name} <span className="recent-date">({item.date})</span>
-            </li>
-          ))}
-        </ul>
+        {recent.length === 0 ? (
+          <p className="empty-hint">No activity yet. Start by listing a product or service!</p>
+        ) : (
+          <ul>
+            {recent.map((item, idx) => (
+              <li key={idx}>
+                <span className={`recent-type recent-type-${item.type}`}>{item.type}</span>
+                {item.name}
+                <span className="recent-date">{item.date}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
-      {/* Notifications */}
-      <section className="dashboard-notifications">
-        <h2>Notifications</h2>
-        <ul>
-          {notifications.length === 0 ? <li>No notifications.</li> : notifications.map((note, idx) => <li key={idx}>🔔 {note}</li>)}
-        </ul>
-      </section>
-
-      {/* Tips / News */}
-      <section className="dashboard-tips">
-        <h2>Tips & News</h2>
-        <ul>
-          <li>💡 Tip: Complete your profile for better visibility!</li>
-          <li>📰 News: New features coming soon. Stay tuned!</li>
-          <li>🌟 Highlight: Top user this week is <strong>JaneDoe</strong>!</li>
-        </ul>
-      </section>
-
-      {/* Community Highlights */}
-      <section className="dashboard-community">
-        <h2>Community Highlights</h2>
-        <ul>
-          <li>Top User: <strong>JaneDoe</strong> (25 products, 18 services)</li>
-          <li>Trending Product: <strong>Logo Design</strong></li>
-          <li>Trending Service: <strong>Tutoring</strong></li>
-          <li>New Member: <strong>StartupGuy</strong></li>
-        </ul>
-      </section>
-
-      {/* Useful Links & Widgets */}
+      {/* Quick links */}
       <section className="dashboard-widgets">
-        <h2>Quick Links & Widgets</h2>
+        <h2>Quick Links</h2>
         <div className="widgets-grid">
-          <button className="btn-primary" onClick={() => (window.location.href = '/products')} aria-label="Browse Products">🛒 Browse Products</button>
-          <button className="btn-primary" onClick={() => (window.location.href = '/services')} aria-label="Find Services">🤝 Find Services</button>
-          <button className="btn-primary" onClick={() => (window.location.href = '/feed')} aria-label="Community Feed">💬 Community Feed</button>
-          <button className="btn-primary" onClick={() => (window.location.href = '/profile')} aria-label="Profile">👤 Profile</button>
-          <button className="btn-primary" onClick={() => (window.location.href = '/register')} aria-label="Register">📝 Register</button>
-        </div>
-        <div className="dashboard-widget-row" style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', marginTop: '2rem', justifyContent: 'center' }}>
-          <div className="widget-card" style={{ background: '#fff', borderRadius: '1.5rem', boxShadow: '0 4px 24px #2563eb22', padding: '1.5rem', minWidth: '220px', maxWidth: '260px', textAlign: 'center' }}>
-            <h3 style={{ color: '#2563eb', fontWeight: 700, marginBottom: '0.5rem' }}>Earnings</h3>
-            <p style={{ fontSize: '1.5rem', fontWeight: 800 }}>$1,250</p>
-            <span style={{ color: '#64748b', fontSize: '0.95rem' }}>This month</span>
-          </div>
-          <div className="widget-card" style={{ background: '#fff', borderRadius: '1.5rem', boxShadow: '0 4px 24px #2563eb22', padding: '1.5rem', minWidth: '220px', maxWidth: '260px', textAlign: 'center' }}>
-            <h3 style={{ color: '#2563eb', fontWeight: 700, marginBottom: '0.5rem' }}>Profile Views</h3>
-            <p style={{ fontSize: '1.5rem', fontWeight: 800 }}>2,340</p>
-            <span style={{ color: '#64748b', fontSize: '0.95rem' }}>This month</span>
-          </div>
-          <div className="widget-card" style={{ background: '#fff', borderRadius: '1.5rem', boxShadow: '0 4px 24px #2563eb22', padding: '1.5rem', minWidth: '220px', maxWidth: '260px', textAlign: 'center' }}>
-            <h3 style={{ color: '#2563eb', fontWeight: 700, marginBottom: '0.5rem' }}>Community Rank</h3>
-            <p style={{ fontSize: '1.5rem', fontWeight: 800 }}>#7</p>
-            <span style={{ color: '#64748b', fontSize: '0.95rem' }}>This week</span>
-          </div>
+          <button className="btn-primary" onClick={() => window.location.href = '/products'}>🛒 Products</button>
+          <button className="btn-primary" onClick={() => window.location.href = '/services'}>🤝 Services</button>
+          <button className="btn-primary" onClick={() => window.location.href = '/feed'}>💬 Feed</button>
+          <button className="btn-primary" onClick={() => window.location.href = '/profile'}>👤 Profile</button>
         </div>
       </section>
+
     </main>
   )
 }

@@ -1,17 +1,29 @@
-import React from "react";
-import "./FeedPost.css";
+import React, { useEffect, useState } from 'react'
+import { supabase } from '../supabaseClient'
+import './FeedPost.css'
 
 export interface FeedPostProps {
-  type: "product" | "service" | "request";
-  title: string;
-  description: string;
-  image?: string;
-  price?: string;
-  author: string;
-  createdAt: string;
+  id: string
+  type: 'product' | 'service' | 'request' | 'general'
+  title: string
+  description?: string
+  image?: string
+  price?: string
+  author: string
+  createdAt: string
+  userId: string
+  onDelete?: (id: string) => void
+}
+
+const TYPE_COLORS: Record<string, string> = {
+  product: 'badge-product',
+  service: 'badge-service',
+  request: 'badge-request',
+  general: 'badge-general',
 }
 
 const FeedPost: React.FC<FeedPostProps> = ({
+  id,
   type,
   title,
   description,
@@ -19,49 +31,67 @@ const FeedPost: React.FC<FeedPostProps> = ({
   price,
   author,
   createdAt,
+  userId,
+  onDelete,
 }) => {
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data?.user?.id ?? null)
+    })
+  }, [])
+
+  const isOwner = currentUserId === userId
+
   return (
-    <div className="card feedpost flex flex-col gap-3">
-      <div className="feedpost-header flex items-center gap-3">
-  <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=400&q=80" alt="Real person" className="feedpost-avatar" />
-        <span className={`feedpost-badge ${type}`}>{type.toUpperCase()}</span>
-        <span className="feedpost-date">{createdAt}</span>
+    <div className="feed-post">
+      {/* Header */}
+      <div className="feed-post-header">
+        <div className="feed-post-avatar">{author?.[0]?.toUpperCase() || '?'}</div>
+        <div className="feed-post-meta">
+          <span className="feed-post-author">{author}</span>
+          <span className="feed-post-date">{createdAt}</span>
+        </div>
+        <span className={`feed-post-badge ${TYPE_COLORS[type]}`}>
+          {type.toUpperCase()}
+        </span>
+        {isOwner && onDelete && (
+          <button
+            className="feed-post-delete"
+            onClick={() => onDelete(id)}
+            title="Delete post"
+            aria-label="Delete post"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
-      <h2 className="feedpost-title font-semibold text-lg">{title}</h2>
-      <p className="feedpost-meta text-xs text-gray-400">by {author}</p>
-
+      {/* Image */}
       {image && (
-        <div className="feedpost-image-wrapper">
-          <img src={image} alt={title} className="feedpost-image rounded-xl max-h-80 object-cover" />
+        <div className="feed-post-image-wrapper">
+          <img src={image} alt={title} className="feed-post-image" />
         </div>
       )}
 
-      <p className="feedpost-description text-sm text-gray-300">{description}</p>
-
-      {price && (
-        <p className="feedpost-price text-md font-bold text-green-400">{price}</p>
-      )}
-
-      <div className="feedpost-actions flex gap-4 text-sm text-gray-400">
-        <button className="feedpost-action hover:text-blue-500 transition">💬 Message</button>
-        {type !== "request" && (
-          <button className="feedpost-action hover:text-green-500 transition">
-            {type === "product" ? "🛒 Buy Now" : "🤝 Offer Service"}
-          </button>
-        )}
-        {type === "request" && (
-          <button className="feedpost-action hover:text-yellow-500 transition">🙌 Help Out</button>
-        )}
+      {/* Content */}
+      <div className="feed-post-body">
+        <h3 className="feed-post-title">{title}</h3>
+        {description && <p className="feed-post-desc">{description}</p>}
+        {price && <span className="feed-post-price">{price}</span>}
       </div>
 
-      <div className="feedpost-reactions flex gap-2 mt-2">
-        <button className="feedpost-like" title="Like">👍 24</button>
-        <button className="feedpost-share" title="Share">🔗 Share</button>
-        <button className="feedpost-save" title="Save">💾 Save</button>
+      {/* Actions */}
+      <div className="feed-post-actions">
+        <button className="feed-action-btn">💬 Message</button>
+        {type === 'product' && <button className="feed-action-btn">🛒 Buy Now</button>}
+        {type === 'service' && <button className="feed-action-btn">🤝 Hire</button>}
+        {type === 'request' && <button className="feed-action-btn">🙌 Help Out</button>}
+        {type === 'general' && <button className="feed-action-btn">👍 Like</button>}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default FeedPost;
+export default FeedPost

@@ -7,6 +7,7 @@ interface ServiceCardProps {
   price: number
   provider: string
   location?: string
+  imageUrl?: string
   onClick?: () => void
 }
 
@@ -16,12 +17,17 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   price,
   provider,
   location,
+  imageUrl,
   onClick,
 }) => {
   return (
     <div className="service-card" onClick={onClick} tabIndex={0} role="button">
       <div className="service-avatar-wrapper">
-        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80" alt="Real person" className="service-avatar" />
+        <img
+          src={imageUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80'}
+          alt={title}
+          className="service-avatar"
+        />
         <span className="service-badge">Top Rated</span>
       </div>
       <h3 className="service-title">{title}</h3>
@@ -35,7 +41,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
         <span className="service-availability">Available</span>
       </div>
       <div className="service-price">
-        <strong>${price.toFixed(2)}</strong>
+        <strong>R{price.toFixed(2)}</strong>
       </div>
     </div>
   )

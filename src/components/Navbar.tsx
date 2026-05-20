@@ -11,7 +11,6 @@ export default function Navbar() {
     navigate('/')
   }
 
-  // Safely extract displayName (username or email)
   const displayName =
     (user as any)?.username ||
     (user as any)?.user_metadata?.username ||
@@ -22,101 +21,48 @@ export default function Navbar() {
 
   return (
     <nav className="navbar" aria-label="Primary navigation">
+      {/* Logo */}
+      <NavLink to="/" className="nav-logo" aria-label="Instant Hub Home">
+        <img src="/instant-hub-logo.svg" alt="Instant Hub" className="nav-logo-icon" />
+        <span className="nav-wordmark">INSTANT <span>HUB</span></span>
+      </NavLink>
+
+      {/* Links */}
       <ul className="nav-list">
-        <li>
-          <NavLink
-            to="/"
-            end
-            className={({ isActive }) => (isActive ? 'active' : '')}
-          >
-            Home
-          </NavLink>
-        </li>
-
-        {isAuthenticated && (
+        {isAuthenticated ? (
           <>
-            <li>
-              <NavLink
-                to="/products"
-                className={({ isActive }) => (isActive ? 'active' : '')}
-              >
-                Products
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/services"
-                className={({ isActive }) => (isActive ? 'active' : '')}
-              >
-                Services
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/feed"
-                className={({ isActive }) => (isActive ? 'active' : '')}
-              >
-                Community
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/dashboard"
-                className={({ isActive }) => (isActive ? 'active' : '')}
-              >
-                Dashboard
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/profile"
-                className={({ isActive }) => (isActive ? 'active' : '')}
-              >
-                Profile
-              </NavLink>
-            </li>
+            <li><NavLink to="/products" className={({ isActive }) => isActive ? 'active' : ''}>Products</NavLink></li>
+            <li><NavLink to="/services" className={({ isActive }) => isActive ? 'active' : ''}>Services</NavLink></li>
+            <li><NavLink to="/feed" className={({ isActive }) => isActive ? 'active' : ''}>Community</NavLink></li>
+            <li><NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink></li>
           </>
-        )}
-
-        {!isAuthenticated && (
+        ) : (
           <>
-            <li>
-              <NavLink
-                to="/login"
-                className={({ isActive }) => (isActive ? 'active' : '')}
-              >
-                Login
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/register"
-                className={({ isActive }) => (isActive ? 'active' : '')}
-              >
-                Register
-              </NavLink>
-            </li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#ecosystem">Ecosystem</a></li>
+            <li><a href="#services">Services</a></li>
           </>
         )}
       </ul>
 
-      {isAuthenticated && (
-        <div className="nav-user-actions">
-          {user && (
-            <span className="nav-avatar" title={displayName}>
+      {/* Actions */}
+      <div className="nav-actions">
+        {isAuthenticated ? (
+          <>
+            <NavLink to="/profile" className="nav-avatar" title={displayName} aria-label="Profile">
               {avatarLetter}
-            </span>
-          )}
-          <button
-            className="btn-primary logout-button"
-            onClick={handleLogout}
-            aria-label="Logout"
-            type="button"
-          >
-            Logout
-          </button>
-        </div>
-      )}
+            </NavLink>
+            <button className="btn-nav-ghost" onClick={handleLogout} aria-label="Logout" type="button">
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <NavLink to="/login" className="btn-nav-ghost">Log In</NavLink>
+            <NavLink to="/register" className="btn-nav-gold">Join Free</NavLink>
+          </>
+        )}
+      </div>
     </nav>
   )
 }

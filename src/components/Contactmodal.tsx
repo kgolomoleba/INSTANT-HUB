@@ -1,0 +1,104 @@
+import React, { useState } from 'react'
+import { supabase } from '../supabaseClient'
+import './ContactModal.css'
+
+interface ContactModalProps {
+  recipientId: string
+  recipientUsername: string
+  listingTitle: string
+  listingType: 'product' | 'service'
+  onClose: () => void
+}
+
+const ContactModal: React.FC<ContactModalProps> = ({
+  recipientId,
+  recipientUsername,
+  listingTitle,
+  listingType,
+  onClose,
+}) => {
+  const [message, setMessage] = useState('')
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!message.trim()) return
+    setSending(true)
+    setError(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('You must be logged in to send a message.')
+      if (user.id === recipientId) throw new Error("You can't contact yourself.")
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single()
+
+      const { error } = await supabase.from('inquiries').insert([{
+        sender_id: user.id,
+        sender_username: profile?.username || user.email,
+        recipient_id: recipientId,
+        listing_type: listingType,
+        listing_title: listingTitle,
+        message: message.trim(),
+      }])
+      if (error) throw error
+      setSent(true)
+    } catch (err: any) {
+      setError(err.message || 'Failed to send message.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-card" onClick={e => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+
+        {sent ? (
+          <div className="modal-sent">
+            <span className="modal-sent-icon">✓</span>
+            <h3>Message Sent!</h3>
+            <p>Your inquiry about <strong>{listingTitle}</strong> has been sent to <strong>{recipientUsername}</strong>.</p>
+            <button className="btn-modal-gold" onClick={onClose}>Done</button>
+          </div>
+        ) : (
+          <>
+            <div className="modal-header">
+              <span className="modal-bolt">⚡</span>
+              <h3>Contact Seller</h3>
+              <p>Sending inquiry to <strong>{recipientUsername}</strong> about <strong>{listingTitle}</strong></p>
+            </div>
+
+            {error && <div className="modal-error">{error}</div>}
+
+            <form onSubmit={handleSend} className="modal-form">
+              <label htmlFor="message">Your Message</label>
+              <textarea
+                id="message"
+                value={message}
+                onChange={e => setMessage(e.target.value)}
+                placeholder={`Hi ${recipientUsername}, I'm interested in your ${listingType} "${listingTitle}". Could you tell me more?`}
+                rows={5}
+                required
+                maxLength={500}
+                disabled={sending}
+              />
+              <span className="modal-hint">{message.length}/500</span>
+              <button type="submit" className="btn-modal-gold" disabled={sending || !message.trim()}>
+                {sending ? 'Sending...' : 'Send Message'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default ContactModal

@@ -89,13 +89,18 @@ export default function Login() {
 
   return (
     <div className="login-container page">
-      <h2>Login</h2>
-      <form
-        onSubmit={handleSubmit}
-        className="login-form"
-        noValidate
-        aria-describedby="error-message"
-      >
+      <div className="login-card">
+        <div className="login-header">
+          <img src="/instant-hub-logo.svg" alt="Instant Hub Logo" className="login-logo" />
+          <h1>Welcome Back</h1>
+          <p>Sign in to your Instant Hub account</p>
+        </div>
+        <form
+          onSubmit={handleSubmit}
+          className="login-form"
+          noValidate
+          aria-describedby="error-message"
+        >
         {error && (
           <div
             className="error-msg"
@@ -146,7 +151,8 @@ export default function Login() {
         <button type="submit" className="btn-primary" disabled={isSubmitting}>
           {isSubmitting ? 'Logging in...' : 'Login'}
         </button>
-      </form>
+        </form>
+      </div>
     </div>
   )
 }
