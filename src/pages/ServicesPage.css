@@ -53,5 +53,15 @@
 .form-group-full { grid-column: 1 / -1; }
 .services-filters { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
 .search-input { padding: 0.7rem 1rem; border: 1.5px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem; width: 100%; max-width: 400px; }
-.category.active { background: #0a0a0a; color: #f59e0b; }
+  .trust-chip {
+    margin-bottom: 1rem;
+    padding: 0.9rem 1.2rem;
+    border-radius: 999px;
+    background: rgba(249, 115, 22, 0.12);
+    color: #fee2b3;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+  }
 .empty-state { text-align: center; padding: 3rem; color: #6b7280; }

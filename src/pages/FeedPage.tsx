@@ -16,13 +16,27 @@ interface Post {
 }
 
 const POST_TYPES = ['All', 'general', 'product', 'service', 'request']
-
 const TYPE_LABELS: Record<string, string> = {
-  All: 'All',
-  general: 'General',
-  product: 'Product',
-  service: 'Service',
-  request: 'Request',
+  All: 'All', general: 'General', product: 'Product', service: 'Service', request: 'Request',
+}
+
+// ===== VALIDATION =====
+const sanitize = (str: string) => str.trim().replace(/[<>{}]/g, '')
+
+const validatePost = (form: {
+  title: string
+  description: string
+  image_url: string
+  price: string
+}): string | null => {
+  if (!form.title.trim()) return 'Title is required.'
+  if (form.title.trim().length < 3) return 'Title must be at least 3 characters.'
+  if (form.title.trim().length > 100) return 'Title must be under 100 characters.'
+  if (form.description.length > 500) return 'Description must be under 500 characters.'
+  if (form.image_url.trim()) {
+    try { new URL(form.image_url) } catch { return 'Image URL must start with https://.' }
+  }
+  return null
 }
 
 const FeedPage: React.FC = () => {
@@ -58,13 +72,14 @@ const FeedPage: React.FC = () => {
     }
   }
 
-  useEffect(() => {
-    fetchPosts()
-  }, [])
+  useEffect(() => { fetchPosts() }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!form.title.trim()) return
+
+    const validationError = validatePost(form)
+    if (validationError) { setError(validationError); return }
+
     setSubmitting(true)
     setError(null)
     try {
@@ -81,10 +96,10 @@ const FeedPage: React.FC = () => {
         user_id: user.id,
         username: profile?.username || user.email,
         type: form.type,
-        title: form.title,
-        description: form.description,
-        image_url: form.image_url,
-        price: form.price,
+        title: sanitize(form.title),
+        description: sanitize(form.description),
+        image_url: form.image_url.trim(),
+        price: sanitize(form.price),
       }])
       if (error) throw error
 
@@ -113,34 +128,25 @@ const FeedPage: React.FC = () => {
     <main className="feed-container">
       <header className="feed-header">
         <h1>Community Feed</h1>
-        <p>Share your hustle, ask for help, promote your products and services.</p>
+        <p>Share your hustle, post hiring requests, ask for help, and promote your products or services.</p>
         <div className="feed-actions">
-          <button className="btn-primary" onClick={() => setShowForm(v => !v)}>
+          <button className="btn-primary" onClick={() => { setShowForm(v => !v); setError(null) }}>
             {showForm ? 'Cancel' : '+ Create Post'}
           </button>
-          <button className="btn-secondary" onClick={() => window.location.href = '/products'}>
-            Browse Products
-          </button>
-          <button className="btn-secondary" onClick={() => window.location.href = '/services'}>
-            Find Services
-          </button>
+          <button className="btn-secondary" onClick={() => window.location.href = '/products'}>Browse Products</button>
+          <button className="btn-secondary" onClick={() => window.location.href = '/services'}>Find Services</button>
         </div>
       </header>
 
-      {/* Create Post Form */}
       {showForm && (
         <section className="feed-form">
           <h2>New Post</h2>
           {error && <p className="error-text">{error}</p>}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <div className="feed-form-grid">
               <div className="form-group">
                 <label htmlFor="type">Post Type</label>
-                <select
-                  id="type"
-                  value={form.type}
-                  onChange={e => setForm({ ...form, type: e.target.value })}
-                >
+                <select id="type" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                   <option value="general">General</option>
                   <option value="product">Product</option>
                   <option value="service">Service</option>
@@ -156,11 +162,12 @@ const FeedPage: React.FC = () => {
                     placeholder="e.g. R150 or R60/hr"
                     value={form.price}
                     onChange={e => setForm({ ...form, price: e.target.value })}
+                    maxLength={30}
                   />
                 </div>
               )}
               <div className="form-group form-group-full">
-                <label htmlFor="title">Title *</label>
+                <label htmlFor="title">Title * <span style={{ color: '#444', fontWeight: 400 }}>{form.title.length}/100</span></label>
                 <input
                   id="title"
                   type="text"
@@ -168,16 +175,18 @@ const FeedPage: React.FC = () => {
                   value={form.title}
                   onChange={e => setForm({ ...form, title: e.target.value })}
                   required
+                  maxLength={100}
                 />
               </div>
               <div className="form-group form-group-full">
-                <label htmlFor="description">Description</label>
+                <label htmlFor="description">Description <span style={{ color: '#444', fontWeight: 400 }}>{form.description.length}/500</span></label>
                 <textarea
                   id="description"
                   placeholder="Tell the community more..."
                   value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
                   rows={3}
+                  maxLength={500}
                 />
               </div>
               <div className="form-group form-group-full">
@@ -198,7 +207,6 @@ const FeedPage: React.FC = () => {
         </section>
       )}
 
-      {/* Filter tabs */}
       <div className="feed-filters">
         {POST_TYPES.map(type => (
           <button
@@ -211,7 +219,6 @@ const FeedPage: React.FC = () => {
         ))}
       </div>
 
-      {/* Posts */}
       <section className="feed-posts">
         {loading ? (
           <p className="loading-text">Loading posts...</p>

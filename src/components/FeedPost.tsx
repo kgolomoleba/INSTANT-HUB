@@ -63,7 +63,7 @@ const FeedPost: React.FC<FeedPostProps> = ({
             title="Delete post"
             aria-label="Delete post"
           >
-            ✕
+            Delete
           </button>
         )}
       </div>
@@ -84,11 +84,11 @@ const FeedPost: React.FC<FeedPostProps> = ({
 
       {/* Actions */}
       <div className="feed-post-actions">
-        <button className="feed-action-btn">💬 Message</button>
-        {type === 'product' && <button className="feed-action-btn">🛒 Buy Now</button>}
-        {type === 'service' && <button className="feed-action-btn">🤝 Hire</button>}
-        {type === 'request' && <button className="feed-action-btn">🙌 Help Out</button>}
-        {type === 'general' && <button className="feed-action-btn">👍 Like</button>}
+        <button className="feed-action-btn">Message</button>
+        {type === 'product' && <button className="feed-action-btn">Buy Now</button>}
+        {type === 'service' && <button className="feed-action-btn">Hire</button>}
+        {type === 'request' && <button className="feed-action-btn">Help Out</button>}
+        {type === 'general' && <button className="feed-action-btn">Like</button>}
       </div>
     </div>
   )

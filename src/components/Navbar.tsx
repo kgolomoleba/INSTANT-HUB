@@ -1,21 +1,19 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import Logo from './Logo'
 import './Navbar.css'
 
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     navigate('/')
   }
 
-  const displayName =
-    (user as any)?.username ||
-    (user as any)?.user_metadata?.username ||
-    user?.email ||
-    'User'
+  const metadata = user?.user_metadata as { username?: string } | undefined
+  const displayName = metadata?.username || user?.email || 'User'
 
   const avatarLetter = displayName[0]?.toUpperCase() || 'U'
 
@@ -23,7 +21,7 @@ export default function Navbar() {
     <nav className="navbar" aria-label="Primary navigation">
       {/* Logo */}
       <NavLink to="/" className="nav-logo" aria-label="Instant Hub Home">
-        <img src="/instant-hub-logo.svg" alt="Instant Hub" className="nav-logo-icon" />
+        <Logo className="nav-logo-icon" />
         <span className="nav-wordmark">INSTANT <span>HUB</span></span>
       </NavLink>
 
@@ -31,9 +29,10 @@ export default function Navbar() {
       <ul className="nav-list">
         {isAuthenticated ? (
           <>
+            <li><NavLink to="/marketplace" className={({ isActive }) => isActive ? 'active' : ''}>Marketplace</NavLink></li>
             <li><NavLink to="/products" className={({ isActive }) => isActive ? 'active' : ''}>Products</NavLink></li>
             <li><NavLink to="/services" className={({ isActive }) => isActive ? 'active' : ''}>Services</NavLink></li>
-            <li><NavLink to="/feed" className={({ isActive }) => isActive ? 'active' : ''}>Community</NavLink></li>
+            <li><NavLink to="/feed" className={({ isActive }) => isActive ? 'active' : ''}>Community Feed</NavLink></li>
             <li><NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink></li>
           </>
         ) : (

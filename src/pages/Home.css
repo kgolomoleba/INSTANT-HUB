@@ -89,7 +89,7 @@
   font-family: 'Bebas Neue', 'Impact', 'Arial Black', sans-serif;
   font-size: clamp(1rem, 2.5vw, 1.6rem);
   letter-spacing: 8px;
-  color: #555;
+  color: #ccc;
   margin-bottom: 2rem;
 }
 
@@ -97,7 +97,7 @@
   max-width: 560px;
   font-size: 15px;
   line-height: 1.9;
-  color: #777;
+  color: #ddd;
   margin-bottom: 3rem;
 }
 
@@ -185,7 +185,7 @@
   font-size: 10px;
   letter-spacing: 2.5px;
   text-transform: uppercase;
-  color: #444;
+  color: #aaa;
 }
 
 .stat-divider {
@@ -217,7 +217,7 @@
 
 .section-desc {
   text-align: center;
-  color: #555;
+  color: #ccc;
   font-size: 14px;
   line-height: 1.8;
   max-width: 480px;
@@ -278,7 +278,7 @@
 
 .role-desc {
   font-size: 11px;
-  color: #444;
+  color: #aaa;
   line-height: 1.6;
 }
 
@@ -326,7 +326,7 @@
 
 .problem-desc {
   font-size: 13px;
-  color: #555;
+  color: #ddd;
   line-height: 1.8;
   margin: 0;
 }
@@ -403,7 +403,7 @@
 
 .service-desc {
   font-size: 11px;
-  color: #444;
+  color: #aaa;
   line-height: 1.6;
 }
 
@@ -448,7 +448,7 @@
 
 .step-card p {
   font-size: 13px;
-  color: #555;
+  color: #ccc;
   line-height: 1.8;
   margin: 0;
 }
@@ -484,7 +484,7 @@
 }
 
 .cta-desc {
-  color: #555;
+  color: #ddd;
   font-size: 15px;
   max-width: 400px;
   margin: 0 auto 3rem;

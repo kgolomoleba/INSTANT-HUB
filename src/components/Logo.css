@@ -1,0 +1,16 @@
+.logo-mark {
+  display: block;
+  min-width: 34px;
+  min-height: 34px;
+}
+
+.logo-mark path,
+.logo-mark circle,
+.logo-mark line,
+.logo-mark polygon {
+  transition: filter 0.25s ease, opacity 0.25s ease;
+}
+
+.logo-mark--glow {
+  filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.35));
+}

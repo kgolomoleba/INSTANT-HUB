@@ -1,26 +1,25 @@
-// src/components/PrivateRoute.tsx
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 
-import type { ReactNode } from 'react'
-import { Navigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext' // Adjust path if needed
-
-interface PrivateRouteProps {
-  children: ReactNode
-}
-
-const PrivateRoute = ({ children }: PrivateRouteProps) => {
+const PrivateRoute = () => {
   const { isAuthenticated, loading } = useAuth()
+  const location = useLocation()
 
-  // Optionally, show a loading indicator while auth state is resolving
   if (loading) {
-    return <div>Loading...</div>
+    return <div className="loading-text">Checking access...</div>
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location.pathname }}
+      />
+    )
   }
 
-  return <>{children}</>
+  return <Outlet />
 }
 
 export default PrivateRoute

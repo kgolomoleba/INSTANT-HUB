@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react'
 import type { User } from '@supabase/auth-js'
 import { supabase } from '../supabaseClient'
+import { trackEvent } from '../utils/analytics'
 import './Profile.css'
 
 const ROLES = [
-  { value: 'buyer', label: 'Buyer', icon: '🛒', desc: 'I buy products & services' },
-  { value: 'seller', label: 'Seller', icon: '🏪', desc: 'I sell products' },
-  { value: 'supplier', label: 'Supplier', icon: '🏭', desc: 'I supply to businesses' },
-  { value: 'manufacturer', label: 'Manufacturer', icon: '⚙️', desc: 'I manufacture goods' },
-  { value: 'worker', label: 'Worker', icon: '🔧', desc: 'I offer my skills' },
-  { value: 'hr', label: 'HR Professional', icon: '👥', desc: 'I source talent' },
-  { value: 'entrepreneur', label: 'Entrepreneur', icon: '🚀', desc: 'I build businesses' },
-  { value: 'investor', label: 'Investor', icon: '💰', desc: 'I fund businesses' },
+  { value: 'buyer', label: 'Buyer', desc: 'Buy products and services' },
+  { value: 'seller', label: 'Seller', desc: 'Sell products' },
+  { value: 'supplier', label: 'Supplier', desc: 'Supply businesses' },
+  { value: 'manufacturer', label: 'Manufacturer', desc: 'Manufacture goods' },
+  { value: 'worker', label: 'Worker', desc: 'Offer skills' },
+  { value: 'hr', label: 'HR Professional', desc: 'Source talent' },
+  { value: 'entrepreneur', label: 'Entrepreneur', desc: 'Build businesses' },
+  { value: 'investor', label: 'Investor', desc: 'Fund businesses' },
 ]
 
 export default function Profile() {
@@ -20,11 +21,16 @@ export default function Profile() {
   const [bio, setBio] = useState('')
   const [role, setRole] = useState('')
   const [location, setLocation] = useState('')
+  const [verificationStatus, setVerificationStatus] = useState<'verified' | 'pending' | 'unverified'>('unverified')
+  const [verificationRequested, setVerificationRequested] = useState(false)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [stats, setStats] = useState({ products: 0, services: 0, posts: 0, joined: '' })
+  const profileComplete = !!(username.trim() && bio.trim() && role && location.trim())
+  const hasListing = stats.products + stats.services > 0
+  const verificationReady = profileComplete && hasListing
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -37,7 +43,7 @@ export default function Profile() {
         // Fetch profile
         const { data: profile } = await supabase
           .from('profiles')
-          .select('username, bio, role, location')
+          .select('*')
           .eq('id', user.id)
           .single()
 
@@ -46,6 +52,14 @@ export default function Profile() {
           setBio(profile.bio ?? '')
           setRole(profile.role ?? '')
           setLocation(profile.location ?? '')
+
+          if (profile.verified || profile.verification_status === 'verified') {
+            setVerificationStatus('verified')
+          } else if (profile.verification_status === 'pending') {
+            setVerificationStatus('pending')
+          } else {
+            setVerificationStatus('unverified')
+          }
         }
 
         // Fetch real stats
@@ -98,6 +112,13 @@ export default function Profile() {
     }
   }
 
+  const handleRequestVerification = async () => {
+    setVerificationRequested(true)
+    setError(null)
+    setMessage('Verification request submitted. We will review your profile and update your status soon.')
+    void trackEvent('verification_request', { user_id: user?.id })
+  }
+
   if (loading) return (
     <main className="profile-page">
       <p className="loading-text">Loading profile...</p>
@@ -116,10 +137,19 @@ export default function Profile() {
           <h1>{username || user?.email}</h1>
           {role && (
             <span className="profile-role-badge">
-              {ROLES.find(r => r.value === role)?.icon} {ROLES.find(r => r.value === role)?.label}
+              {ROLES.find(r => r.value === role)?.label}
             </span>
           )}
-          {location && <span className="profile-location">📍 {location}</span>}
+          {verificationStatus === 'verified' ? (
+            <span className="profile-status-badge">Verified member</span>
+          ) : verificationStatus === 'pending' ? (
+            <span className="profile-status-badge">Verification pending</span>
+          ) : (
+            <span className="profile-status-badge" style={{ background: 'rgba(248,113,113,0.12)', borderColor: 'rgba(248,113,113,0.25)', color: '#fecaca' }}>
+              Not verified
+            </span>
+          )}
+          {location && <span className="profile-location">{location}</span>}
         </div>
       </div>
 
@@ -147,6 +177,41 @@ export default function Profile() {
       </div>
 
       {/* Edit Form */}
+      <section className="profile-verification-card">
+        <h2>Verification</h2>
+        <p>
+          Verification makes your profile more trustworthy and gives you a visible badge on listings. Request verification once your profile is complete.
+        </p>
+        {verificationStatus === 'verified' ? (
+          <p>Your account is verified.</p>
+        ) : verificationStatus === 'pending' || verificationRequested ? (
+          <p>Your verification request is pending review.</p>
+        ) : (
+          <>
+            <div className="verification-checklist">
+              <div className={`check-item ${profileComplete ? 'complete' : ''}`}>
+                <span className="check-mark">•</span>
+                Profile complete
+              </div>
+              <div className={`check-item ${hasListing ? 'complete' : ''}`}>
+                <span className="check-mark">•</span>
+                At least one listing
+              </div>
+              <div className={`check-item ${verificationRequested ? 'complete' : ''}`}>
+                <span className="check-mark">•</span>
+                Verification request submitted
+              </div>
+            </div>
+            <button className="btn-verify" onClick={handleRequestVerification}>
+              Request Verification
+            </button>
+            {!verificationReady && (
+              <p className="verification-hint">Complete your profile and add at least one offer before requesting verification.</p>
+            )}
+          </>
+        )}
+      </section>
+
       <section className="profile-section">
         <h2 className="profile-section-title">Edit Profile</h2>
 
@@ -205,7 +270,6 @@ export default function Profile() {
                 onClick={() => setRole(r.value)}
                 type="button"
               >
-                <span className="role-option-icon">{r.icon}</span>
                 <span className="role-option-name">{r.label}</span>
                 <span className="role-option-desc">{r.desc}</span>
               </button>
@@ -222,10 +286,10 @@ export default function Profile() {
       <section className="profile-section">
         <h2 className="profile-section-title">Quick Links</h2>
         <div className="profile-links">
-          <a href="/dashboard" className="profile-link">📊 Dashboard</a>
-          <a href="/products" className="profile-link">🛒 Your Products</a>
-          <a href="/services" className="profile-link">🤝 Your Services</a>
-          <a href="/feed" className="profile-link">💬 Community Feed</a>
+          <a href="/dashboard" className="profile-link">Dashboard</a>
+          <a href="/products" className="profile-link">Your Products</a>
+          <a href="/services" className="profile-link">Your Services</a>
+          <a href="/feed" className="profile-link">Community Feed</a>
         </div>
       </section>
 

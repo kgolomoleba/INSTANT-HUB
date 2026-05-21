@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react'
 import './Register.css'
 import { useNavigate, Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import Logo from '../components/Logo'
 import { supabase } from '../supabaseClient'
+import { trackEvent } from '../utils/analytics'
 
 const validateEmail = (email: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -11,6 +14,7 @@ const validateUsername = (username: string): boolean =>
 
 export default function Register() {
   const navigate = useNavigate()
+  const { register, isAuthenticated, loading: authLoading } = useAuth()
 
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
@@ -26,6 +30,25 @@ export default function Register() {
       errorRef.current.focus()
     }
   }, [error])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isAuthenticated, navigate])
+
+  useEffect(() => {
+    // track that user saw the registration page
+    try {
+      trackEvent('signup_start')
+    } catch (e) {
+      // ignore
+    }
+  }, [])
+
+  if (authLoading) {
+    return <div className="loading-text">Checking your session...</div>
+  }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -75,37 +98,39 @@ export default function Register() {
         return
       }
 
-      // Sign up with Supabase auth
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: trimmedEmail,
-        password,
-        options: {
-          data: { username: trimmedUsername },
-        },
-      })
+      await register(trimmedEmail, password, trimmedUsername)
 
-      if (signUpError) {
-        setError(signUpError.message)
-        return
-      }
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
 
-      if (data?.user) {
-        // Save username to profiles table
+      if (user) {
         const { error: profileError } = await supabase
           .from('profiles')
           .upsert({
-            id: data.user.id,
+            id: user.id,
             username: trimmedUsername,
             updated_at: new Date().toISOString(),
           })
 
         if (profileError) {
           setError('Account created but failed to save username. Please update it in your profile.')
-        } else {
-          navigate('/login', {
-            state: { message: 'Registration successful! Please check your email to confirm your account.' }
-          })
+          return
         }
+
+        try {
+          // best-effort analytics event
+          trackEvent('signup_complete', { user_id: user.id, username: trimmedUsername })
+        } catch (e) {
+          // ignore analytics errors
+        }
+
+        navigate('/login', {
+          state: {
+            message: 'Registration successful! Please check your email to confirm your account.',
+          },
+          replace: true,
+        })
       } else {
         setError('Registration failed. Please try again.')
       }
@@ -120,7 +145,7 @@ export default function Register() {
     <div className="register-container">
       <div className="register-card">
         <div className="register-header">
-          <img src="/instant-hub-logo.svg" alt="Instant Hub Logo" className="register-logo" />
+          <Logo className="register-logo" size={64} />
           <h1>Create Account</h1>
           <p>Join the Instant Hub ecosystem</p>
         </div>

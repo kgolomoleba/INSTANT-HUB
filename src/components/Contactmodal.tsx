@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { supabase } from '../supabaseClient'
-import './ContactModal.css'
+import { trackEvent } from '../utils/analytics'
+import './Contactmodal.css'
 
 interface ContactModalProps {
   recipientId: string
@@ -47,6 +48,12 @@ const ContactModal: React.FC<ContactModalProps> = ({
         message: message.trim(),
       }])
       if (error) throw error
+      void trackEvent('contact_seller', {
+        sender_id: user.id,
+        recipient_id: recipientId,
+        listing_type: listingType,
+        listing_title: listingTitle,
+      })
       setSent(true)
     } catch (err: any) {
       setError(err.message || 'Failed to send message.')
@@ -58,19 +65,18 @@ const ContactModal: React.FC<ContactModalProps> = ({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="Close">✕</button>
+        <button className="modal-close" onClick={onClose} aria-label="Close">Close</button>
 
         {sent ? (
           <div className="modal-sent">
-            <span className="modal-sent-icon">✓</span>
-            <h3>Message Sent!</h3>
+            <span className="modal-sent-icon">Sent</span>
+            <h3>Message Sent</h3>
             <p>Your inquiry about <strong>{listingTitle}</strong> has been sent to <strong>{recipientUsername}</strong>.</p>
             <button className="btn-modal-gold" onClick={onClose}>Done</button>
           </div>
         ) : (
           <>
             <div className="modal-header">
-              <span className="modal-bolt">⚡</span>
               <h3>Contact Seller</h3>
               <p>Sending inquiry to <strong>{recipientUsername}</strong> about <strong>{listingTitle}</strong></p>
             </div>
