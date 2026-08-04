@@ -1,4 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 
 const PrivateRoute = () => {
@@ -6,7 +7,17 @@ const PrivateRoute = () => {
   const location = useLocation()
 
   if (loading) {
-    return <div className="loading-text">Checking access...</div>
+    return (
+      <motion.div
+        className="loading-state"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        <div className="loading-spinner" aria-hidden="true" />
+        <p>Checking access...</p>
+      </motion.div>
+    )
   }
 
   if (!isAuthenticated) {

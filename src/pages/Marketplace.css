@@ -1,5 +1,5 @@
 .marketplace-container {
-  max-width: 1000px;
+  max-width: 1100px;
   margin: 0 auto;
   padding: 0 1.5rem 4rem;
   color: #ffffff;
@@ -12,8 +12,10 @@
   padding: 4rem 2rem 3rem;
   overflow: hidden;
   margin: 0 -1.5rem 2rem;
-  background: #0a0a0a;
-  border-bottom: 1px solid #1a1a1a;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(10,10,10,0.95));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 28px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.18);
 }
 
 .marketplace-hero-grid {
@@ -34,6 +36,28 @@
   text-transform: uppercase;
   color: #f59e0b;
   margin-bottom: 1rem;
+}
+
+.marketplace-pill-row {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.marketplace-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #cbd5e1;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .marketplace-title {
@@ -79,19 +103,19 @@
 
 .marketplace-search {
   width: 100%;
-  background: #111111;
-  border: 1px solid #2a2a2a;
-  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px;
   padding: 14px 20px;
   font-size: 14px;
   color: #ffffff;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
 }
 
-.marketplace-search::placeholder { color: #aaa; }
-.marketplace-search:focus { border-color: #f59e0b; }
+.marketplace-search::placeholder { color: #94a3b8; }
+.marketplace-search:focus { border-color: rgba(245,158,11,0.45); box-shadow: 0 0 0 4px rgba(245,158,11,0.12); }
 
 /* Stats */
 .marketplace-stats {
@@ -137,26 +161,28 @@
   gap: 8px;
   flex-wrap: wrap;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #1a1a1a;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.03);
 }
 
 .marketplace-tab {
   background: transparent;
-  border: 1px solid #1e1e1e;
-  color: #ccc;
-  padding: 8px 20px;
-  border-radius: 20px;
+  border: 1px solid transparent;
+  color: #cbd5e1;
+  padding: 8px 18px;
+  border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
-.marketplace-tab:hover { border-color: #f59e0b; color: #f59e0b; }
-.marketplace-tab.active { background: #f59e0b; color: #0a0a0a; border-color: #f59e0b; }
+.marketplace-tab:hover { border-color: rgba(245,158,11,0.3); color: #f59e0b; }
+.marketplace-tab.active { background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #0a0a0a; border-color: transparent; box-shadow: 0 10px 24px rgba(245,158,11,0.18); }
 
 .marketplace-tab-actions {
   display: flex;

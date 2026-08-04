@@ -79,6 +79,11 @@ export default function Marketplace() {
         <div className="marketplace-hero-grid" aria-hidden="true" />
         <span className="marketplace-label">Instant Hub Marketplace</span>
         <h1 className="marketplace-title">MARKETPLACE<br /><span className="marketplace-gold">FOR PRODUCTS & SERVICES</span></h1>
+        <div className="marketplace-pill-row">
+          <span className="marketplace-pill">Verified • Local</span>
+          <span className="marketplace-pill">Fast inquiries</span>
+          <span className="marketplace-pill">Trusted businesses</span>
+        </div>
         <p className="marketplace-desc">
           Browse verified products and services from trusted businesses, suppliers and local providers.
         </p>
@@ -155,6 +160,7 @@ export default function Marketplace() {
                       seller={product.profiles?.username || 'Unknown'}
                       verified={product.profiles?.verified || product.profiles?.verification_status === 'verified'}
                       userId={product.user_id}
+                      listingId={product.id}
                       imageUrl={product.image_url}
                       location={product.location}
                     />
@@ -185,6 +191,7 @@ export default function Marketplace() {
                       provider={service.profiles?.username || 'Unknown'}
                       verified={service.profiles?.verified || service.profiles?.verification_status === 'verified'}
                       userId={service.user_id}
+                      listingId={service.id}
                       imageUrl={service.image_url}
                       location={service.location}
                     />

@@ -10,51 +10,76 @@ export default function Home() {
         <div className="hero-grid" aria-hidden="true" />
         <div className="hero-glow" aria-hidden="true" />
 
-        <div className="hero-badge">
-          <span className="hero-dot" aria-hidden="true" />
-          Verified · Local · African
-        </div>
-
-        <h1 className="hero-title">
-          WHERE <span className="hero-gold">AFRICAN</span><br />
-          BUSINESS<br />
-          HAPPENS
-        </h1>
-
-        <p className="hero-sub">Verified trade, local sourcing and trusted business relationships</p>
-
-        <p className="hero-desc">
-          One platform for <strong>buyers, sellers, suppliers, contractors,
-          entrepreneurs and investors</strong>, built to make business across Africa easier and more reliable.
-        </p>
-        <p className="hero-desc">
-          The marketplace is for fee-based products and services. Hiring, work requests and talent sourcing are handled in the Community Feed.
-        </p>
-
-        <div className="hero-cta">
-          <Link to="/register" className="btn-hero">Create Free Account</Link>
-          <Link to="/products" className="btn-hero-outline">Explore Marketplace</Link>
-        </div>
-
-        <div className="hero-stats">
-          <div className="hero-stat">
-            <span className="stat-num">9+</span>
-            <span className="stat-label">User Roles</span>
+        <div className="hero-content">
+          <div className="hero-badge">
+            <span className="hero-dot" aria-hidden="true" />
+            Verified · Local · African
           </div>
-          <div className="stat-divider" aria-hidden="true" />
-          <div className="hero-stat">
-            <span className="stat-num">1</span>
-            <span className="stat-label">Platform</span>
+
+          <h1 className="hero-title">
+            WHERE <span className="hero-gold">AFRICAN</span><br />
+            BUSINESS<br />
+            HAPPENS
+          </h1>
+
+          <p className="hero-sub">Verified trade, local sourcing and trusted business relationships</p>
+
+          <p className="hero-desc">
+            One platform for <strong>buyers, sellers, suppliers, contractors,
+            entrepreneurs and investors</strong>, built to make business across Africa easier and more reliable.
+          </p>
+          <p className="hero-desc">
+            The marketplace is for fee-based products and services. Hiring, work requests and talent sourcing are handled in the Community Feed.
+          </p>
+
+          <div className="hero-cta">
+            <Link to="/register" className="btn-hero">Create Free Account</Link>
+            <Link to="/products" className="btn-hero-outline">Explore Marketplace</Link>
           </div>
-          <div className="stat-divider" aria-hidden="true" />
-          <div className="hero-stat">
-            <span className="stat-num">∞</span>
-            <span className="stat-label">Opportunities</span>
+
+          <div className="hero-preview" aria-label="Platform highlights">
+            <div className="preview-card">
+              <div className="preview-top">
+                <span className="preview-chip">Live network</span>
+                <span className="preview-pill">Verified • Fast</span>
+              </div>
+              <div className="preview-list">
+                <div className="preview-item">
+                  <span className="preview-bullet" />
+                  <span>Discover trusted products, services, and talent</span>
+                </div>
+                <div className="preview-item">
+                  <span className="preview-bullet" />
+                  <span>Connect with verified business partners in minutes</span>
+                </div>
+                <div className="preview-item">
+                  <span className="preview-bullet" />
+                  <span>Launch deals and grow with one modern hub</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="stat-divider" aria-hidden="true" />
-          <div className="hero-stat">
-            <span className="stat-num">ZA</span>
-            <span className="stat-label">Starting Here</span>
+
+          <div className="hero-stats">
+            <div className="hero-stat">
+              <span className="stat-num">9+</span>
+              <span className="stat-label">User Roles</span>
+            </div>
+            <div className="stat-divider" aria-hidden="true" />
+            <div className="hero-stat">
+              <span className="stat-num">1</span>
+              <span className="stat-label">Platform</span>
+            </div>
+            <div className="stat-divider" aria-hidden="true" />
+            <div className="hero-stat">
+              <span className="stat-num">∞</span>
+              <span className="stat-label">Opportunities</span>
+            </div>
+            <div className="stat-divider" aria-hidden="true" />
+            <div className="hero-stat">
+              <span className="stat-num">ZA</span>
+              <span className="stat-label">Starting Here</span>
+            </div>
           </div>
         </div>
       </section>
@@ -67,16 +92,17 @@ export default function Home() {
 
         <div className="roles-grid">
           {[
-            { name: 'Buyers', desc: 'Find verified products and services' },
-            { name: 'Sellers', desc: 'Reach the right customers' },
-            { name: 'Suppliers', desc: 'Connect with businesses at scale' },
-            { name: 'Manufacturers', desc: 'Showcase capacity and output' },
-            { name: 'Workers', desc: 'Skilled and semi-skilled talent' },
-            { name: 'HR Pros', desc: 'Source verified candidates' },
-            { name: 'Entrepreneurs', desc: 'Build, launch, and grow' },
-            { name: 'Investors', desc: 'Discover fundable businesses' },
+            { name: 'Buyers', desc: 'Find verified products and services', icon: '01' },
+            { name: 'Sellers', desc: 'Reach the right customers', icon: '02' },
+            { name: 'Suppliers', desc: 'Connect with businesses at scale', icon: '03' },
+            { name: 'Manufacturers', desc: 'Showcase capacity and output', icon: '04' },
+            { name: 'Workers', desc: 'Skilled and semi-skilled talent', icon: '05' },
+            { name: 'HR Pros', desc: 'Source verified candidates', icon: '06' },
+            { name: 'Entrepreneurs', desc: 'Build, launch, and grow', icon: '07' },
+            { name: 'Investors', desc: 'Discover fundable businesses', icon: '08' },
           ].map((role) => (
             <div className="role-card" key={role.name}>
+              <span className="role-icon">{role.icon}</span>
               <span className="role-name">{role.name}</span>
               <span className="role-desc">{role.desc}</span>
             </div>

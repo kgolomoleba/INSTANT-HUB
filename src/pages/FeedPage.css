@@ -1,47 +1,245 @@
-/* FeedPage styles */
+/* ==========================================================================
+   FeedPage Layout & Base Structures 
+   ========================================================================== */
 .feed-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem 1rem;
   background: #181a20;
   color: #f3f3f3;
+  min-height: 100vh;
 }
+
 .feed-header {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid #2d313a;
+  padding-bottom: 1.5rem;
 }
+
+.feed-header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin: 0;
+  background: linear-gradient(135deg, #ffffff 0%, #b5b5b5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.feed-header p {
+  color: #b1b5c3;
+  font-size: 1.1rem;
+  margin: 0;
+  max-width: 700px;
+  line-height: 1.5;
+}
+
 .feed-actions {
   display: flex;
   gap: 1rem;
-  margin-top: 1rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
 }
+
+/* ==========================================================================
+   Feed Creation Form (Interactive Cards Block)
+   ========================================================================== */
+.feed-form {
+  background: #23262f;
+  border: 1px solid #353945;
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 2.5rem;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+  animation: fadeInForm 0.25s ease-out;
+}
+
+@keyframes fadeInForm {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.feed-form h2 {
+  font-size: 1.5rem;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+}
+
+.feed-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #b1b5c3;
+}
+
+/* Input Styles aligned to system boundaries */
+.feed-form select,
+.feed-form input[type="text"],
+.feed-form input[type="url"],
+.feed-form textarea {
+  background: #14151a;
+  border: 2px solid #353945;
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.feed-form select:focus,
+.feed-form input:focus,
+.feed-form textarea:focus {
+  outline: none;
+  border-color: #d4af37; /* Gold Accent Focus */
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+}
+
+.feed-form textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* ==========================================================================
+   Interactive Filter Header Bar
+   ========================================================================== */
+.feed-filters {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+}
+
+.feed-filter-btn {
+  background: #23262f;
+  border: 1px solid #353945;
+  color: #b1b5c3;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.feed-filter-btn:hover {
+  border-color: #777e90;
+  color: #ffffff;
+}
+
+.feed-filter-btn.active {
+  background: #d4af37; /* Theme Accent Gold */
+  border-color: #d4af37;
+  color: #14151a;
+}
+
+/* ==========================================================================
+   Dynamic Grid Streams
+   ========================================================================== */
 .feed-posts {
   margin-bottom: 2rem;
 }
+
 .feed-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 2rem;
 }
+
+/* Informative Widgets & Side Layout Elements */
 .feed-info {
   background: #23262f;
   border-radius: 1rem;
   padding: 1.5rem;
-  margin-top: 2rem;
+  margin-top: 3rem;
+  border: 1px solid #2d313a;
 }
+
 .highlights-list {
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
+
 .highlight {
   background: #2d313a;
   color: #f3f3f3;
   border-radius: 999px;
   padding: 0.3rem 1rem;
   font-size: 0.95rem;
+  border: 1px solid #353945;
+}
+
+/* System State Visual Alerts */
+.loading-text {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #b1b5c3;
+  padding: 4rem 0;
+}
+
+.error-text {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 5rem 2rem;
+  background: #23262f;
+  border: 2px dashed #353945;
+  border-radius: 1rem;
+  color: #777e90;
+}
+
+/* ==========================================================================
+   Responsive Viewport Alterations
+   ========================================================================== */
+@media (max-width: 768px) {
+  .feed-container {
+    padding: 1rem;
+  }
+  
+  .feed-header h1 {
+    font-size: 2rem;
+  }
+  
+  .feed-grid {
+    grid-template-columns: 1fr; /* Single stream layout card presentation for mobile screens */
+    gap: 1.25rem;
+  }
+
+  .feed-form {
+    padding: 1.25rem;
+  }
 }

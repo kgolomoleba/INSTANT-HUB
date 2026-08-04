@@ -1,51 +1,70 @@
+import { lazy, Suspense, type ReactNode } from 'react'
 import { Routes, Route } from 'react-router-dom'
 
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Dashboard from './pages/Dashboard'
-import Profile from './pages/Profile'
-import ProductsPage from './pages/ProductsPage'
-import ServicesPage from './pages/ServicesPage'
-import FeedPage from './pages/FeedPage'
-import Marketplace from './pages/Marketplace'
+const Home = lazy(() => import('./pages/Home'))
+const Login = lazy(() => import('./pages/Login'))
+const Register = lazy(() => import('./pages/Register'))
+const Dashboard = lazy(() => import('./pages/Dashboard'))
+const Profile = lazy(() => import('./pages/Profile'))
+const ProductsPage = lazy(() => import('./pages/ProductsPage'))
+const ServicesPage = lazy(() => import('./pages/ServicesPage'))
+const FeedPage = lazy(() => import('./pages/FeedPage'))
+const Marketplace = lazy(() => import('./pages/Marketplace'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
 import PrivateRoute from './components/PrivateRoute'
-import Navbar from './components/Navbar'
+import AdminRoute from './components/AdminRoute'
+import Layout from './components/Layout'
+import PageShell from './components/PageShell'
 
 import './App.css'
 
+const routeFallback = (
+  <PageShell>
+    <div className="loading-state">
+      <div className="loading-spinner" aria-hidden="true" />
+      <p>Loading page...</p>
+    </div>
+  </PageShell>
+)
+
+const RouteWrapper = ({ children }: { children: ReactNode }) => (
+  <Suspense fallback={routeFallback}>{children}</Suspense>
+)
+
 const NotFound = () => (
-  <div className="page" role="alert" aria-live="assertive">
-    <h2>Page Not Found</h2>
-    <p>The page you are looking for does not exist.</p>
-  </div>
+  <PageShell>
+    <div className="empty-state" role="alert" aria-live="assertive">
+      <h2>Page Not Found</h2>
+      <p>The page you are looking for does not exist.</p>
+    </div>
+  </PageShell>
 )
 
 function App() {
   return (
     <>
-      <header>
-        <Navbar />
-      </header>
-
-      <main className="container" tabIndex={-1} aria-live="polite" role="main">
+      <Layout>
         <Routes>
-          <Route path="/" element={<div className="page"><Home /></div>} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          <Route path="/" element={<RouteWrapper><PageShell><Home /></PageShell></RouteWrapper>} />
+          <Route path="/login" element={<RouteWrapper><PageShell><Login /></PageShell></RouteWrapper>} />
+          <Route path="/register" element={<RouteWrapper><PageShell><Register /></PageShell></RouteWrapper>} />
 
           <Route element={<PrivateRoute />}>
-            <Route path="/dashboard" element={<div className="page"><Dashboard /></div>} />
-            <Route path="/profile" element={<div className="page"><Profile /></div>} />
-            <Route path="/marketplace" element={<div className="page"><Marketplace /></div>} />
-            <Route path="/products" element={<div className="page"><ProductsPage /></div>} />
-            <Route path="/services" element={<div className="page"><ServicesPage /></div>} />
-            <Route path="/feed" element={<div className="page"><FeedPage /></div>} />
+            <Route path="/dashboard" element={<RouteWrapper><PageShell><Dashboard /></PageShell></RouteWrapper>} />
+            <Route path="/profile" element={<RouteWrapper><PageShell><Profile /></PageShell></RouteWrapper>} />
+            <Route path="/marketplace" element={<RouteWrapper><PageShell><Marketplace /></PageShell></RouteWrapper>} />
+            <Route path="/products" element={<RouteWrapper><PageShell><ProductsPage /></PageShell></RouteWrapper>} />
+            <Route path="/services" element={<RouteWrapper><PageShell><ServicesPage /></PageShell></RouteWrapper>} />
+            <Route path="/feed" element={<RouteWrapper><PageShell><FeedPage /></PageShell></RouteWrapper>} />
+          </Route>
+
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<RouteWrapper><PageShell><AdminPage /></PageShell></RouteWrapper>} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </main>
+      </Layout>
 
       <footer className="footer" role="contentinfo">
         &copy; {new Date().getFullYear()} Instant Hub. All rights reserved.

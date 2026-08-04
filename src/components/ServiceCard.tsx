@@ -10,6 +10,7 @@ interface ServiceCardProps {
   provider: string
   verified?: boolean
   userId?: string
+  listingId?: string
   location?: string
   imageUrl?: string
   onClick?: () => void
@@ -22,17 +23,19 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
   provider,
   verified,
   userId,
+  listingId,
   location,
   imageUrl,
   onClick,
 }) => {
   const [showContact, setShowContact] = useState(false)
-  const statusLabel = verified ? 'Verified provider' : location ? 'Local service' : 'New service'
+  const isVerified = Boolean(verified)
+  const statusLabel = isVerified ? 'Verified provider' : location ? 'Local service' : 'New service'
 
   return (
     <>
       <div
-        className="service-card"
+        className={`service-card ${isVerified ? 'is-verified' : 'is-unverified'}`}
         onClick={() => {
           onClick?.()
           void trackEvent('view_listing', { listing_type: 'service', title, provider, user_id: userId })
@@ -48,21 +51,25 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           />
           <span className="service-badge">{statusLabel}</span>
         </div>
-        <h3 className="service-title">{title}</h3>
-        <p className="service-description">{description}</p>
-        <div className="service-meta">
-          <span className="service-provider">
-            By: {provider}
-            {verified && <span className="verified-badge">Verified</span>}
-          </span>
-          {location && <span className="service-location"> | {location}</span>}
-        </div>
-        <div className="service-extra">
-          <span className="service-rating">★ 4.9</span>
-          <span className="service-availability">Available</span>
-        </div>
-        <div className="service-price">
-          <strong>R{price.toFixed(2)}</strong>
+        <div className="service-content">
+          <div className="service-heading-row">
+            <h3 className="service-title">{title}</h3>
+            <div className="service-price">
+              <strong>R{price.toFixed(2)}</strong>
+            </div>
+          </div>
+          <p className="service-description">{description}</p>
+          <div className="service-meta">
+            <span className="service-provider">
+              By {provider}
+              {isVerified && <span className="verified-badge">Verified</span>}
+            </span>
+            {location && <span className="service-location">{location}</span>}
+          </div>
+          <div className="service-extra">
+            <span className="service-rating">★ 4.9</span>
+            <span className="service-availability">Available</span>
+          </div>
         </div>
         {userId && (
           <button
@@ -73,7 +80,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
               setShowContact(true)
             }}
           >
-            Contact Provider
+            Send Inquiry
           </button>
         )}
       </div>
@@ -84,6 +91,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
           recipientUsername={provider}
           listingTitle={title}
           listingType="service"
+          listingId={listingId}
           onClose={() => setShowContact(false)}
         />
       )}

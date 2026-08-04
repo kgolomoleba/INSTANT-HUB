@@ -55,8 +55,8 @@ const FeedPage: React.FC = () => {
     price: '',
   })
 
-  const fetchPosts = async () => {
-    setLoading(true)
+  const fetchPosts = async (silent = false) => {
+    if (!silent) setLoading(true)
     setError(null)
     try {
       const { data, error } = await supabase
@@ -68,11 +68,33 @@ const FeedPage: React.FC = () => {
     } catch (err: any) {
       setError(err.message || 'Failed to load posts.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
-  useEffect(() => { fetchPosts() }, [])
+  // Hook handles stream setup and real-time synchronization updates
+  useEffect(() => {
+    void fetchPosts()
+
+    const channel = supabase
+      .channel('realtime-community-feed')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'posts'
+        },
+        () => {
+          void fetchPosts(true)
+        }
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,7 +121,7 @@ const FeedPage: React.FC = () => {
         title: sanitize(form.title),
         description: sanitize(form.description),
         image_url: form.image_url.trim(),
-        price: sanitize(form.price),
+        price: form.type === 'product' || form.type === 'service' ? sanitize(form.price) : '',
       }])
       if (error) throw error
 
@@ -115,8 +137,13 @@ const FeedPage: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this post?')) return
-    await supabase.from('posts').delete().eq('id', id)
-    await fetchPosts()
+    try {
+      const { error } = await supabase.from('posts').delete().eq('id', id)
+      if (error) throw error
+      await fetchPosts()
+    } catch (err: any) {
+      setError(err.message || 'Could not delete post selection.')
+    }
   }
 
   const filtered = filter === 'All' ? posts : posts.filter(p => p.type === filter)

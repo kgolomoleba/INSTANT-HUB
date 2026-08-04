@@ -10,6 +10,7 @@ interface ProductCardProps {
   seller: string
   verified?: boolean
   userId?: string
+  listingId?: string
   imageUrl?: string
   location?: string
   onClick?: () => void
@@ -22,17 +23,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
   seller,
   verified,
   userId,
+  listingId,
   imageUrl,
   location,
   onClick,
 }) => {
   const [showContact, setShowContact] = useState(false)
-  const statusLabel = verified ? 'Verified seller' : location ? 'Local supplier' : 'New listing'
+  const isVerified = Boolean(verified)
+  const statusLabel = isVerified ? 'Verified seller' : location ? 'Local supplier' : 'New listing'
 
   return (
     <>
       <div
-        className="product-card"
+        className={`product-card ${isVerified ? 'is-verified' : 'is-unverified'}`}
         onClick={() => {
           onClick?.()
           void trackEvent('view_listing', { listing_type: 'product', title, seller, user_id: userId })
@@ -48,21 +51,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
           <span className="product-badge">{statusLabel}</span>
         </div>
-        <h3 className="product-title">{title}</h3>
-        <p className="product-description">{description}</p>
-        <div className="product-meta">
-          <span className="product-seller">
-            By: {seller}
-            {verified && <span className="verified-badge">Verified</span>}
-          </span>
-          {location && <span className="product-location"> | {location}</span>}
-        </div>
-        <div className="product-extra">
-          <span className="product-rating">★ 4.8</span>
-          <span className="product-stock">In Stock</span>
-        </div>
-        <div className="product-price">
-          <strong>R{price.toFixed(2)}</strong>
+        <div className="product-content">
+          <div className="product-heading-row">
+            <h3 className="product-title">{title}</h3>
+            <div className="product-price">
+              <strong>R{price.toFixed(2)}</strong>
+            </div>
+          </div>
+          <p className="product-description">{description}</p>
+          <div className="product-meta">
+            <span className="product-seller">
+              By {seller}
+              {isVerified && <span className="verified-badge">Verified</span>}
+            </span>
+            {location && <span className="product-location">{location}</span>}
+          </div>
+          <div className="product-extra">
+            <span className="product-rating">★ 4.8</span>
+            <span className="product-stock">In Stock</span>
+          </div>
         </div>
         {userId && (
           <button
@@ -73,7 +80,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               setShowContact(true)
             }}
           >
-            Contact Seller
+            Send Inquiry
           </button>
         )}
       </div>
@@ -84,6 +91,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           recipientUsername={seller}
           listingTitle={title}
           listingType="product"
+          listingId={listingId}
           onClose={() => setShowContact(false)}
         />
       )}

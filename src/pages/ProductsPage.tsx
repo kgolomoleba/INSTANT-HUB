@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { trackEvent } from '../utils/analytics'
 import ProductCard from '../components/ProductCard'
+import { CreateListingModal } from '../components/CreateListingModal'
 import './ProductsPage.css'
 
 interface ProfileData {
@@ -25,46 +26,16 @@ interface Product {
 
 const CATEGORIES = ['All', 'Design', 'Handmade', 'Tutoring', 'Tech', 'Art', 'Other']
 
-const sanitize = (str: string) => str.trim().replace(/[<>{}]/g, '')
-
-const validateForm = (form: {
-  title: string
-  price: string
-  location: string
-  description: string
-  image_url: string
-  category: string
-}): string | null => {
-  if (!form.title.trim()) return 'Title is required.'
-  if (form.title.trim().length < 3) return 'Title must be at least 3 characters.'
-  if (form.title.trim().length > 100) return 'Title must be under 100 characters.'
-  if (form.price && isNaN(parseFloat(form.price))) return 'Price must be a valid number.'
-  if (form.price && parseFloat(form.price) < 0) return 'Price cannot be negative.'
-  if (form.price && parseFloat(form.price) > 1000000) return 'Price is too high.'
-  if (form.description && form.description.length > 500) return 'Description must be under 500 characters.'
-  if (form.image_url && form.image_url.trim()) {
-    try { new URL(form.image_url) } catch { return 'Image URL must be a valid URL (starting with https://).' }
-  }
-  return null
-}
-
 const ProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
+  
+  // Replaced showForm with isModalOpen
+  const [isModalOpen, setIsModalOpen] = useState(false) 
+  
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [search, setSearch] = useState('')
-
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    price: '',
-    location: '',
-    image_url: '',
-    category: 'Other',
-  })
 
   const fetchProducts = async () => {
     setLoading(true)
@@ -85,45 +56,6 @@ const ProductsPage: React.FC = () => {
 
   useEffect(() => { fetchProducts() }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const validationError = validateForm(form)
-    if (validationError) { setError(validationError); return }
-
-    setSubmitting(true)
-    setError(null)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) throw new Error('You must be logged in to add a product.')
-
-      const { error } = await supabase.from('products').insert([{
-        user_id: user.id,
-        title: sanitize(form.title),
-        description: sanitize(form.description),
-        price: parseFloat(form.price) || 0,
-        location: sanitize(form.location),
-        image_url: form.image_url.trim(),
-        category: form.category,
-      }])
-      if (error) throw error
-
-      void trackEvent('create_product', {
-        user_id: user.id,
-        title: sanitize(form.title),
-        category: form.category,
-        price: parseFloat(form.price) || 0,
-      })
-
-      setForm({ title: '', description: '', price: '', location: '', image_url: '', category: 'Other' })
-      setShowForm(false)
-      await fetchProducts()
-    } catch (err: any) {
-      setError(err.message || 'Failed to add product.')
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
   const filtered = products.filter((p) => {
     const matchCategory = selectedCategory === 'All' || p.category === selectedCategory
     const matchSearch =
@@ -141,12 +73,12 @@ const ProductsPage: React.FC = () => {
           <button
             className="btn-primary"
             onClick={() => {
-              setShowForm(v => !v)
+              setIsModalOpen(true)
               setError(null)
-              void trackEvent('product_form_toggle', { showForm: !showForm })
+              void trackEvent('product_form_toggle', { showForm: true })
             }}
           >
-            {showForm ? 'Cancel' : '+ Add Product'}
+            + Add Product
           </button>
           <button
             className="btn-secondary"
@@ -159,94 +91,18 @@ const ProductsPage: React.FC = () => {
           </button>
         </div>
       </header>
+      
       <div className="trust-chip badge-gold">
         Trusted sellers and verified product offers
       </div>
 
-      {showForm && (
-        <section className="add-product-form">
-          <h2>List a New Product</h2>
-          {error && <p className="error-text">{error}</p>}
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="title">Title *</label>
-                <input
-                  id="title"
-                  type="text"
-                  placeholder="Product name"
-                  value={form.title}
-                  onChange={e => setForm({ ...form, title: e.target.value })}
-                  maxLength={100}
-                  required
-                />
-                <span className="form-hint">{form.title.length}/100</span>
-              </div>
-              <div className="form-group">
-                <label htmlFor="price">Price (R)</label>
-                <input
-                  id="price"
-                  type="number"
-                  placeholder="0.00"
-                  value={form.price}
-                  onChange={e => setForm({ ...form, price: e.target.value })}
-                  min="0"
-                  max="1000000"
-                  step="0.01"
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="location">Location</label>
-                <input
-                  id="location"
-                  type="text"
-                  placeholder="e.g. Cape Town"
-                  value={form.location}
-                  onChange={e => setForm({ ...form, location: e.target.value })}
-                  maxLength={100}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="category">Category</label>
-                <select
-                  id="category"
-                  value={form.category}
-                  onChange={e => setForm({ ...form, category: e.target.value })}
-                >
-                  {CATEGORIES.filter(c => c !== 'All').map(c => (
-                    <option key={c} value={c}>{c}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group form-group-full">
-                <label htmlFor="description">Description</label>
-                <textarea
-                  id="description"
-                  placeholder="Describe your product..."
-                  value={form.description}
-                  onChange={e => setForm({ ...form, description: e.target.value })}
-                  rows={3}
-                  maxLength={500}
-                />
-                <span className="form-hint">{form.description.length}/500</span>
-              </div>
-              <div className="form-group form-group-full">
-                <label htmlFor="image_url">Image URL</label>
-                <input
-                  id="image_url"
-                  type="url"
-                  placeholder="https://..."
-                  value={form.image_url}
-                  onChange={e => setForm({ ...form, image_url: e.target.value })}
-                />
-              </div>
-            </div>
-            <button className="btn-primary" type="submit" disabled={submitting}>
-              {submitting ? 'Listing...' : 'List Product'}
-            </button>
-          </form>
-        </section>
-      )}
+      {/* Render the unified modal component instead of inline form */}
+      <CreateListingModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        onSuccess={fetchProducts}
+        type="product" 
+      />
 
       <div className="products-filters">
         <input
@@ -279,7 +135,7 @@ const ProductsPage: React.FC = () => {
       <section className="products-list">
         {loading ? (
           <p className="loading-text">Loading products...</p>
-        ) : error && !showForm ? (
+        ) : error ? (
           <p className="error-text">{error}</p>
         ) : filtered.length === 0 ? (
           <div className="empty-state">
@@ -296,6 +152,7 @@ const ProductsPage: React.FC = () => {
                 seller={product.profiles?.username || 'Unknown'}
                 verified={product.profiles?.verified || product.profiles?.verification_status === 'verified'}
                 userId={product.user_id}
+                listingId={product.id}
                 imageUrl={product.image_url}
                 location={product.location}
               />

@@ -3,19 +3,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, #080808 100%);
+  background: radial-gradient(circle at top, rgba(245, 158, 11, 0.12), transparent 24%), #060606;
   padding: 2rem 1rem;
 }
 
 .login-card {
-  background: var(--dark);
-  border: 1px solid var(--dark2);
-  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(12,12,12,0.96));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
   padding: 2.5rem 2rem;
   width: 100%;
   max-width: 420px;
   animation: cardIn 0.3s ease forwards;
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
 }
 
 @keyframes cardIn {
