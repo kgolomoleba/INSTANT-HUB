@@ -119,8 +119,8 @@ const AdminPage = () => {
                   </div>
                 )}
                 {req.verification_document_url && (
-                  
                   <a
+                    href={req.verification_document_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="admin-doc-link"
