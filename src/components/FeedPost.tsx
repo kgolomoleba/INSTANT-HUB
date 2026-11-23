@@ -51,7 +51,7 @@ const FeedPost: React.FC<FeedPostProps> = ({
 
   useEffect(() => {
     supabase
-      .from('profiles')
+      .from('public_profiles')
       .select('verification_status')
       .eq('id', userId)
       .single()

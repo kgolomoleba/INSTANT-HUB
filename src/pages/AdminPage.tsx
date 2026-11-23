@@ -118,7 +118,13 @@ const AdminPage = () => {
                     <span className="admin-field-value">{req.verification_note}</span>
                   </div>
                 )}
-                {req.verification_document_url && (
+                {req.verification_document_url && !/^https?:\/\//i.test(req.verification_document_url) && (
+                  <div className="admin-field">
+                    <span className="admin-field-label">Document</span>
+                    <span className="admin-field-value">{req.verification_document_url} (not a web link, not opened)</span>
+                  </div>
+                )}
+                {req.verification_document_url && /^https?:\/\//i.test(req.verification_document_url) && (
                   <a
                     href={req.verification_document_url}
                     target="_blank"

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { withProfiles } from '../utils/publicProfiles'
 import { trackEvent } from '../utils/analytics'
 import ProductCard from '../components/ProductCard'
 import { CreateListingModal } from '../components/CreateListingModal'
@@ -44,10 +45,10 @@ const ProductsPage: React.FC = () => {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*, profiles(*)')
+        .select('*')
         .order('created_at', { ascending: false })
       if (error) throw error
-      setProducts(data || [])
+      setProducts(await withProfiles((data ?? []) as Product[]))
     } catch (err) {
       setError(errorMessage(err, 'Failed to load products.'))
     } finally {

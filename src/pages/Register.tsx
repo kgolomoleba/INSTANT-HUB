@@ -86,13 +86,11 @@ export default function Register() {
 
     try {
       // Check username is not already taken
-      const { data: existing } = await supabase
-        .from('profiles')
-        .select('username')
-        .eq('username', trimmedUsername)
-        .single()
+      const { data: available, error: availabilityError } = await supabase.rpc('username_available', {
+        candidate: trimmedUsername,
+      })
 
-      if (existing) {
+      if (!availabilityError && available === false) {
         setError('That username is already taken. Please choose another.')
         setIsSubmitting(false)
         return

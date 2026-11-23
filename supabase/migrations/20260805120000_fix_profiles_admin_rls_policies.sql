@@ -10,13 +10,14 @@ BEGIN
       LANGUAGE sql
       SECURITY DEFINER
       STABLE
-    AS $$
+    SET search_path = public
+    AS $fn$
       SELECT EXISTS(
         SELECT 1
         FROM public.profiles
         WHERE id = auth.uid() AND role = 'admin'
       );
-    $$;
+    $fn$;
   END IF;
 END $$;
 

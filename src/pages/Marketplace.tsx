@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { withProfiles } from '../utils/publicProfiles'
 import ProductCard from '../components/ProductCard'
 import ServiceCard from '../components/ServiceCard'
 import './Marketplace.css'
@@ -49,13 +50,19 @@ export default function Marketplace() {
   useEffect(() => {
     const fetchAll = async () => {
       setLoading(true)
-      const [{ data: p }, { data: s }] = await Promise.all([
-        supabase.from('products').select('*, profiles(*)').order('created_at', { ascending: false }).limit(12),
-        supabase.from('services').select('*, profiles(*)').order('created_at', { ascending: false }).limit(12),
-      ])
-      setProducts(p || [])
-      setServices(s || [])
-      setLoading(false)
+      try {
+        const [{ data: p }, { data: s }] = await Promise.all([
+          supabase.from('products').select('*').order('created_at', { ascending: false }).limit(12),
+          supabase.from('services').select('*').order('created_at', { ascending: false }).limit(12),
+        ])
+        const [pp, ss] = await Promise.all([withProfiles((p ?? []) as Product[]), withProfiles((s ?? []) as Service[])])
+        setProducts(pp)
+        setServices(ss)
+      } catch {
+        // Listings still show without author details.
+      } finally {
+        setLoading(false)
+      }
     }
     fetchAll()
   }, [])
