@@ -23,10 +23,13 @@ const cache = new Map<string, Promise<unknown>>()
 function getJson<T>(url: string): Promise<T> {
   const hit = cache.get(url)
   if (hit) return hit as Promise<T>
-  const p = fetch(url, { headers: { Accept: 'application/json' } }).then(async (res) => {
-    if (!res.ok) throw new Error(`${new URL(url).host} answered ${res.status}`)
-    return (await res.json()) as T
-  })
+  const p = fetch(url, { headers: { Accept: 'application/json' } }).then(
+    async (res) => {
+      if (!res.ok)
+        throw new Error(`${new URL(url).host} answered ${res.status}`)
+      return (await res.json()) as T
+    }
+  )
   p.catch(() => cache.delete(url))
   cache.set(url, p)
   return p
@@ -38,14 +41,15 @@ export async function fetchWeather(
   lat: number,
   lon: number,
   start: string,
-  end: string,
+  end: string
 ): Promise<DailyWeather> {
   const q = new URLSearchParams({
     latitude: String(round(lat)),
     longitude: String(round(lon)),
     start_date: start,
     end_date: end,
-    daily: 'precipitation_sum,temperature_2m_max,temperature_2m_min,et0_fao_evapotranspiration',
+    daily:
+      'precipitation_sum,temperature_2m_max,temperature_2m_min,et0_fao_evapotranspiration',
     timezone: 'Africa/Johannesburg',
   })
   type Resp = {
@@ -57,7 +61,9 @@ export async function fetchWeather(
       et0_fao_evapotranspiration: (number | null)[]
     }
   }
-  const r = await getJson<Resp>(`https://archive-api.open-meteo.com/v1/archive?${q}`)
+  const r = await getJson<Resp>(
+    `https://archive-api.open-meteo.com/v1/archive?${q}`
+  )
   const d = r.daily
   return {
     dates: d.time,
@@ -100,14 +106,17 @@ export async function fetchNdvi(
   lon: number,
   start: string,
   end: string,
-  area: NdviArea,
+  area: NdviArea
 ): Promise<NdviPoint[]> {
   let km = 0
   if (area.kind === 'square') km = area.km
   else {
     const [w, s, e, n] = bbox(area.boundary)
     const kmLat = Math.max(Math.abs(n - lat), Math.abs(s - lat)) * 111.32
-    const kmLon = Math.max(Math.abs(e - lon), Math.abs(w - lon)) * 111.32 * Math.cos((lat * Math.PI) / 180)
+    const kmLon =
+      Math.max(Math.abs(e - lon), Math.abs(w - lon)) *
+      111.32 *
+      Math.cos((lat * Math.PI) / 180)
     km = Math.min(25, Math.ceil(Math.max(kmLat, kmLon) + 0.25))
   }
 
@@ -136,17 +145,22 @@ export async function fetchNdvi(
         kmAboveBelow: String(km),
         kmLeftRight: String(km),
       })
-      return getJson<Resp>(`https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset?${q}`)
-    }),
+      return getJson<Resp>(
+        `https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset?${q}`
+      )
+    })
   )
 
   const points: NdviPoint[] = []
   for (const r of results) {
     const scale = Number(r.scale) || 0.0001
-    const mask = area.kind === 'boundary' ? pixelMask(r, area.boundary, lat, lon) : null
+    const mask =
+      area.kind === 'boundary' ? pixelMask(r, area.boundary, lat, lon) : null
     for (const s of r.subset) {
       // -3000 is the fill value; valid NDVI is -2000..10000 before scaling.
-      const valid = s.data.filter((v, i) => (!mask || mask[i]) && v > -2000 && v <= 10000)
+      const valid = s.data.filter(
+        (v, i) => (!mask || mask[i]) && v > -2000 && v <= 10000
+      )
       if (!valid.length) continue
       const mean = valid.reduce((a, b) => a + b, 0) / valid.length
       points.push({ date: s.calendar_date, ndvi: mean * scale })
@@ -160,14 +174,24 @@ export async function fetchNdvi(
  * MODIS sinusoidal projection, row-major from the top (north) row.
  */
 function pixelMask(
-  r: { xllcorner?: string | number; yllcorner?: string | number; cellsize?: string | number; nrows?: string | number; ncols?: string | number },
+  r: {
+    xllcorner?: string | number
+    yllcorner?: string | number
+    cellsize?: string | number
+    nrows?: string | number
+    ncols?: string | number
+  },
   boundary: MultiPolygon,
   lat: number,
-  lon: number,
+  lon: number
 ): boolean[] | null {
-  const xll = Number(r.xllcorner), yll = Number(r.yllcorner), cs = Number(r.cellsize)
-  const nrows = Number(r.nrows), ncols = Number(r.ncols)
-  if (![xll, yll, cs, nrows, ncols].every(Number.isFinite) || !nrows || !ncols) return null
+  const xll = Number(r.xllcorner),
+    yll = Number(r.yllcorner),
+    cs = Number(r.cellsize)
+  const nrows = Number(r.nrows),
+    ncols = Number(r.ncols)
+  if (![xll, yll, cs, nrows, ncols].every(Number.isFinite) || !nrows || !ncols)
+    return null
   const mask: boolean[] = []
   let nearest = 0
   let best = Infinity
@@ -176,11 +200,17 @@ function pixelMask(
       const x = xll + (col + 0.5) * cs
       const y = yll + (nrows - row - 0.5) * cs
       const pLat = (y / MODIS_R) * (180 / Math.PI)
-      const pLon = (x / (MODIS_R * Math.cos((pLat * Math.PI) / 180))) * (180 / Math.PI)
+      const pLon =
+        (x / (MODIS_R * Math.cos((pLat * Math.PI) / 180))) * (180 / Math.PI)
       const i = row * ncols + col
       mask[i] = contains(boundary, pLon, pLat)
-      const d = (pLat - lat) ** 2 + ((pLon - lon) * Math.cos((lat * Math.PI) / 180)) ** 2
-      if (d < best) { best = d; nearest = i }
+      const d =
+        (pLat - lat) ** 2 +
+        ((pLon - lon) * Math.cos((lat * Math.PI) / 180)) ** 2
+      if (d < best) {
+        best = d
+        nearest = i
+      }
     }
   if (!mask.some(Boolean)) mask[nearest] = true
   return mask

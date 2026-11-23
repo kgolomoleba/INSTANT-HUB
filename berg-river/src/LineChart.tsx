@@ -1,7 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 
 export type ChartPoint = { x: number; y: number; date: string }
-export type ChartSeries = { key: string; label: string; color: string; points: ChartPoint[] }
+export type ChartSeries = {
+  key: string
+  label: string
+  color: string
+  points: ChartPoint[]
+}
 
 type Props = {
   title: string
@@ -20,14 +25,24 @@ function niceTicks(min: number, max: number, count = 4): number[] {
   const span = max - min || 1
   const raw = span / count
   const mag = 10 ** Math.floor(Math.log10(raw))
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? raw
+  const step =
+    [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? raw
   const out: number[] = []
   const top = Math.ceil(max / step - 1e-9) * step
-  for (let v = Math.ceil(min / step) * step; v <= top + 1e-9; v += step) out.push(+v.toFixed(6))
+  for (let v = Math.ceil(min / step) * step; v <= top + 1e-9; v += step)
+    out.push(+v.toFixed(6))
   return out
 }
 
-export default function LineChart({ title, series, xMax, format, yMin = 0, yMaxFloor = 0, markers }: Props) {
+export default function LineChart({
+  title,
+  series,
+  xMax,
+  format,
+  yMin = 0,
+  yMaxFloor = 0,
+  markers,
+}: Props) {
   const wrap = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(600)
   const [hoverX, setHoverX] = useState<number | null>(null)
@@ -35,7 +50,9 @@ export default function LineChart({ title, series, xMax, format, yMin = 0, yMaxF
   useEffect(() => {
     const el = wrap.current
     if (!el) return
-    const ro = new ResizeObserver(([e]) => setW(Math.max(280, e.contentRect.width)))
+    const ro = new ResizeObserver(([e]) =>
+      setW(Math.max(280, e.contentRect.width))
+    )
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
@@ -52,7 +69,8 @@ export default function LineChart({ title, series, xMax, format, yMin = 0, yMaxF
 
   const nearest = (s: ChartSeries, x: number) => {
     let best: ChartPoint | null = null
-    for (const p of s.points) if (!best || Math.abs(p.x - x) < Math.abs(best.x - x)) best = p
+    for (const p of s.points)
+      if (!best || Math.abs(p.x - x) < Math.abs(best.x - x)) best = p
     return best && Math.abs(best.x - x) <= (markers ? 12 : 1) ? best : null
   }
 
@@ -62,7 +80,8 @@ export default function LineChart({ title, series, xMax, format, yMin = 0, yMaxF
     setHoverX(Math.round(Math.min(xMax, Math.max(0, x))))
   }
 
-  const hovered = hoverX == null ? [] : series.map((s) => ({ s, p: nearest(s, hoverX) }))
+  const hovered =
+    hoverX == null ? [] : series.map((s) => ({ s, p: nearest(s, hoverX) }))
   const tipLeft = hoverX == null ? 0 : sx(hoverX)
 
   return (
@@ -82,29 +101,72 @@ export default function LineChart({ title, series, xMax, format, yMin = 0, yMaxF
         <svg width={w} height={H} role="img" aria-label={title}>
           {ticksY.map((t) => (
             <g key={t}>
-              <line className="grid" x1={M.left} x2={w - M.right} y1={sy(t)} y2={sy(t)} />
-              <text className="tick" x={M.left - 8} y={sy(t)} dy="0.32em" textAnchor="end">
+              <line
+                className="grid"
+                x1={M.left}
+                x2={w - M.right}
+                y1={sy(t)}
+                y2={sy(t)}
+              />
+              <text
+                className="tick"
+                x={M.left - 8}
+                y={sy(t)}
+                dy="0.32em"
+                textAnchor="end"
+              >
                 {format(t)}
               </text>
             </g>
           ))}
           {ticksX.map((t) => (
-            <text key={t} className="tick" x={sx(t)} y={H - 8} textAnchor="middle">
+            <text
+              key={t}
+              className="tick"
+              x={sx(t)}
+              y={H - 8}
+              textAnchor="middle"
+            >
               {t === 0 ? 'day 0' : t}
             </text>
           ))}
           {series.map((s) => {
-            const d = s.points.map((p, i) => `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`).join('')
+            const d = s.points
+              .map(
+                (p, i) =>
+                  `${i ? 'L' : 'M'}${sx(p.x).toFixed(1)},${sy(p.y).toFixed(1)}`
+              )
+              .join('')
             const last = s.points[s.points.length - 1]
             return (
               <g key={s.key}>
-                <path d={d} fill="none" stroke={s.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+                <path
+                  d={d}
+                  fill="none"
+                  stroke={s.color}
+                  strokeWidth={2}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                />
                 {markers &&
                   s.points.map((p) => (
-                    <circle key={p.x} cx={sx(p.x)} cy={sy(p.y)} r={4} fill={s.color} stroke="var(--surface)" strokeWidth={2} />
+                    <circle
+                      key={p.x}
+                      cx={sx(p.x)}
+                      cy={sy(p.y)}
+                      r={4}
+                      fill={s.color}
+                      stroke="var(--surface)"
+                      strokeWidth={2}
+                    />
                   ))}
                 {last && series.length <= 4 && (
-                  <text className="direct-label" x={Math.min(sx(last.x) + 6, w - M.right)} y={sy(last.y) - 8} textAnchor="end">
+                  <text
+                    className="direct-label"
+                    x={Math.min(sx(last.x) + 6, w - M.right)}
+                    y={sy(last.y) - 8}
+                    textAnchor="end"
+                  >
                     {s.label}
                   </text>
                 )}
@@ -113,10 +175,26 @@ export default function LineChart({ title, series, xMax, format, yMin = 0, yMaxF
           })}
           {hoverX != null && (
             <g pointerEvents="none">
-              <line className="crosshair" x1={tipLeft} x2={tipLeft} y1={M.top} y2={M.top + ih} />
+              <line
+                className="crosshair"
+                x1={tipLeft}
+                x2={tipLeft}
+                y1={M.top}
+                y2={M.top + ih}
+              />
               {hovered.map(
                 ({ s, p }) =>
-                  p && <circle key={s.key} cx={sx(p.x)} cy={sy(p.y)} r={5} fill={s.color} stroke="var(--surface)" strokeWidth={2} />,
+                  p && (
+                    <circle
+                      key={s.key}
+                      cx={sx(p.x)}
+                      cy={sy(p.y)}
+                      r={5}
+                      fill={s.color}
+                      stroke="var(--surface)"
+                      strokeWidth={2}
+                    />
+                  )
               )}
             </g>
           )}
@@ -131,7 +209,10 @@ export default function LineChart({ title, series, xMax, format, yMin = 0, yMaxF
           />
         </svg>
         {hoverX != null && (
-          <div className="tooltip" style={{ left: Math.min(Math.max(tipLeft, 90), w - 90) }}>
+          <div
+            className="tooltip"
+            style={{ left: Math.min(Math.max(tipLeft, 90), w - 90) }}
+          >
             <div className="tooltip-head">Day {hoverX}</div>
             {hovered.map(({ s, p }) => (
               <div key={s.key} className="tooltip-row">

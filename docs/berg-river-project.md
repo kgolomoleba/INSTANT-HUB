@@ -54,6 +54,13 @@ weather effects across different time periods.
   `DOA-Agric-Census/Census_2013_Crops`, `Census_2017_Crops`, `Census_2023_Crops`
   (MapServer). Next step: show each field's crop type.
 
+- **2026-11-24 — Users:** farmers, insurers/banks, government/co-ops, and the
+  owner. **Sample points removed**; only real farms the user adds.
+- **2026-11-24 — Accounts with Supabase** (email sign-in link). Table
+  `berg_farms`, owner-only row-level security
+  (`berg-river/supabase/migrations/`). Without Supabase settings the app keeps
+  farms in the browser. Not yet run against a real Supabase project.
+
 ## Verified against real services
 
 - **Open-Meteo**: real response checked, format matches; sends CORS `*`.

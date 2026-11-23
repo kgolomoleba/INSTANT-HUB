@@ -16,8 +16,9 @@ For a selected farm and two periods (A and B):
 - **Plain-language summary** of what changed between A and B.
 - **All farms table**: the same comparison across every farm at once.
 
-Click the map to add your own farm locations. They're saved in your browser.
-The built-in grey points are sample spots named after the nearest town, not real farms.
+Click the map to add farms. Signed out, they're saved in this browser.
+Signed in, they're saved to your account and show on every device; farms
+added before signing in are moved into the account.
 
 ## Farm boundaries
 
@@ -42,7 +43,24 @@ Two ways to add boundaries, both under **Farm boundaries** in the sidebar:
 - Weather: [Open-Meteo historical API](https://open-meteo.com/en/docs/historical-weather-api) (ERA5 reanalysis, daily).
 - Vegetation: [ORNL DAAC MODIS web service](https://modis.ornl.gov/data/modis_webservice.html), product MOD13Q1, band `250m_16_days_NDVI`.
 
-Data is fetched directly from the browser; there is no backend.
+Satellite, weather and boundary data are fetched directly from the browser.
+
+## Accounts (optional, Supabase)
+
+Without Supabase settings the app works fully, with farms kept in the browser.
+To turn on sign-in (email link) and online saving:
+
+1. In a Supabase project (Instant Hub's or a new one), run
+   `supabase/migrations/20261124000000_create_berg_farms.sql` (SQL editor, or
+   `supabase db push`). It creates the `berg_farms` table; row-level security
+   lets each user see and change only their own farms.
+2. In Supabase → Authentication → URL Configuration, add the app's address
+   (e.g. `http://localhost:5173`) to the redirect URLs.
+3. Create `berg-river/.env.local`:
+   ```
+   VITE_SUPABASE_URL=https://<project>.supabase.co
+   VITE_SUPABASE_ANON_KEY=<anon public key>
+   ```
 
 Green cover uses `((NDVI − 0.15) / 0.70)²` (scaled NDVI, Carlson & Ripley 1997).
 It's a rough, generic estimate: read it as a trend, not an exact percentage.

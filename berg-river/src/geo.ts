@@ -7,20 +7,35 @@ export function ringContains(ring: Ring, lon: number, lat: number): boolean {
   for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
     const [xi, yi] = ring[i]
     const [xj, yj] = ring[j]
-    if (yi > lat !== yj > lat && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) inside = !inside
+    if (
+      yi > lat !== yj > lat &&
+      lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi
+    )
+      inside = !inside
   }
   return inside
 }
 
 export function contains(mp: MultiPolygon, lon: number, lat: number): boolean {
-  return mp.some((poly) => ringContains(poly[0], lon, lat) && !poly.slice(1).some((h) => ringContains(h, lon, lat)))
+  return mp.some(
+    (poly) =>
+      ringContains(poly[0], lon, lat) &&
+      !poly.slice(1).some((h) => ringContains(h, lon, lat))
+  )
 }
 
 export function bbox(mp: MultiPolygon): [number, number, number, number] {
-  let w = Infinity, s = Infinity, e = -Infinity, n = -Infinity
-  for (const poly of mp) for (const [x, y] of poly[0]) {
-    w = Math.min(w, x); e = Math.max(e, x); s = Math.min(s, y); n = Math.max(n, y)
-  }
+  let w = Infinity,
+    s = Infinity,
+    e = -Infinity,
+    n = -Infinity
+  for (const poly of mp)
+    for (const [x, y] of poly[0]) {
+      w = Math.min(w, x)
+      e = Math.max(e, x)
+      s = Math.min(s, y)
+      n = Math.max(n, y)
+    }
   return [w, s, e, n]
 }
 
@@ -32,25 +47,32 @@ export function areaHa(mp: MultiPolygon): number {
     for (let i = 0; i < ring.length; i++) {
       const [x1, y1] = ring[i]
       const [x2, y2] = ring[(i + 1) % ring.length]
-      a += ((x2 - x1) * Math.PI) / 180 * (2 + Math.sin((y1 * Math.PI) / 180) + Math.sin((y2 * Math.PI) / 180))
+      a +=
+        (((x2 - x1) * Math.PI) / 180) *
+        (2 + Math.sin((y1 * Math.PI) / 180) + Math.sin((y2 * Math.PI) / 180))
     }
     return Math.abs((a * R * R) / 2)
   }
   let m2 = 0
-  for (const poly of mp) m2 += ringArea(poly[0]) - poly.slice(1).reduce((s, h) => s + ringArea(h), 0)
+  for (const poly of mp)
+    m2 += ringArea(poly[0]) - poly.slice(1).reduce((s, h) => s + ringArea(h), 0)
   return m2 / 10000
 }
 
 /** A point inside the farm: the area-weighted centroid if it falls inside, else the first vertex-ish interior point. */
 export function interiorPoint(mp: MultiPolygon): [number, number] {
-  let sx = 0, sy = 0, sa = 0
+  let sx = 0,
+    sy = 0,
+    sa = 0
   for (const poly of mp) {
     const r = poly[0]
     for (let i = 0; i < r.length; i++) {
       const [x1, y1] = r[i]
       const [x2, y2] = r[(i + 1) % r.length]
       const f = x1 * y2 - x2 * y1
-      sx += (x1 + x2) * f; sy += (y1 + y2) * f; sa += f
+      sx += (x1 + x2) * f
+      sy += (y1 + y2) * f
+      sa += f
     }
   }
   if (sa !== 0) {
@@ -68,7 +90,9 @@ export function interiorPoint(mp: MultiPolygon): [number, number] {
 }
 
 /** Convert GeoJSON Polygon / MultiPolygon geometry to MultiPolygon coords. */
-export function fromGeoJsonGeometry(g: { type: string; coordinates: unknown } | null | undefined): MultiPolygon | null {
+export function fromGeoJsonGeometry(
+  g: { type: string; coordinates: unknown } | null | undefined
+): MultiPolygon | null {
   if (!g) return null
   if (g.type === 'Polygon') return [g.coordinates as Ring[]]
   if (g.type === 'MultiPolygon') return g.coordinates as Ring[][]
