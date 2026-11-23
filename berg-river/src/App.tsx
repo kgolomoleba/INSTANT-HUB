@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import FarmMap from './FarmMap'
 import LineChart, { type ChartSeries } from './LineChart'
 import { fetchNdvi, fetchWeather, type DailyWeather, type NdviPoint } from './api'
-import { SAMPLE_FARMS, loadUserFarms, saveUserFarms, type Farm } from './farms'
+import { SAMPLE_FARMS, loadLayerUrl, loadUserFarms, saveLayerUrl, saveUserFarms, type Farm } from './farms'
+import { normaliseLayerUrl, queryArcgisAt, readBoundaryFile, type BoundaryFeature } from './boundaries'
+import { areaHa, interiorPoint } from './geo'
 import { computeStats, coverFromNdvi, dayIndex, describe, periodDays, type Period, type PeriodStats } from './stats'
 
 type FarmResult = {
@@ -34,14 +36,31 @@ function periodError(p: Period): string | null {
 }
 
 async function loadFarm(f: Farm, a: Period, b: Period, size: 0 | 1): Promise<FarmResult> {
+  const area = f.boundary ? ({ kind: 'boundary', boundary: f.boundary } as const) : ({ kind: 'square', km: size } as const)
   const [wa, wb, na, nb] = await Promise.all([
     fetchWeather(f.lat, f.lon, a.start, a.end),
     fetchWeather(f.lat, f.lon, b.start, b.end),
-    fetchNdvi(f.lat, f.lon, a.start, a.end, size),
-    fetchNdvi(f.lat, f.lon, b.start, b.end, size),
+    fetchNdvi(f.lat, f.lon, a.start, a.end, area),
+    fetchNdvi(f.lat, f.lon, b.start, b.end, area),
   ])
   return { weather: [wa, wb], ndvi: [na, nb], stats: [computeStats(wa, na), computeStats(wb, nb)] }
 }
+
+function farmFromFeature(f: BoundaryFeature, source: Farm['source'], i = 0): Farm {
+  const [lon, lat] = interiorPoint(f.boundary)
+  return {
+    id: `u${Date.now()}${i}`,
+    name: f.name,
+    lat,
+    lon,
+    sample: false,
+    boundary: f.boundary,
+    areaHa: areaHa(f.boundary),
+    source,
+  }
+}
+
+const fmtHa = (ha?: number) => (ha == null ? '' : ha >= 100 ? `${ha.toFixed(0)} ha` : `${ha.toFixed(1)} ha`)
 
 const fmt = (n: number, d = 0) => (Number.isFinite(n) ? n.toFixed(d) : '—')
 const signed = (n: number, d = 0) => (Number.isFinite(n) ? `${n > 0 ? '+' : ''}${n.toFixed(d)}` : '—')
@@ -59,11 +78,16 @@ export default function App() {
   const [showTable, setShowTable] = useState(false)
   const [all, setAll] = useState<{ farm: Farm; stats?: [PeriodStats, PeriodStats]; error?: string }[] | null>(null)
   const [allBusy, setAllBusy] = useState(false)
+  const [layerInput, setLayerInput] = useState(loadLayerUrl)
+  const layerUrl = normaliseLayerUrl(layerInput)
+  const [info, setInfo] = useState<{ text: string; error?: boolean } | null>(null)
+  const [picking, setPicking] = useState(false)
 
   const [pa, pb] = periods
   const invalid = periodError(pa) ?? periodError(pb)
 
   useEffect(() => saveUserFarms(userFarms), [userFarms])
+  useEffect(() => saveLayerUrl(layerInput), [layerInput])
 
   useEffect(() => {
     if (invalid) return
@@ -83,13 +107,55 @@ export default function App() {
     }
   }, [selected, pa, pb, size, invalid])
 
-  const addFarm = useCallback((lat: number, lon: number) => {
-    const name = window.prompt('Name this farm', `Farm ${lat.toFixed(3)}, ${lon.toFixed(3)}`)
-    if (!name) return
-    const f: Farm = { id: `u${Date.now()}`, name: name.trim(), lat, lon, sample: false }
-    setUserFarms((fs) => [f, ...fs])
-    setSelectedId(f.id)
+  const addFarms = useCallback((added: Farm[]) => {
+    if (!added.length) return
+    setUserFarms((fs) => [...added, ...fs])
+    setSelectedId(added[0].id)
   }, [])
+
+  const addFarm = useCallback(
+    async (lat: number, lon: number) => {
+      if (layerUrl) {
+        setPicking(true)
+        setInfo({ text: 'Looking up the farm boundary in Cape Farm Mapper…' })
+        try {
+          const found = await queryArcgisAt(layerUrl, lat, lon)
+          if (!found.length) {
+            setInfo({ text: 'No farm boundary at that spot in the Cape Farm Mapper layer. Click inside a farm.', error: true })
+            return
+          }
+          // Where boundaries overlap (farm and its portions), take the smallest: the portion clicked on.
+          const f = found.map((x) => farmFromFeature(x, 'Cape Farm Mapper')).sort((a, b) => (a.areaHa ?? 0) - (b.areaHa ?? 0))[0]
+          addFarms([f])
+          setInfo({ text: `Added ${f.name} (${fmtHa(f.areaHa)}) from Cape Farm Mapper.` })
+        } catch (e) {
+          setInfo({ text: `Couldn't load the boundary: ${e instanceof Error ? e.message : String(e)}`, error: true })
+        } finally {
+          setPicking(false)
+        }
+        return
+      }
+      const name = window.prompt('Name this farm', `Farm ${lat.toFixed(3)}, ${lon.toFixed(3)}`)
+      if (!name) return
+      addFarms([{ id: `u${Date.now()}`, name: name.trim(), lat, lon, sample: false, source: 'map point' }])
+    },
+    [layerUrl, addFarms],
+  )
+
+  const importFile = async (file: File | undefined) => {
+    if (!file) return
+    try {
+      const found = await readBoundaryFile(file)
+      if (!found.length) {
+        setInfo({ text: `No farm boundaries (polygons) found in ${file.name}.`, error: true })
+        return
+      }
+      addFarms(found.map((f, i) => farmFromFeature(f, 'file', i)))
+      setInfo({ text: `Imported ${found.length} farm boundar${found.length === 1 ? 'y' : 'ies'} from ${file.name}.` })
+    } catch (e) {
+      setInfo({ text: `Couldn't read ${file.name}: ${e instanceof Error ? e.message : String(e)}`, error: true })
+    }
+  }
 
   const removeFarm = (id: string) => {
     setUserFarms((fs) => fs.filter((f) => f.id !== id))
@@ -192,7 +258,7 @@ export default function App() {
           </fieldset>
         ))}
         <label className="size">
-          Area
+          Area for farms without a boundary
           <select value={size} onChange={(e) => setSize(Number(e.target.value) as 0 | 1)}>
             <option value={1}>~2 × 2 km around point</option>
             <option value={0}>Single 250 m pixel</option>
@@ -204,13 +270,19 @@ export default function App() {
       <div className="layout">
         <aside className="side">
           <FarmMap farms={farms} selectedId={selected.id} onSelect={setSelectedId} onAdd={addFarm} />
-          <p className="hint">Click the map to add your own farm. Grey points are sample spots named after the nearest town.</p>
+          <p className="hint">
+            {layerUrl
+              ? 'Click inside a farm on the map to load its boundary from Cape Farm Mapper.'
+              : 'Click the map to add a farm as a point, or connect Cape Farm Mapper below to load real boundaries.'}{' '}
+            Grey points are sample spots named after the nearest town.
+          </p>
+          {info && <p className={`notice small ${info.error ? 'error' : ''}`}>{info.text}</p>}
           <ul className="farm-list">
             {farms.map((f) => (
               <li key={f.id} className={f.id === selected.id ? 'active' : ''}>
                 <button type="button" onClick={() => setSelectedId(f.id)}>
                   <span>{f.name}</span>
-                  <small>{f.sample ? 'sample' : 'your farm'}</small>
+                  <small>{f.sample ? 'sample' : f.boundary ? fmtHa(f.areaHa) : 'point'}</small>
                 </button>
                 {!f.sample && (
                   <button type="button" className="remove" onClick={() => removeFarm(f.id)} aria-label={`Remove ${f.name}`}>
@@ -220,11 +292,50 @@ export default function App() {
               </li>
             ))}
           </ul>
+
+          <details className="boundaries" open={!layerUrl}>
+            <summary>Farm boundaries</summary>
+            <label className="stack">
+              Cape Farm Mapper layer address
+              <input
+                type="url"
+                placeholder="https://…/MapServer/0"
+                value={layerInput}
+                onChange={(e) => setLayerInput(e.target.value)}
+                disabled={picking}
+              />
+            </label>
+            {layerInput && !layerUrl && (
+              <p className="notice small error">That doesn't look like an ArcGIS layer address. It should end in /MapServer/ or /FeatureServer/ followed by a number.</p>
+            )}
+            {layerUrl && <p className="hint">Connected. Click inside a farm on the map.</p>}
+            <details className="how">
+              <summary>How to find this address</summary>
+              <ol>
+                <li>Open Cape Farm Mapper and switch on the farm portions layer (under Surveyor-General).</li>
+                <li>Open your browser's developer tools (F12) and go to the Network tab.</li>
+                <li>Click a farm on the Cape Farm Mapper map.</li>
+                <li>
+                  Find a request containing <code>MapServer</code> or <code>FeatureServer</code> followed by a number, and copy
+                  it. Paste it here; anything after the layer number is removed automatically.
+                </li>
+              </ol>
+            </details>
+            <label className="file">
+              Or import boundaries from a file (KML or GeoJSON)
+              <input type="file" accept=".kml,.geojson,.json" onChange={(e) => { void importFile(e.target.files?.[0]); e.target.value = '' }} />
+            </label>
+          </details>
         </aside>
 
         <main className="main">
           <h2>
-            {selected.name} <small>{selected.lat.toFixed(3)}, {selected.lon.toFixed(3)}</small>
+            {selected.name}{' '}
+            <small>
+              {selected.boundary
+                ? `${fmtHa(selected.areaHa)} · boundary from ${selected.source === 'file' ? 'imported file' : 'Cape Farm Mapper'} · satellite pixels inside the boundary only`
+                : `${selected.lat.toFixed(3)}, ${selected.lon.toFixed(3)} · ${size ? '~2 × 2 km square' : 'single 250 m pixel'} around the point`}
+            </small>
           </h2>
           {loading && <p className="notice">Loading satellite and weather data…</p>}
           {error && (

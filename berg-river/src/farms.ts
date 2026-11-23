@@ -1,3 +1,5 @@
+import type { MultiPolygon } from './geo'
+
 export type Farm = {
   id: string
   name: string
@@ -5,6 +7,10 @@ export type Farm = {
   lon: number
   /** true for the built-in sample points, false for farms the user added */
   sample: boolean
+  /** Farm boundary, [lon, lat] coordinates, from Cape Farm Mapper or an imported file. */
+  boundary?: MultiPolygon
+  areaHa?: number
+  source?: 'map point' | 'Cape Farm Mapper' | 'file'
 }
 
 /**
@@ -60,5 +66,21 @@ export function saveUserFarms(farms: Farm[]) {
     localStorage.setItem(STORE_KEY, JSON.stringify(farms))
   } catch {
     /* storage unavailable: farms stay for this visit only */
+  }
+}
+
+const LAYER_KEY = 'berg-river:cfm-layer'
+export function loadLayerUrl(): string {
+  try {
+    return localStorage.getItem(LAYER_KEY) ?? ''
+  } catch {
+    return ''
+  }
+}
+export function saveLayerUrl(url: string) {
+  try {
+    localStorage.setItem(LAYER_KEY, url)
+  } catch {
+    /* ignore */
   }
 }

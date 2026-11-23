@@ -42,3 +42,9 @@ weather effects across different time periods.
 - **2026-11-23 — First version built** (`berg-river/`): NASA MODIS NDVI via ORNL
   for vegetation, Open-Meteo ERA5 for weather, compare period A vs B per farm and
   across all farms. No backend. See `berg-river/README.md`.
+- **2026-11-23 — Farm boundaries from Cape Farm Mapper.** The app takes a pasted
+  ArcGIS layer address and looks up the farm boundary at a clicked spot; green
+  cover is then measured only inside the boundary. KML / GeoJSON import is the
+  backup. Not yet tested against the real Cape Farm Mapper server (unreachable
+  from the build session): the layer address is still needed, and it's unknown
+  whether that server allows browser requests from other sites.

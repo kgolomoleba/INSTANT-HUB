@@ -43,6 +43,19 @@ export default function FarmMap({ farms, selectedId, onSelect, onAdd }: Props) {
     g.clearLayers()
     for (const f of farms) {
       const sel = f.id === selectedId
+      if (f.boundary) {
+        L.polygon(
+          f.boundary.map((poly) => poly.map((ring) => ring.map(([x, y]) => [y, x] as [number, number]))),
+          { color: sel ? '#eb6834' : '#008300', weight: sel ? 3 : 2, fillOpacity: sel ? 0.25 : 0.12 },
+        )
+          .bindTooltip(f.name)
+          .on('click', (e) => {
+            L.DomEvent.stopPropagation(e)
+            onSelect(f.id)
+          })
+          .addTo(g)
+        continue
+      }
       L.circleMarker([f.lat, f.lon], {
         radius: sel ? 10 : 7,
         color: '#ffffff',
@@ -58,6 +71,15 @@ export default function FarmMap({ farms, selectedId, onSelect, onAdd }: Props) {
         .addTo(g)
     }
   }, [farms, selectedId, onSelect])
+
+  // Zoom to the selected farm's boundary.
+  const selected = farms.find((f) => f.id === selectedId)
+  useEffect(() => {
+    const m = map.current
+    if (!m || !selected?.boundary) return
+    const pts = selected.boundary.flatMap((poly) => poly[0].map(([x, y]) => [y, x] as [number, number]))
+    m.fitBounds(L.latLngBounds(pts).pad(0.4), { maxZoom: 15 })
+  }, [selected?.id, selected?.boundary])
 
   return <div className="map" ref={el} aria-label="Map of farms along the Berg River" />
 }

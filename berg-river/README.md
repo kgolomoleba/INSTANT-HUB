@@ -19,6 +19,27 @@ For a selected farm and two periods (A and B):
 Click the map to add your own farm locations. They're saved in your browser.
 The built-in grey points are sample spots named after the nearest town, not real farms.
 
+## Farm boundaries
+
+Farms can have a real boundary instead of a point. Green cover is then measured
+only from the 250 m satellite pixels whose centres fall inside the boundary
+(the nearest pixel is used for farms smaller than one pixel).
+
+Two ways to add boundaries, both under **Farm boundaries** in the sidebar:
+
+1. **Cape Farm Mapper layer.** Paste the address of the farm portions layer
+   (an ArcGIS address ending in `/MapServer/<number>` or `/FeatureServer/<number>`),
+   then click inside a farm on the map. The app asks the layer which farm
+   contains that spot and adds it with its name and area. Where a farm and its
+   portions overlap, it picks the smallest one (the portion you clicked).
+   To find the address: open Cape Farm Mapper, switch on the farm portions
+   layer, open developer tools (F12) → Network, click a farm, and copy a
+   request containing `MapServer/<number>`.
+   This only works if the Cape Farm Mapper server allows browser requests from
+   other websites; if it doesn't, the app says so and you can use a file instead.
+2. **Import a file**: KML (e.g. from Google Earth or a Cape Farm Mapper export)
+   or GeoJSON. Every polygon becomes a farm.
+
 ## Data sources (free, no API key)
 
 - Weather: [Open-Meteo historical API](https://open-meteo.com/en/docs/historical-weather-api) (ERA5 reanalysis, daily).
