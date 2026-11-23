@@ -25,6 +25,13 @@ weather effects across different time periods.
   near towns plus farms users add on the map).
 - Which time ranges matter most (default is the May–October winter grain season).
 - Whether to move the app into its own repository.
+- **Cape Farm Mapper** (https://gis.elsenburg.com/apps/cfm/, Western Cape Dept. of
+  Agriculture): candidate source for real farm portions (Surveyor-General layer)
+  and crop types (Agriculture Census 2013 / 2017 / 2023 layers). Still to confirm:
+  its ArcGIS REST service URLs and layer IDs, whether browsers can call them
+  directly, and the terms for reusing the data. A related national service is
+  https://ndagis.nda.agric.za/arcgis/rest/services/Western_Cape/MapServer
+  (Agric. Census 2018, cultivated fields).
 
 ## Decisions log
 
