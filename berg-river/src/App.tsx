@@ -829,8 +829,8 @@ export default function App() {
               (MOD13Q1, 250 m, one reading per 16 days) using ((NDVI − 0.15) /
               0.70)², a common rough rule, so read it as a trend rather than an
               exact figure. Weather is daily ERA5 reanalysis from Open-Meteo
-              (about 9 km grid). Both are free public sources; no data is stored
-              on a server.
+              (about 9 km grid). Both are free public sources. Your farm list is
+              kept in this browser, or in your account when you sign in.
             </p>
           </footer>
         </main>
