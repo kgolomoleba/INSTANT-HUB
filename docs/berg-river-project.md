@@ -20,14 +20,18 @@ weather effects across different time periods.
 
 ## Open questions
 
-- What "coverage" means here: crop/vegetation cover (e.g. from satellite
-  imagery), insurance coverage, irrigation/water coverage, or several of these.
-- Data sources: satellite imagery (Sentinel-2 / Landsat NDVI), weather data
-  (SAWS, Open-Meteo, ERA5), farm boundaries.
 - Users: farmers, insurers, co-ops, government or researchers.
-- Whether it lives inside Instant Hub or is a separate app.
-- Which farms or areas to start with, and which time ranges matter.
+- Real farm locations and boundaries (the app currently has sample points
+  near towns plus farms users add on the map).
+- Which time ranges matter most (default is the May–October winter grain season).
+- Whether to move the app into its own repository.
 
 ## Decisions log
 
-_None yet._
+- **2026-11-23 — "Coverage" means crop/vegetation cover**, measured from
+  satellite imagery.
+- **2026-11-23 — Separate app**, not part of Instant Hub. Lives in `berg-river/`
+  for now.
+- **2026-11-23 — First version built** (`berg-river/`): NASA MODIS NDVI via ORNL
+  for vegetation, Open-Meteo ERA5 for weather, compare period A vs B per farm and
+  across all farms. No backend. See `berg-river/README.md`.
