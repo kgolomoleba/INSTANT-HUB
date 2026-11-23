@@ -41,7 +41,7 @@ export default function Register() {
     // track that user saw the registration page
     try {
       trackEvent('signup_start')
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [])
@@ -121,7 +121,7 @@ export default function Register() {
         try {
           // best-effort analytics event
           trackEvent('signup_complete', { user_id: user.id, username: trimmedUsername })
-        } catch (e) {
+        } catch {
           // ignore analytics errors
         }
 

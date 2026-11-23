@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import VerifiedBadge from './VerifiedBadge'
 import type { VerificationStatus } from './VerifiedBadge'
 import './FeedPost.css'
+import { errorMessage } from '../utils/errors'
 
 export interface FeedPostProps {
   id: string
@@ -89,8 +90,8 @@ const FeedPost: React.FC<FeedPostProps> = ({
       setActionStatus({ success: true })
       setMessageText('')
       setTimeout(() => setIsInquiring(false), 2000)
-    } catch (err: any) {
-      setActionStatus({ error: err.message || 'Failed to dispatch your request link.' })
+    } catch (err) {
+      setActionStatus({ error: errorMessage(err, 'Failed to dispatch your request link.') })
     }
   }
 

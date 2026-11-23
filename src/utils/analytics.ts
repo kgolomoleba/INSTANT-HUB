@@ -7,7 +7,7 @@ import { supabase } from '../supabaseClient'
 
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void
+    gtag?: (...args: unknown[]) => void
   }
 }
 
@@ -18,7 +18,7 @@ export function initAnalytics() {
   // Optionally you could read process.env for a GA id and inject script here.
 }
 
-export async function trackEvent(eventName: string, params: Record<string, any> = {}) {
+export async function trackEvent(eventName: string, params: Record<string, unknown> = {}) {
   try {
     // Send to GA4 via gtag if available
     if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
@@ -26,7 +26,6 @@ export async function trackEvent(eventName: string, params: Record<string, any> 
         window.gtag('event', eventName, params)
       } catch (e) {
         // ignore GA errors
-        // eslint-disable-next-line no-console
         console.debug('gtag error', e)
       }
     }
@@ -43,22 +42,20 @@ export async function trackEvent(eventName: string, params: Record<string, any> 
     ])
   } catch (e) {
     // ignore to avoid breaking UI flows
-    // eslint-disable-next-line no-console
     console.debug('analytics trackEvent failed', e)
   }
 }
 
-export function trackPageView(path: string, params: Record<string, any> = {}) {
+export function trackPageView(path: string, params: Record<string, unknown> = {}) {
   trackEvent('page_view', { path, ...params })
 }
 
-export function setUserProperties(userId: string, props: Record<string, any> = {}) {
+export function setUserProperties(userId: string, props: Record<string, unknown> = {}) {
   try {
     if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
       window.gtag('set', { user_id: userId, ...props })
     }
   } catch (e) {
-    // eslint-disable-next-line no-console
     console.debug('setUserProperties failed', e)
   }
 }

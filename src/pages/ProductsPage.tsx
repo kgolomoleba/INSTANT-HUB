@@ -4,6 +4,7 @@ import { trackEvent } from '../utils/analytics'
 import ProductCard from '../components/ProductCard'
 import { CreateListingModal } from '../components/CreateListingModal'
 import './ProductsPage.css'
+import { errorMessage } from '../utils/errors'
 
 interface ProfileData {
   username: string
@@ -47,8 +48,8 @@ const ProductsPage: React.FC = () => {
         .order('created_at', { ascending: false })
       if (error) throw error
       setProducts(data || [])
-    } catch (err: any) {
-      setError(err.message || 'Failed to load products.')
+    } catch (err) {
+      setError(errorMessage(err, 'Failed to load products.'))
     } finally {
       setLoading(false)
     }

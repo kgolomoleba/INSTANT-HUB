@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'
 import { trackEvent } from '../utils/analytics'
 import OnboardingPanel from '../components/OnboardingPanel'
 import './Dashboard.css'
+import { errorMessage } from '../utils/errors'
 
 interface Stats {
   products: number
@@ -181,8 +182,8 @@ export default function Dashboard() {
           // ignore analytics failures
         }
       }
-    } catch (err: any) {
-      setError(err.message || 'Failed to load dashboard.')
+    } catch (err) {
+      setError(errorMessage(err, 'Failed to load dashboard.'))
     } finally {
       setLoading(false)
       setTimeout(() => mainRef.current?.focus(), 100)

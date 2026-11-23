@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import './Login.css'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { errorMessage } from '../utils/errors'
 
 const validateEmail = (email: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -17,8 +18,13 @@ export default function Login() {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const fromPath = (location.state as any)?.from || '/dashboard'
-  const successMessage = (location.state as any)?.message || null
+  const navState = (location.state ?? {}) as { from?: unknown; message?: unknown }
+  // Only follow in-app paths, never a full URL.
+  const fromPath =
+    typeof navState.from === 'string' && navState.from.startsWith('/') && !navState.from.startsWith('//')
+      ? navState.from
+      : '/dashboard'
+  const successMessage = typeof navState.message === 'string' ? navState.message : null
 
   const errorRef = useRef<HTMLDivElement>(null)
   const emailRef = useRef<HTMLInputElement>(null)
@@ -67,8 +73,8 @@ export default function Login() {
     try {
       await login(trimmedEmail, trimmedPassword)
       navigate(fromPath, { replace: true })
-    } catch (loginError: any) {
-      const message = loginError?.message || 'Something went wrong. Please try again.'
+    } catch (loginError) {
+      const message = errorMessage(loginError, 'Something went wrong. Please try again.')
 
       if (message.toLowerCase().includes('email not confirmed')) {
         setError('Please verify your email before logging in. Check your inbox for the confirmation link.')

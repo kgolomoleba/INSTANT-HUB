@@ -1,15 +1,18 @@
 // eslint.config.js
 import js from "@eslint/js"
 import globals from "globals"
+import tseslint from "typescript-eslint"
 import reactHooks from "eslint-plugin-react-hooks"
 import reactRefresh from "eslint-plugin-react-refresh"
 import prettier from "eslint-config-prettier"
 
-export default [
-  js.configs.recommended,
+export default tseslint.config(
   {
-    ignores: ["dist"], // ignore build output
+    // build output, and Berg River (a separate app with its own setup)
+    ignores: ["dist", "berg-river", "supabase/functions"],
   },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
   {
     files: ["**/*.{js,jsx,ts,tsx}"],
     languageOptions: {
@@ -27,5 +30,5 @@ export default [
       ],
     },
   },
-  prettier, // 👈 disables ESLint rules that conflict with Prettier
-]
+  prettier, // disables ESLint rules that conflict with Prettier
+)

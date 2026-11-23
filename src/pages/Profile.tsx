@@ -3,6 +3,7 @@ import type { User } from '@supabase/auth-js'
 import { supabase } from '../supabaseClient'
 import { trackEvent } from '../utils/analytics'
 import './Profile.css'
+import { errorMessage } from '../utils/errors'
 
 const ROLES = [
   { value: 'buyer', label: 'Buyer', desc: 'Buy products and services' },
@@ -123,8 +124,8 @@ export default function Profile() {
           : 0
 
         setResponseStats({ handled: handled.length, avgHours })
-      } catch (err: any) {
-        setError(err.message || 'Failed to load profile')
+      } catch (err) {
+        setError(errorMessage(err, 'Failed to load profile'))
       } finally {
         setLoading(false)
       }
@@ -155,8 +156,8 @@ export default function Profile() {
       if (error) throw error
       setMessage('Profile saved!')
       setTimeout(() => setMessage(null), 3000)
-    } catch (err: any) {
-      setError(err.message || 'Failed to save profile')
+    } catch (err) {
+      setError(errorMessage(err, 'Failed to save profile'))
     } finally {
       setSaving(false)
     }
@@ -195,9 +196,9 @@ export default function Profile() {
       setVerificationApprovedAt(null)
       setMessage('Verification request submitted. An admin can mark your status as verified in Supabase when the proof is approved.')
       void trackEvent('verification_request', { user_id: user.id })
-    } catch (err: any) {
+    } catch (err) {
       console.error('Verification submit failed', err)
-      setError(err?.message || 'Failed to submit verification request')
+      setError(errorMessage(err, 'Failed to submit verification request'))
     } finally {
       setSubmittingVerification(false)
     }

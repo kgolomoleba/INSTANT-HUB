@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import FeedPost from '../components/FeedPost'
 import './FeedPage.css'
+import { errorMessage } from '../utils/errors'
 
 interface Post {
   id: string
@@ -65,8 +66,8 @@ const FeedPage: React.FC = () => {
         .order('created_at', { ascending: false })
       if (error) throw error
       setPosts(data || [])
-    } catch (err: any) {
-      setError(err.message || 'Failed to load posts.')
+    } catch (err) {
+      setError(errorMessage(err, 'Failed to load posts.'))
     } finally {
       if (!silent) setLoading(false)
     }
@@ -128,8 +129,8 @@ const FeedPage: React.FC = () => {
       setForm({ type: 'general', title: '', description: '', image_url: '', price: '' })
       setShowForm(false)
       await fetchPosts()
-    } catch (err: any) {
-      setError(err.message || 'Failed to create post.')
+    } catch (err) {
+      setError(errorMessage(err, 'Failed to create post.'))
     } finally {
       setSubmitting(false)
     }
@@ -141,8 +142,8 @@ const FeedPage: React.FC = () => {
       const { error } = await supabase.from('posts').delete().eq('id', id)
       if (error) throw error
       await fetchPosts()
-    } catch (err: any) {
-      setError(err.message || 'Could not delete post selection.')
+    } catch (err) {
+      setError(errorMessage(err, 'Could not delete post selection.'))
     }
   }
 

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { trackEvent } from '../utils/analytics'
 import './Contactmodal.css'
+import { errorMessage } from '../utils/errors'
 
 interface ContactModalProps {
   recipientId: string
@@ -64,8 +65,8 @@ export default function ContactModal({
       })
       
       setSent(true)
-    } catch (err: any) {
-      setError(err.message || 'Failed to send message.')
+    } catch (err) {
+      setError(errorMessage(err, 'Failed to send message.'))
     } finally {
       setSending(false)
     }

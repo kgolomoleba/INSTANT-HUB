@@ -15,15 +15,28 @@ const AdminRoute = () => {
       return
     }
 
+    let live = true
+    setCheckingRole(true)
     supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
-      .then(({ data }) => {
-        setIsAdmin(data?.role === 'admin')
-        setCheckingRole(false)
-      })
+      .then(
+        ({ data }) => {
+          if (!live) return
+          setIsAdmin(data?.role === 'admin')
+          setCheckingRole(false)
+        },
+        () => {
+          if (!live) return
+          setIsAdmin(false)
+          setCheckingRole(false)
+        },
+      )
+    return () => {
+      live = false
+    }
   }, [isAuthenticated, user])
 
   if (loading || checkingRole) {
