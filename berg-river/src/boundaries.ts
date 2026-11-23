@@ -23,11 +23,66 @@ export function nameFrom(attrs: Record<string, unknown>, fallback: string): stri
   return fallback
 }
 
-/** Clean a pasted ArcGIS layer URL down to ".../MapServer/<id>" or ".../FeatureServer/<id>". */
+/**
+ * Cape Farm Mapper's own Surveyor-General service and the layers it checks when
+ * you click the map (farm portions, erven and other land parcels).
+ * Source: gis.elsenburg.com/apps/cfm/src/cfm-identify.js
+ */
+export const CFM_SG_SERVICE = 'https://gis.westerncape.gov.za/server3/rest/services/DOA-SG/WC_All_Layers/MapServer'
+export const CFM_SG_LAYERS = [7, 8, 9, 10, 11, 3, 4, 6]
+
+/**
+ * Clean a pasted ArcGIS address down to ".../MapServer/<id>" (one layer) or
+ * ".../MapServer" (whole service, searched with identify).
+ */
 export function normaliseLayerUrl(raw: string): string | null {
   const s = raw.trim()
-  const m = s.match(/^(https?:\/\/[^?#]+?\/(?:MapServer|FeatureServer)\/\d+)/i)
+  const m = s.match(/^(https?:\/\/[^?#]+?\/(?:MapServer|FeatureServer)(?:\/\d+)?)(?=[/?#]|$)/i)
   return m ? m[1] : null
+}
+
+/** Look up boundaries at a point: identify for a whole MapServer, query for one layer. */
+export function boundariesAt(url: string, lat: number, lon: number): Promise<BoundaryFeature[]> {
+  return /\/\d+$/.test(url) ? queryArcgisAt(url, lat, lon) : identifyArcgisAt(url, lat, lon)
+}
+
+const unreachable =
+  'the browser could not reach the Cape Farm Mapper service (it may be down, or not allow requests from other websites). Try importing a KML or GeoJSON file instead.'
+
+export async function identifyArcgisAt(serviceUrl: string, lat: number, lon: number): Promise<BoundaryFeature[]> {
+  const d = 0.01
+  const layers = serviceUrl === CFM_SG_SERVICE ? `all:${CFM_SG_LAYERS.join(',')}` : 'all'
+  const q = new URLSearchParams({
+    geometry: `${lon},${lat}`,
+    geometryType: 'esriGeometryPoint',
+    sr: '4326',
+    layers,
+    tolerance: '1',
+    mapExtent: `${lon - d},${lat - d},${lon + d},${lat + d}`,
+    imageDisplay: '400,400,96',
+    returnGeometry: 'true',
+    f: 'json',
+  })
+  let res: Response
+  try {
+    res = await fetch(`${serviceUrl}/identify?${q}`)
+  } catch {
+    throw new Error(unreachable)
+  }
+  if (!res.ok) throw new Error(`the service answered ${res.status}`)
+  type Resp = {
+    error?: { message?: string }
+    results?: { layerName?: string; value?: string; attributes?: Record<string, unknown>; geometry?: { rings?: Ring[] } }[]
+  }
+  const body = (await res.json()) as Resp
+  if (body.error) throw new Error(body.error.message || 'the service returned an error')
+  return (body.results ?? [])
+    .filter((r) => r.geometry?.rings?.length)
+    .map((r) => {
+      const attributes = r.attributes ?? {}
+      const fallback = [r.layerName, r.value].filter(Boolean).join(' ') || `Farm ${lat.toFixed(3)}, ${lon.toFixed(3)}`
+      return { name: nameFrom(attributes, fallback), boundary: fromEsriRings(r.geometry!.rings!), attributes }
+    })
 }
 
 /** Find the boundary polygon(s) in an ArcGIS layer that contain a point. */
@@ -47,9 +102,7 @@ export async function queryArcgisAt(layerUrl: string, lat: number, lon: number):
     // Esri JSON is supported by every ArcGIS Server version; GeoJSON only by newer ones.
     res = await fetch(`${layerUrl}/query?${base}&f=json`)
   } catch {
-    throw new Error(
-      'the browser could not reach the Cape Farm Mapper layer (the server may not allow requests from other websites). Try importing a KML or GeoJSON file instead.',
-    )
+    throw new Error(unreachable)
   }
   if (!res.ok) throw new Error(`the layer answered ${res.status}`)
   type EsriResp = {

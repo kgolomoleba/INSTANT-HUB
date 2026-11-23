@@ -3,7 +3,7 @@ import FarmMap from './FarmMap'
 import LineChart, { type ChartSeries } from './LineChart'
 import { fetchNdvi, fetchWeather, type DailyWeather, type NdviPoint } from './api'
 import { SAMPLE_FARMS, loadLayerUrl, loadUserFarms, saveLayerUrl, saveUserFarms, type Farm } from './farms'
-import { normaliseLayerUrl, queryArcgisAt, readBoundaryFile, type BoundaryFeature } from './boundaries'
+import { CFM_SG_SERVICE, boundariesAt, normaliseLayerUrl, readBoundaryFile, type BoundaryFeature } from './boundaries'
 import { areaHa, interiorPoint } from './geo'
 import { computeStats, coverFromNdvi, dayIndex, describe, periodDays, type Period, type PeriodStats } from './stats'
 
@@ -119,7 +119,7 @@ export default function App() {
         setPicking(true)
         setInfo({ text: 'Looking up the farm boundary in Cape Farm Mapper…' })
         try {
-          const found = await queryArcgisAt(layerUrl, lat, lon)
+          const found = await boundariesAt(layerUrl, lat, lon)
           if (!found.length) {
             setInfo({ text: 'No farm boundary at that spot in the Cape Farm Mapper layer. Click inside a farm.', error: true })
             return
@@ -293,26 +293,36 @@ export default function App() {
             ))}
           </ul>
 
-          <details className="boundaries" open={!layerUrl}>
+          <details className="boundaries">
             <summary>Farm boundaries</summary>
             <label className="stack">
-              Cape Farm Mapper layer address
+              Cape Farm Mapper service
               <input
                 type="url"
-                placeholder="https://…/MapServer/0"
+                placeholder={CFM_SG_SERVICE}
                 value={layerInput}
                 onChange={(e) => setLayerInput(e.target.value)}
                 disabled={picking}
               />
             </label>
             {layerInput && !layerUrl && (
-              <p className="notice small error">That doesn't look like an ArcGIS layer address. It should end in /MapServer/ or /FeatureServer/ followed by a number.</p>
+              <p className="notice small error">That doesn't look like an ArcGIS layer address. It should end in /MapServer or /FeatureServer, optionally followed by a layer number.</p>
             )}
-            {layerUrl && <p className="hint">Connected. Click inside a farm on the map.</p>}
+            {layerUrl && (
+              <p className="hint">
+                {layerUrl === CFM_SG_SERVICE ? "Using Cape Farm Mapper's Surveyor-General farm portions." : 'Using a custom layer.'} Click inside a farm
+                on the map.{' '}
+                {layerUrl !== CFM_SG_SERVICE && (
+                  <button type="button" className="link" onClick={() => setLayerInput(CFM_SG_SERVICE)}>
+                    Reset to Cape Farm Mapper
+                  </button>
+                )}
+              </p>
+            )}
             <details className="how">
-              <summary>How to find this address</summary>
+              <summary>Using a different layer</summary>
               <ol>
-                <li>Open Cape Farm Mapper and switch on the farm portions layer (under Surveyor-General).</li>
+                <li>Open Cape Farm Mapper and switch on the layer you want.</li>
                 <li>Open your browser's developer tools (F12) and go to the Network tab.</li>
                 <li>Click a farm on the Cape Farm Mapper map.</li>
                 <li>

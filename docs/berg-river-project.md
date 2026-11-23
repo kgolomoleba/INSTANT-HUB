@@ -45,6 +45,23 @@ weather effects across different time periods.
 - **2026-11-23 — Farm boundaries from Cape Farm Mapper.** The app takes a pasted
   ArcGIS layer address and looks up the farm boundary at a clicked spot; green
   cover is then measured only inside the boundary. KML / GeoJSON import is the
-  backup. Not yet tested against the real Cape Farm Mapper server (unreachable
-  from the build session): the layer address is still needed, and it's unknown
-  whether that server allows browser requests from other sites.
+  backup.
+- **2026-11-23 — Real CFM service found** (from CFM's own code,
+  `cfm-identify.js`): Surveyor-General parcels at
+  `https://gis.westerncape.gov.za/server3/rest/services/DOA-SG/WC_All_Layers/MapServer`,
+  layers 7, 8, 9, 10, 11, 3, 4, 6, queried with `identify`. Now the app's default.
+  Crop census services on the same server:
+  `DOA-Agric-Census/Census_2013_Crops`, `Census_2017_Crops`, `Census_2023_Crops`
+  (MapServer). Next step: show each field's crop type.
+
+## Verified against real services
+
+- **Open-Meteo**: real response checked, format matches; sends CORS `*`.
+- **gis.elsenburg.com**: sends CORS `*`.
+- **gis.westerncape.gov.za** (boundaries, crop census): not yet reached; the
+  build environment needs this host allowed (approve from a computer, the phone
+  app can't approve environment changes).
+- **modis.ornl.gov** (NDVI): not yet reached from the build environment (its
+  certificate chains to the emSign root, which the build machine's network
+  gateway doesn't accept). Browsers trust it; whether it sends CORS headers is
+  still unconfirmed.

@@ -1,4 +1,5 @@
 import type { MultiPolygon } from './geo'
+import { CFM_SG_SERVICE } from './boundaries'
 
 export type Farm = {
   id: string
@@ -72,9 +73,9 @@ export function saveUserFarms(farms: Farm[]) {
 const LAYER_KEY = 'berg-river:cfm-layer'
 export function loadLayerUrl(): string {
   try {
-    return localStorage.getItem(LAYER_KEY) ?? ''
+    return localStorage.getItem(LAYER_KEY) ?? CFM_SG_SERVICE
   } catch {
-    return ''
+    return CFM_SG_SERVICE
   }
 }
 export function saveLayerUrl(url: string) {

@@ -27,16 +27,13 @@ only from the 250 m satellite pixels whose centres fall inside the boundary
 
 Two ways to add boundaries, both under **Farm boundaries** in the sidebar:
 
-1. **Cape Farm Mapper layer.** Paste the address of the farm portions layer
-   (an ArcGIS address ending in `/MapServer/<number>` or `/FeatureServer/<number>`),
-   then click inside a farm on the map. The app asks the layer which farm
-   contains that spot and adds it with its name and area. Where a farm and its
-   portions overlap, it picks the smallest one (the portion you clicked).
-   To find the address: open Cape Farm Mapper, switch on the farm portions
-   layer, open developer tools (F12) → Network, click a farm, and copy a
-   request containing `MapServer/<number>`.
-   This only works if the Cape Farm Mapper server allows browser requests from
-   other websites; if it doesn't, the app says so and you can use a file instead.
+1. **Cape Farm Mapper (default, no setup).** Click inside a farm on the map.
+   The app asks Cape Farm Mapper's own Surveyor-General service
+   (`gis.westerncape.gov.za/server3/rest/services/DOA-SG/WC_All_Layers/MapServer`,
+   the same layers CFM checks when you click its map) which parcel contains that
+   spot and adds it with its name and area. Where a farm and its portions
+   overlap, it picks the smallest one (the portion you clicked). A different
+   ArcGIS service or layer can be pasted in instead.
 2. **Import a file**: KML (e.g. from Google Earth or a Cape Farm Mapper export)
    or GeoJSON. Every polygon becomes a farm.
 
