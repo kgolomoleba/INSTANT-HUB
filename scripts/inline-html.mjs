@@ -9,9 +9,11 @@ let html = readFileSync(join(dir, 'index.html'), 'utf8')
 const read = (p) => readFileSync(join(dir, p.replace(/^\.?\//, '')), 'utf8')
 
 // Stylesheets first, then scripts (moved to the end of <body> so the page exists when they run).
-html = html.replace(/<link rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/g, (_, href) => `<style>${read(href)}</style>`)
+// Local stylesheets are folded in; links to other sites (fonts) stay as links.
+html = html.replace(/<link rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/g, (tag, href) => (/^https?:/.test(href) ? tag : `<style>${read(href)}</style>`))
 const scripts = []
-html = html.replace(/<script type="module"[^>]*src="([^"]+)"[^>]*><\/script>/g, (_, src) => {
+html = html.replace(/<script type="module"[^>]*src="([^"]+)"[^>]*><\/script>/g, (tag, src) => {
+  if (/^https?:/.test(src)) return tag
   scripts.push(read(src).replace(/<\/script/gi, '<\\/script'))
   return ''
 })
