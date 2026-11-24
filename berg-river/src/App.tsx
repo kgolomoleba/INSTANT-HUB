@@ -262,6 +262,9 @@ export default function App() {
                 shareUrl={
                   window.location.origin + window.location.pathname + hash
                 }
+                explain={
+                  session && store.supabase ? store.explainSeason : undefined
+                }
               />
             </>
           )}

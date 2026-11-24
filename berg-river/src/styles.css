@@ -1152,3 +1152,30 @@ td.drop {
   font-size: 0.8rem;
   color: var(--text-3);
 }
+
+/* Explain this season */
+.explain {
+  margin: 4px 0 16px;
+}
+.explain-btn {
+  background: var(--surface);
+  border: 1px dashed var(--brand);
+  color: var(--brand);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 8px 16px;
+}
+.explain-text {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--brand);
+  line-height: 1.55;
+}
+.explain-foot {
+  margin: 4px 0 0;
+  font-size: 0.78rem;
+  color: var(--text-3);
+}

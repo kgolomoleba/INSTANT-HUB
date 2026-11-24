@@ -67,6 +67,14 @@ weather effects across different time periods.
   report, share links, retries/timeouts, on-device cache, partial results,
   all-farms in parallel with sorting.
 
+- **2026-11-24 — Installable + online-ready, Sentinel-2, Explain.** Phone
+  "Add to Home Screen" and offline app shell; Vercel/Netlify config.
+  Sentinel-2 (10 m) via Copernicus Statistical API in Supabase function
+  `sentinel-ndvi`, used for both periods when available, else NASA MODIS.
+  "Explain this season" via Supabase function `farm-explain` (Claude Opus 5.5,
+  low effort, refusal fallback on, signed-in users only). Keep it simple for
+  users: extras appear automatically when configured, no new settings.
+
 ## Verified against real services
 
 - **Open-Meteo**: real response checked, format matches; sends CORS `*`.

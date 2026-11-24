@@ -90,6 +90,24 @@ npm install
 npm run dev
 ```
 
+## Put it online (phone app)
+
+The app is a static site: `npm run build` produces `dist/`. `vercel.json` and
+`netlify.toml` are included, so importing the repository in Vercel or Netlify
+with **root directory `berg-river`** is enough. Add the two `VITE_SUPABASE_*`
+settings there too. On a phone, open the site and choose **Add to Home
+Screen**; it then opens like an app and works offline for farms already viewed.
+
+## Optional extras (switch on by themselves once set up)
+
+| Extra | What users get | Set up |
+|---|---|---|
+| Sharper satellite | Sentinel-2: 10 m detail, a reading every ~5 days instead of NASA's 250 m / 16 days | Free account at dataspace.copernicus.eu → OAuth client; Supabase secrets `CDSE_CLIENT_ID`, `CDSE_CLIENT_SECRET`; `supabase functions deploy sentinel-ndvi` |
+| Explain this season | A ✦ button (signed-in users) where Claude writes 3–5 plain sentences about the farm's figures | Supabase secret `ANTHROPIC_API_KEY`; `supabase functions deploy farm-explain` |
+| NASA backup | Satellite data still loads if a browser can't reach NASA directly | `supabase functions deploy modis-ndvi` |
+
+Without them the app works as before (NASA satellite, no ✦ button).
+
 ## Tests
 
 ```bash

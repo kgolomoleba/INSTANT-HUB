@@ -158,3 +158,23 @@ export async function deleteDiary(id: string): Promise<void> {
   const { error } = await need().from('berg_farm_diary').delete().eq('id', id)
   if (error) throw new Error(error.message)
 }
+
+// ---------------------------------------------------------- explanations
+/** Ask the farm-explain function (Claude) for a plain-language summary. Signed-in users only. */
+export async function explainSeason(payload: Record<string, unknown>): Promise<string> {
+  const { data, error } = await need().functions.invoke<{
+    text?: string
+    error?: string
+  }>('farm-explain', { body: payload })
+  if (error) {
+    // The function's own message is friendlier than the transport error.
+    const ctx = (error as { context?: Response }).context
+    const body = ctx ? await ctx.json().catch(() => null) : null
+    throw new Error(
+      body?.error ?? 'The explanation service had a problem. Try again.'
+    )
+  }
+  if (!data?.text)
+    throw new Error(data?.error ?? 'No explanation came back. Try again.')
+  return data.text
+}

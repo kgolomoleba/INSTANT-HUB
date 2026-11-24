@@ -41,6 +41,8 @@ type Props = {
   onRemoveDiary: (e: DiaryEntry) => void
   onRename: (name: string) => void
   shareUrl: string
+  /** Present when signed in with Supabase: enables 'Explain this season'. */
+  explain?: (payload: Record<string, unknown>) => Promise<string>
 }
 
 export default function FarmView(p: Props) {
@@ -146,11 +148,38 @@ export default function FarmView(p: Props) {
       <SourceStatus data={p.data} onRetry={p.onRetry} />
 
       {show('overview') && (
-        <Overview
-          stats={p.data.stats}
-          names={names}
-          loading={p.data.weather.loading || p.data.ndvi.loading}
-        />
+        <>
+          <Overview
+            stats={p.data.stats}
+            names={names}
+            loading={p.data.weather.loading || p.data.ndvi.loading}
+          />
+          {p.explain &&
+            p.data.stats &&
+            !p.data.ndvi.loading &&
+            !p.data.weather.loading && (
+              <Explain
+                key={`${p.periods[0].start}${p.periods[1].start}${p.periods[0].end}${p.periods[1].end}`}
+                run={() =>
+                  p.explain!({
+                    farm: {
+                      name: p.farm.name,
+                      areaHa: p.farm.areaHa,
+                      satellite: p.data.ndvi.satellite,
+                    },
+                    periods: { a: names[0], b: names[1] },
+                    stats: {
+                      a: roundStats(p.data.stats![0]),
+                      b: roundStats(p.data.stats![1]),
+                    },
+                    diary: p.diary.filter((e) =>
+                      p.periods.some((q) => e.day >= q.start && e.day <= q.end)
+                    ),
+                  })
+                }
+              />
+            )}
+        </>
       )}
       {show('charts') && (
         <Charts
@@ -625,6 +654,57 @@ function DiaryPanel({
             </li>
           ))}
         </ul>
+      )}
+    </section>
+  )
+}
+
+const roundStats = (s: PeriodStats) =>
+  Object.fromEntries(
+    Object.entries(s).map(([k, v]) => [
+      k,
+      Number.isFinite(v) ? Math.round(v * 100) / 100 : null,
+    ])
+  )
+
+function Explain({ run }: { run: () => Promise<string> }) {
+  const [state, setState] = useState<{
+    kind: 'idle' | 'busy' | 'done' | 'error'
+    text?: string
+  }>({ kind: 'idle' })
+  const go = async () => {
+    setState({ kind: 'busy' })
+    try {
+      setState({ kind: 'done', text: await run() })
+    } catch (e) {
+      setState({
+        kind: 'error',
+        text: e instanceof Error ? e.message : String(e),
+      })
+    }
+  }
+  return (
+    <section className="explain" aria-live="polite">
+      {state.kind === 'done' ? (
+        <>
+          <p className="explain-text">{state.text}</p>
+          <p className="explain-foot">
+            Written by Claude (AI) from the figures above. Check anything
+            important.
+          </p>
+        </>
+      ) : (
+        <button
+          type="button"
+          className="explain-btn no-print"
+          onClick={go}
+          disabled={state.kind === 'busy'}
+        >
+          {state.kind === 'busy' ? 'Writing…' : '✦ Explain this season'}
+        </button>
+      )}
+      {state.kind === 'error' && (
+        <p className="notice small error">{state.text}</p>
       )}
     </section>
   )
