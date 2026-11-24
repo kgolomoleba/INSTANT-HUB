@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { PRODUCT_CATEGORIES, SERVICE_CATEGORIES } from '../utils/categories'
 import { errorMessage } from '../utils/errors'
 import { useToast } from './ui/Toast'
-import './CreateListingModal.css'
+import './Modal.css'
 
 interface CreateListingModalProps {
   isOpen: boolean

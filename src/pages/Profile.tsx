@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { User } from '@supabase/auth-js'
 import { supabase } from '../supabaseClient'
+import { ListingSkeletons } from '../components/ui/Skeleton'
 import { trackEvent } from '../utils/analytics'
 import './Profile.css'
 import { errorMessage } from '../utils/errors'
@@ -242,13 +243,6 @@ export default function Profile() {
     setMessage(null)
     try {
       if (!user) throw new Error('Not logged in')
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
-      if (!supabaseUrl || !supabaseAnonKey) {
-        throw new Error(
-          'Supabase is not configured for this app. Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your environment.'
-        )
-      }
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -269,7 +263,7 @@ export default function Profile() {
       setVerificationSubmittedAt(new Date().toISOString())
       setVerificationApprovedAt(null)
       setMessage(
-        'Verification request submitted. An admin can mark your status as verified in Supabase when the proof is approved.'
+        'Verification request submitted. We will review your proof and update your status.'
       )
       void trackEvent('verification_request', { user_id: user.id })
     } catch (err) {
@@ -283,7 +277,7 @@ export default function Profile() {
   if (loading)
     return (
       <main className="profile-page">
-        <p className="loading-text">Loading profile...</p>
+        <ListingSkeletons count={3} />
       </main>
     )
 
@@ -320,18 +314,15 @@ export default function Profile() {
           <span className="profile-stat-num">{stats.products}</span>
           <span className="profile-stat-label">Products</span>
         </div>
-        <div className="stat-divider" />
-        <div className="profile-stat">
+                <div className="profile-stat">
           <span className="profile-stat-num">{stats.services}</span>
           <span className="profile-stat-label">Services</span>
         </div>
-        <div className="stat-divider" />
-        <div className="profile-stat">
+                <div className="profile-stat">
           <span className="profile-stat-num">{stats.posts}</span>
           <span className="profile-stat-label">Posts</span>
         </div>
-        <div className="stat-divider" />
-        <div className="profile-stat">
+                <div className="profile-stat">
           <span className="profile-stat-num" style={{ fontSize: '0.9rem' }}>
             {stats.joined}
           </span>
@@ -343,36 +334,12 @@ export default function Profile() {
         <h2>Verification</h2>
         <p>
           Verification makes your profile more trustworthy and gives you a
-          visible badge on listings. Submit proof and an admin can approve it
-          from Supabase.
+          visible badge on listings. Submit proof of your business and we will
+          review it.
         </p>
-        {verificationStatus === 'verified' ? (
-          <p>Your account is verified.</p>
-        ) : verificationStatus === 'pending' || verificationRequested ? (
-          <p>Your verification request is pending review.</p>
-        ) : (
-          <div className="verification-checklist">
-            <div className={`check-item ${profileComplete ? 'complete' : ''}`}>
-              <span className="check-mark">•</span>
-              Profile complete
-            </div>
-            <div className={`check-item ${hasListing ? 'complete' : ''}`}>
-              <span className="check-mark">•</span>
-              At least one listing
-            </div>
-            <div
-              className={`check-item ${verificationRequested ? 'complete' : ''}`}
-            >
-              <span className="check-mark">•</span>
-              Verification request submitted
-            </div>
-          </div>
-        )}
-
         <div className="trust-progress-card">
           <div className="trust-progress-header">
             <span className={`trust-pill trust-pill--${verificationStatus}`}>
-              \n{' '}
               {verificationStatus === 'verified'
                 ? 'Verified'
                 : verificationStatus === 'pending'
@@ -532,7 +499,7 @@ export default function Profile() {
       </section>
 
       <section className="profile-section">
-        <h2 className="profile-section-title">Edit Profile</h2>
+        <h2 className="profile-section-title">Edit profile</h2>
 
         {message && <div className="profile-success">{message}</div>}
         {error && <div className="profile-error">{error}</div>}
@@ -601,27 +568,10 @@ export default function Profile() {
         )}
 
         <button className="btn-save" onClick={handleSave} disabled={saving}>
-          {saving ? 'Saving...' : 'Save Profile'}
+          {saving ? 'Saving…' : 'Save profile'}
         </button>
       </section>
 
-      <section className="profile-section">
-        <h2 className="profile-section-title">Quick Links</h2>
-        <div className="profile-links">
-          <a href="/dashboard" className="profile-link">
-            Dashboard
-          </a>
-          <a href="/products" className="profile-link">
-            Your Products
-          </a>
-          <a href="/services" className="profile-link">
-            Your Services
-          </a>
-          <a href="/feed" className="profile-link">
-            Community Feed
-          </a>
-        </div>
-      </section>
     </main>
   )
 }

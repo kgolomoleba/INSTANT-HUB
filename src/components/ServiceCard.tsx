@@ -2,7 +2,6 @@ import { placeholderImage } from '../utils/placeholder'
 import ShareButton from './ui/ShareButton'
 import React, { useState } from 'react'
 import { trackEvent } from '../utils/analytics'
-import './ServiceCard.css'
 import ContactModal from './Contactmodal'
 
 interface ServiceCardProps {

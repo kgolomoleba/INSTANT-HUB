@@ -9,5 +9,5 @@
 .verified-badge-sm { width: 14px; height: 14px; }
 .verified-badge-md { width: 18px; height: 18px; }
 
-.verified-badge-verified { color: #f59e0b; }
-.verified-badge-pending { color: #555; }
+.verified-badge-verified { color: var(--brand); }
+.verified-badge-pending { color: var(--ink-3); }

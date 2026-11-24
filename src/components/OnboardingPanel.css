@@ -1,121 +1,17 @@
-.onboarding-panel {
-  background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,243,239,.96));
-  border: 1px solid rgba(255,215,90,0.18);
-  border-radius: 24px;
-  padding: 28px;
-  box-shadow: 0 24px 60px rgba(14, 20, 30, 0.08);
-  margin-bottom: 32px;
-}
-
-.onboarding-panel-header {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.onboarding-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: rgba(255, 198, 0, 0.16);
-  color: #b17100;
-  font-weight: 700;
-  font-size: 0.78rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.onboarding-panel-copy {
-  max-width: 620px;
-  color: #5e5e5e;
-}
-
-.onboarding-tasks {
-  display: grid;
-  gap: 16px;
-}
-
-.task-card,
-.onboarding-success {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 18px;
-  padding: 20px 22px;
-  border-radius: 20px;
-  border: 1px solid rgba(16, 24, 40, 0.06);
-  background: #fff;
-}
-
-.task-card {
-  transition: transform 0.2s ease, border-color 0.2s ease;
-}
-
-.task-card:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 215, 90, 0.3);
-}
-
-.task-card.task-complete {
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-.task-card h3,
-.onboarding-success h3 {
-  margin: 0;
-  font-size: 1.05rem;
-  color: #111827;
-}
-
-.task-card p,
-.onboarding-success p {
-  margin: 8px 0 0;
-  color: #4b5563;
-  line-height: 1.6;
-}
-
-.btn-task,
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 140px;
-  padding: 12px 20px;
-  border-radius: 999px;
-  text-decoration: none;
-  font-weight: 700;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.btn-task {
-  background: #111827;
-  color: #ffffff;
-}
-
-.btn-task:hover,
-.btn-primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(17, 24, 39, 0.12);
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #f59e0b, #f97316);
-  color: #fff;
-}
-
-@media (max-width: 860px) {
-  .task-card,
-  .onboarding-success {
-    grid-template-columns: 1fr;
-    text-align: left;
-  }
-}
-
-/* Heading on the light card (it inherited the app's white text). */
-.onboarding-panel h2 {
-  color: #111827;
-  margin: 0;
-}
+.onboarding-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.onboarding-head { display: flex; align-items: baseline; justify-content: space-between; }
+.onboarding-head h2 { font-size: 1.05rem; }
+.onboarding-count { font-size: 13px; font-weight: 700; color: var(--ink-3); }
+.onboarding-bar { height: 6px; border-radius: var(--r-full); background: var(--surface-3); overflow: hidden; }
+.onboarding-bar span { display: block; height: 100%; border-radius: inherit; background: var(--brand); transition: width 0.5s var(--ease); }
+.onboarding-tasks { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.task-card { display: grid; grid-template-columns: 24px 1fr auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+.task-card:first-child { border-top: 0; }
+.task-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line-strong); display: grid; place-items: center; font-size: 12px; font-weight: 800; color: var(--brand-ink); }
+.task-complete .task-check { background: var(--good); border-color: var(--good); }
+.task-text h3 { font-size: 14px; font-weight: 600; letter-spacing: 0; }
+.task-complete .task-text h3 { color: var(--ink-3); text-decoration: line-through; }
+.task-text p { font-size: 12.5px; color: var(--ink-3); margin-top: 2px; }
+.btn-task { display: inline-flex; align-items: center; min-height: 34px; padding: 0 14px; border-radius: var(--r-full); background: var(--surface-3); color: var(--ink); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.btn-task:hover { background: var(--brand); color: var(--brand-ink); }
+@media (max-width: 480px) { .task-card { grid-template-columns: 24px 1fr; } .btn-task { grid-column: 2; justify-self: start; } }

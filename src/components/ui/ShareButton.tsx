@@ -21,7 +21,8 @@ export default function ShareButton({ title, text, url, className = 'ui-btn smal
         }
       }}
     >
-      ↗ Share
+      <span aria-hidden="true">↗</span>
+      <span className="share-label">Share</span>
     </button>
   )
 }

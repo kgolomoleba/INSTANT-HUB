@@ -1,10 +1,12 @@
 import { useEffect, useState, useRef } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import type { User } from '@supabase/auth-js'
-import { Bell, BriefcaseBusiness, Compass, MessageCircleMore, Sparkles, UserRound } from 'lucide-react'
+import { Bell, BriefcaseBusiness, Compass, MessageCircleMore } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { timeAgo } from '../utils/time'
 import { trackEvent } from '../utils/analytics'
 import OnboardingPanel from '../components/OnboardingPanel'
+import { ListingSkeletons } from '../components/ui/Skeleton'
 import './Dashboard.css'
 import { errorMessage } from '../utils/errors'
 
@@ -72,6 +74,7 @@ const ROLE_LABELS: Record<string, string> = {
 const formatDate = (iso: string) => timeAgo(iso)
 
 export default function Dashboard() {
+  const navigate = useNavigate()
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -90,7 +93,7 @@ export default function Dashboard() {
     setError(null)
     try {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
-      if (authError || !user) { window.location.href = '/login'; return }
+      if (authError || !user) { navigate('/login'); return }
       setUser(user)
 
       const { data: profileData } = await supabase
@@ -256,289 +259,218 @@ export default function Dashboard() {
     : profile?.verification_status === 'pending'
       ? 'pending'
       : 'unverified'
-  const totalListings = stats.products + stats.services
 
   if (loading) return (
-    <main className="dashboard-container" role="main" tabIndex={-1} ref={mainRef}>
-      <p className="loading-text">Loading your dashboard...</p>
+    <main className="dash" role="main" tabIndex={-1} ref={mainRef}>
+      <ListingSkeletons count={4} />
     </main>
   )
 
   if (error) return (
-    <main className="dashboard-container" role="main" tabIndex={-1} ref={mainRef}>
+    <main className="dash" role="main" tabIndex={-1} ref={mainRef}>
       <p className="error-text">{error}</p>
-      <button className="btn-secondary" onClick={() => fetchDashboard()}>Retry</button>
+      <button className="btn-secondary" onClick={() => fetchDashboard()}>Try again</button>
     </main>
   )
 
-  return (
-    <main className="dashboard-container" role="main" tabIndex={-1} ref={mainRef}>
+  const go = (path: string, event: string) => {
+    void trackEvent(event, { user_id: user?.id })
+    navigate(path)
+  }
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
+  const trustText =
+    verificationStatus === 'verified'
+      ? 'Your profile shows verified trust signals to buyers.'
+      : verificationStatus === 'pending'
+        ? 'Your proof is under review. We will update this when it is checked.'
+        : 'Submit proof of your business to earn a verified badge on your listings.'
 
-      {/* Header */}
-      <header className="dashboard-header">
-        <div className="dashboard-header-top">
-          <div>
-            <span className="welcome-chip"><Sparkles size={14} /> Business command center</span>
-            <h1>
-              Welcome back, <span className="accent-text">{profile?.username || user?.email}</span>
-            </h1>
-            <p>Track your business, connect with the community, and discover new opportunities.</p>
-          </div>
-          <div className="dashboard-header-badges">
-            {profile?.role && (
-              <span className="dashboard-role">{ROLE_LABELS[profile.role] || profile.role}</span>
-            )}
-            {unreadCount > 0 && (
-              <span className="dashboard-pill"><Bell size={14} /> {unreadCount} unread</span>
-            )}
-          </div>
+  return (
+    <main className="dash" role="main" tabIndex={-1} ref={mainRef}>
+      <header className="page-head">
+        <div>
+          <p className="eyebrow">{greeting}</p>
+          <h1>{profile?.username || user?.email}</h1>
+          <p className="dash-sub">
+            {profile?.role && <span className="pill">{ROLE_LABELS[profile.role] || profile.role}</span>}
+            <span className={`pill pill-${verificationStatus}`}>
+              {verificationStatus === 'verified' ? '✓ Verified' : verificationStatus === 'pending' ? 'Verification pending' : 'Not verified'}
+            </span>
+          </p>
         </div>
-        <div className="dashboard-actions">
-          <button className="btn-primary" onClick={() => { trackEvent('dashboard_browse_products_click', { user_id: user?.id }); window.location.href = '/products' }}><Compass size={16} /> Browse Products</button>
-          <button className="btn-primary" onClick={() => { trackEvent('dashboard_browse_services_click', { user_id: user?.id }); window.location.href = '/services' }}><BriefcaseBusiness size={16} /> Find Services</button>
-          <button className="btn-primary" onClick={() => { trackEvent('dashboard_open_feed_click', { user_id: user?.id }); window.location.href = '/feed' }}><MessageCircleMore size={16} /> Community Feed</button>
+        <div className="actions">
+          <button className="btn-secondary" onClick={() => go('/services', 'dashboard_browse_services_click')}>
+            <BriefcaseBusiness size={16} /> Find services
+          </button>
+          <button className="btn-primary" onClick={() => go('/products', 'dashboard_browse_products_click')}>
+            <Compass size={16} /> Browse products
+          </button>
         </div>
       </header>
 
-      <OnboardingPanel
-        profileComplete={profileComplete}
-        products={stats.products}
-        services={stats.services}
-      />
-
-      {/* Profile completeness nudge */}
-      {!profileComplete && (
-        <div className="dashboard-nudge">
-          <span>Your profile is not complete. Add your bio, role and location to increase visibility.</span>
-          <a href="/profile" className="nudge-link">Complete Profile</a>
+      <section className="stat-row" aria-label="Your numbers">
+        <div className="stat-tile">
+          <span className="stat-ico"><BriefcaseBusiness size={18} /></span>
+          <strong>{stats.products}</strong>
+          <span>Products listed</span>
         </div>
-      )}
-
-      {/* Stats */}
-      <section className="dashboard-stats">
-        <h2>Your Stats</h2>
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon-wrap"><BriefcaseBusiness size={18} /></div>
-            <strong>{stats.products}</strong>
-            <span>Products Listed</span>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon-wrap"><Compass size={18} /></div>
-            <strong>{stats.services}</strong>
-            <span>Services Offered</span>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon-wrap"><MessageCircleMore size={18} /></div>
-            <strong>{stats.posts}</strong>
-            <span>Posts Shared</span>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon-wrap"><Bell size={18} /></div>
-            <strong>{unreadCount}</strong>
-            <span>Unread inquiries</span>
-          </div>
+        <div className="stat-tile">
+          <span className="stat-ico"><Compass size={18} /></span>
+          <strong>{stats.services}</strong>
+          <span>Services offered</span>
+        </div>
+        <div className="stat-tile">
+          <span className="stat-ico"><MessageCircleMore size={18} /></span>
+          <strong>{stats.posts}</strong>
+          <span>Posts shared</span>
+        </div>
+        <div className={`stat-tile ${unreadCount > 0 ? 'hot' : ''}`}>
+          <span className="stat-ico"><Bell size={18} /></span>
+          <strong>{unreadCount}</strong>
+          <span>Unread inquiries</span>
         </div>
       </section>
 
-      <section className="dashboard-performance">
-        <h2>Trust & performance</h2>
-        <div className="performance-grid">
-          <div className="performance-card">
-            <strong>{totalListings}</strong>
-            <span>Active listings</span>
-          </div>
-          <div className="performance-card">
-            <strong>{unreadCount}</strong>
-            <span>Incoming inquiries</span>
-          </div>
-          <div className="performance-card performance-card--trust">
-            <div className={`trust-badge trust-badge--${verificationStatus}`}>
-              {verificationStatus === 'verified' ? 'Verified' : verificationStatus === 'pending' ? 'Pending' : 'Unverified'}
-            </div>
-            <span>Trust status</span>
-            <p>
-              {verificationStatus === 'verified'
-                ? 'Your profile already shows verified trust signals.'
-                : verificationStatus === 'pending'
-                  ? 'Your proof is under review.'
-                  : 'Submit proof details to unlock trust badges.'}
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Admin verification queue */}
-      {isAdmin && (
-        <section className="dashboard-verification-queue">
-          <h2>Verification approvals</h2>
-          {pendingVerifications.length === 0 ? (
-            <p className="empty-hint">No pending verification requests at the moment.</p>
-          ) : (
-            <div className="verification-queue-list">
-              {pendingVerifications.map(request => (
-                <div key={request.id} className="verification-request-card">
-                  <div className="verification-request-top">
-                    <div>
-                      <h3>{request.username || 'Unnamed user'}</h3>
-                      <p>{request.role ? request.role : 'No role set'} • {request.location || 'No location'}</p>
+      <div className="dash-grid">
+        <div className="dash-main">
+          {isAdmin && (
+            <section className="dash-card" aria-labelledby="admin-q">
+              <h2 id="admin-q">Verification approvals</h2>
+              {pendingVerifications.length === 0 ? (
+                <p className="empty-hint">No pending verification requests.</p>
+              ) : (
+                <div className="verification-queue-list">
+                  {pendingVerifications.map(request => (
+                    <div key={request.id} className="verification-request-card">
+                      <div className="verification-request-top">
+                        <div>
+                          <h3>{request.username || 'Unnamed user'}</h3>
+                          <p>{request.role ? request.role : 'No role set'} · {request.location || 'No location'}</p>
+                        </div>
+                        <button className="btn-primary" type="button" onClick={() => approveVerificationRequest(request.id)} disabled={approvingId === request.id}>
+                          {approvingId === request.id ? 'Approving…' : 'Approve'}
+                        </button>
+                      </div>
+                      <div className="verification-request-body">
+                        <p><strong>Proof type:</strong> {request.verification_method || 'Not provided'}</p>
+                        <p><strong>Reference:</strong> {request.verification_reference || 'Not provided'}</p>
+                        <p><strong>Note:</strong> {request.verification_note || 'None'}</p>
+                        {request.verification_document_url && /^https?:\/\//i.test(request.verification_document_url) && (
+                          <p><strong>Proof link:</strong> <a href={request.verification_document_url} target="_blank" rel="noreferrer">View document</a></p>
+                        )}
+                      </div>
                     </div>
-                    <button
-                      className="btn-approve"
-                      type="button"
-                      onClick={() => approveVerificationRequest(request.id)}
-                      disabled={approvingId === request.id}
-                    >
-                      {approvingId === request.id ? 'Approving...' : 'Approve'}
-                    </button>
-                  </div>
-                  <div className="verification-request-body">
-                    <p><strong>Proof type:</strong> {request.verification_method || 'Not provided'}</p>
-                    <p><strong>Reference:</strong> {request.verification_reference || 'Not provided'}</p>
-                    <p><strong>Note:</strong> {request.verification_note || 'None'}</p>
-                    {request.verification_document_url && (
-                      <p><strong>Proof link:</strong> <a href={request.verification_document_url} target="_blank" rel="noreferrer">View document</a></p>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
+            </section>
           )}
-        </section>
-      )}
 
-      {/* Inquiries Inbox */}
-      <section className="dashboard-inquiries">
-        <h2>
-          Inquiries Inbox
-          {unreadCount > 0 && <span className="inbox-badge">{unreadCount} new</span>}
-        </h2>
-        {inquiries.length === 0 ? (
-          <p className="empty-hint">No inquiries yet. List a product or service to start receiving messages.</p>
-        ) : (
-          <div className="inquiries-list">
-            {inquiries.map(inquiry => (
-              <div
-                key={inquiry.id}
-                className={`inquiry-card ${!inquiry.read ? 'unread' : ''}`}
-              >
-                <div className="inquiry-header">
-                  <div className="inquiry-sender">
+          <section className="dash-card" aria-labelledby="inbox">
+            <div className="card-head">
+              <h2 id="inbox">Inquiries</h2>
+              {unreadCount > 0 && <span className="inbox-badge">{unreadCount} new</span>}
+            </div>
+            {inquiries.length === 0 ? (
+              <div className="empty-block">
+                <strong>No inquiries yet</strong>
+                <p>List a product or service and buyers can message you here.</p>
+              </div>
+            ) : (
+              <div className="inquiries-list">
+                {inquiries.map(inquiry => (
+                  <article key={inquiry.id} className={`inquiry-card ${!inquiry.read ? 'unread' : ''}`}>
                     <span className="inquiry-avatar">{inquiry.sender_username?.[0]?.toUpperCase() || '?'}</span>
-                    <div>
-                      <span className="inquiry-name">{inquiry.sender_username}</span>
+                    <div className="inquiry-body">
+                      <div className="inquiry-top">
+                        <span className="inquiry-name">{inquiry.sender_username}</span>
+                        <span className="inquiry-date">{formatDate(inquiry.created_at)}</span>
+                      </div>
                       <span className="inquiry-about">
-                        re: <strong>{inquiry.listing_title}</strong>
+                        About <strong>{inquiry.listing_title}</strong>
                         <span className={`inquiry-type-badge ${inquiry.listing_type}`}>{inquiry.listing_type}</span>
                       </span>
-                    </div>
-                  </div>
-                  <div className="inquiry-meta">
-                    <span className="inquiry-date">{formatDate(inquiry.created_at)}</span>
-                    <div className="inquiry-actions">
-                      {!inquiry.read && (
-                        <button
-                          className="btn-mark-read"
-                          onClick={() => markAsRead(inquiry.id)}
-                        >
-                          Mark read
+                      <p className="inquiry-message">{inquiry.message}</p>
+                      <div className="inquiry-actions">
+                        {!inquiry.read && (
+                          <button className="btn-mark-read" onClick={() => markAsRead(inquiry.id)}>Mark read</button>
+                        )}
+                        <button className="btn-mark-read" onClick={() => markAsResponded(inquiry.id)} disabled={inquiry.status === 'responded'}>
+                          {inquiry.status === 'responded' ? '✓ Responded' : 'Mark responded'}
                         </button>
-                      )}
-                      <button
-                        className="btn-mark-read"
-                        onClick={() => markAsResponded(inquiry.id)}
-                      >
-                        {inquiry.status === 'responded' ? 'Responded' : 'Mark responded'}
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <p className="inquiry-message">{inquiry.message}</p>
-                {inquiry.responded_at && (
-                  <p className="inquiry-status">Responded {formatDate(inquiry.responded_at)}</p>
-                )}
+                  </article>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-      </section>
+            )}
+          </section>
 
-      {/* Sent Inquiries Folder */}
-      <section className="dashboard-inquiries">
-        <h2>Inquiries you sent</h2>
-        {sentInquiries.length === 0 ? (
-          <p className="empty-hint">You have not sent any inquiries yet.</p>
-        ) : (
-          <div className="inquiries-list">
-            {sentInquiries.map(inquiry => (
-              <div key={inquiry.id} className="inquiry-card">
-                <div className="inquiry-header">
-                  <div>
-                    <span className="inquiry-name">{inquiry.recipient_username || 'Recipient'}</span>
-                    <span className="inquiry-about">{inquiry.listing_title}</span>
-                  </div>
-                  <div className="inquiry-meta">
-                    <span className="inquiry-date">{formatDate(inquiry.created_at)}</span>
-                    <span className={`inquiry-status-pill ${inquiry.status === 'responded' ? 'responded' : 'sent'}`}>
-                      {inquiry.status === 'responded' ? 'Responded' : 'Sent'}
-                    </span>
-                  </div>
-                </div>
-                <p className="inquiry-message">{inquiry.message}</p>
+          <section className="dash-card" aria-labelledby="sent">
+            <div className="card-head">
+              <h2 id="sent">Inquiries you sent</h2>
+            </div>
+            {sentInquiries.length === 0 ? (
+              <div className="empty-block">
+                <strong>Nothing sent yet</strong>
+                <p>Found something you like? Send the seller an inquiry from any listing.</p>
               </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Profile Summary */}
-      <section className="dashboard-profile-summary">
-        <h2>Profile Summary</h2>
-        <div className="profile-summary-grid">
-          <div className="profile-avatar-circle">
-            <UserRound size={24} />
-          </div>
-          <ul>
-            <li>Email: <strong>{user?.email}</strong></li>
-            <li>Username: <strong>{profile?.username || '—'}</strong></li>
-            {profile?.location && <li>Location: <strong>{profile.location}</strong></li>}
-            {profile?.bio && <li>Bio: <strong>{profile.bio}</strong></li>}
-            <li>Profile Complete: <strong className={profileComplete ? 'text-success' : 'text-gold'}>{profileComplete ? 'Yes' : 'Incomplete'}</strong></li>
-            <li>Verification: <strong className={`text-gold verification-status-${verificationStatus}`}>{verificationStatus === 'verified' ? 'Verified' : verificationStatus === 'pending' ? 'Pending review' : 'Not verified'}</strong></li>
-          </ul>
+            ) : (
+              <div className="inquiries-list">
+                {sentInquiries.map(inquiry => (
+                  <article key={inquiry.id} className="inquiry-card">
+                    <span className="inquiry-avatar">{(inquiry.recipient_username || '?')[0]?.toUpperCase()}</span>
+                    <div className="inquiry-body">
+                      <div className="inquiry-top">
+                        <span className="inquiry-name">{inquiry.recipient_username || 'Recipient'}</span>
+                        <span className="inquiry-date">{formatDate(inquiry.created_at)}</span>
+                      </div>
+                      <span className="inquiry-about">{inquiry.listing_title}</span>
+                      <p className="inquiry-message">{inquiry.message}</p>
+                      <span className={`inquiry-status-pill ${inquiry.status === 'responded' ? 'responded' : 'sent'}`}>
+                        {inquiry.status === 'responded' ? 'Responded' : 'Sent'}
+                      </span>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
-        <a href="/profile" className="btn-secondary">Edit Profile</a>
-      </section>
 
-      {/* Recent Activity */}
-      <section className="dashboard-recent">
-        <h2>Recent Activity</h2>
-        {recent.length === 0 ? (
-          <p className="empty-hint">No activity yet. Start by listing a product or service!</p>
-        ) : (
-          <ul>
-            {recent.map((item, idx) => (
-              <li key={idx}>
-                <span className={`recent-type recent-type-${item.type}`}>{item.type}</span>
-                {item.name}
-                <span className="recent-date">{item.date}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <aside className="dash-side">
+          <OnboardingPanel profileComplete={profileComplete} products={stats.products} services={stats.services} />
 
-      {/* Quick links */}
-      <section className="dashboard-widgets">
-        <h2>Quick Links</h2>
-        <div className="widgets-grid">
-          <button className="btn-primary" onClick={() => window.location.href = '/products'}>Products</button>
-          <button className="btn-primary" onClick={() => window.location.href = '/services'}>Services</button>
-          <button className="btn-primary" onClick={() => window.location.href = '/feed'}>Community Feed</button>
-          <button className="btn-primary" onClick={() => window.location.href = '/profile'}>Profile</button>
-        </div>
-      </section>
+          <section className="dash-card" aria-labelledby="trust">
+            <h2 id="trust">Trust status</h2>
+            <div className={`trust-badge trust-badge--${verificationStatus}`}>
+              {verificationStatus === 'verified' ? 'Verified' : verificationStatus === 'pending' ? 'Pending review' : 'Not verified'}
+            </div>
+            <p>{trustText}</p>
+            {verificationStatus === 'unverified' && (
+              <Link to="/profile" className="btn-secondary small-btn">Submit proof</Link>
+            )}
+          </section>
 
+          <section className="dash-card" aria-labelledby="recent">
+            <h2 id="recent">Recent activity</h2>
+            {recent.length === 0 ? (
+              <p className="empty-hint">No activity yet. Your listings and posts will show up here.</p>
+            ) : (
+              <ul className="recent-list">
+                {recent.map((item, idx) => (
+                  <li key={idx}>
+                    <span className={`recent-type recent-type-${item.type}`}>{item.type}</span>
+                    <span className="recent-name">{item.name}</span>
+                    <span className="recent-date">{item.date}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </aside>
+      </div>
     </main>
   )
 }

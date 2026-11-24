@@ -1,0 +1,24 @@
+/* Sign in and sign up: a reason to join on the left, the form on the right. */
+.auth-page { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; min-height: calc(100dvh - var(--nav-h) - 130px); border: 1px solid var(--line); border-radius: var(--r-xl); overflow: hidden; background: var(--surface); }
+.auth-aside { display: flex; flex-direction: column; justify-content: center; gap: 22px; padding: clamp(28px, 5vw, 56px); background: radial-gradient(120% 90% at 0% 0%, rgba(245, 165, 36, 0.16), transparent 60%), var(--surface-2); border-right: 1px solid var(--line); }
+.auth-aside h2 { font-size: clamp(1.8rem, 3.2vw, 2.6rem); line-height: 1.08; max-width: 14ch; }
+.auth-aside ul { list-style: none; display: flex; flex-direction: column; gap: 16px; max-width: 38ch; }
+.auth-aside li { color: var(--ink-2); }
+.auth-aside li b { display: block; color: var(--ink); font-weight: 700; }
+
+.login-card, .register-card { display: flex; flex-direction: column; justify-content: center; gap: 20px; width: 100%; max-width: 440px; margin: 0 auto; padding: 32px 24px; background: none; border: 0; box-shadow: none; }
+.login-header h1, .register-header h1 { font-size: 1.8rem; }
+.login-header p, .register-header p { margin-top: 4px; }
+.login-form, .register-form { display: flex; flex-direction: column; gap: 14px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 13px; font-weight: 600; color: var(--ink-2); text-transform: none; letter-spacing: 0; }
+.form-hint { font-size: 12.5px; color: var(--ink-3); }
+.btn-login, .btn-register { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 48px; margin-top: 4px; border-radius: var(--r-full); background: var(--brand); color: var(--brand-ink); font-weight: 700; font-size: 15px; box-shadow: 0 8px 22px rgba(245, 165, 36, 0.2); }
+.btn-login:hover:not(:disabled), .btn-register:hover:not(:disabled) { background: var(--brand-strong); transform: translateY(-1px); }
+.error-msg { padding: 10px 12px; border-radius: var(--r-md); background: rgba(248, 113, 113, 0.1); border: 1px solid rgba(248, 113, 113, 0.28); color: #fca5a5; font-size: 14px; }
+.login-success { padding: 10px 12px; border-radius: var(--r-md); background: rgba(52, 211, 153, 0.1); border: 1px solid rgba(52, 211, 153, 0.28); color: var(--good); font-size: 14px; }
+.login-footer, .register-login-link { font-size: 14px; color: var(--ink-3); text-align: center; }
+.login-footer p { color: var(--ink-3); }
+.register-login-link { margin-top: 4px; }
+
+@media (max-width: 860px) { .auth-page { grid-template-columns: 1fr; border: 0; background: none; min-height: 0; } .auth-aside { display: none; } .login-card, .register-card { padding: 8px 0 24px; } }

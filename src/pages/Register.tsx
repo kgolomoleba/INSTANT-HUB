@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react'
-import './Register.css'
+import './Auth.css'
+import AuthAside from '../components/AuthAside'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import Logo from '../components/Logo'
 import { supabase } from '../supabaseClient'
 import { trackEvent } from '../utils/analytics'
 
@@ -140,12 +140,13 @@ export default function Register() {
   }
 
   return (
-    <div className="register-container">
+    <div className="register-container auth-page">
+      <AuthAside />
       <div className="register-card">
         <div className="register-header">
-          <Logo className="register-logo" size={64} />
-          <h1>Create Account</h1>
-          <p>Join the Instant Hub ecosystem</p>
+          
+          <h1>Create your account</h1>
+          <p>It's free and takes a minute.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="register-form" noValidate>
@@ -221,7 +222,7 @@ export default function Register() {
           </div>
 
           <button type="submit" className="btn-register" disabled={isSubmitting}>
-            {isSubmitting ? 'Creating account...' : 'Create Account'}
+            {isSubmitting ? 'Creating account…' : 'Create account'}
           </button>
 
           <p className="register-login-link">

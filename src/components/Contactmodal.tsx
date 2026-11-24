@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { trackEvent } from '../utils/analytics'
-import './Contactmodal.css'
+import './Modal.css'
 import { errorMessage } from '../utils/errors'
 
 interface ContactModalProps {
@@ -75,11 +75,11 @@ export default function ContactModal({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" onClick={e => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose} aria-label="Close">Close</button>
+        <button className="modal-close" onClick={onClose} aria-label="Close"></button>
 
         {sent ? (
           <div className="modal-sent">
-            <span className="modal-sent-icon">Sent</span>
+            <span className="modal-sent-icon">✓ Sent</span>
             <h3>Inquiry sent</h3>
             <p>Your inquiry about <strong>{listingTitle}</strong> has been sent to <strong>{recipientUsername}</strong>.</p>
             <button className="btn-modal-gold" onClick={onClose}>Done</button>

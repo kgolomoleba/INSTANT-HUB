@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom'
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { withProfiles } from '../utils/publicProfiles'
@@ -6,7 +7,7 @@ import { PRODUCT_CATEGORIES, matchesCategory } from '../utils/categories'
 import { trackEvent } from '../utils/analytics'
 import ProductCard from '../components/ProductCard'
 import { CreateListingModal } from '../components/CreateListingModal'
-import './ProductsPage.css'
+import './Listings.css'
 import { errorMessage } from '../utils/errors'
 
 interface ProfileData {
@@ -31,6 +32,7 @@ interface Product {
 const CATEGORIES = ['All', ...PRODUCT_CATEGORIES]
 
 const ProductsPage: React.FC = () => {
+  const navigate = useNavigate()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -71,10 +73,21 @@ const ProductsPage: React.FC = () => {
 
   return (
     <main className="products-container">
-      <header className="products-header">
-        <h1>Products Marketplace</h1>
-        <p>Browse and discover products offered by the Instant Hub community.</p>
-        <div className="products-actions">
+      <header className="page-head">
+        <div>
+          <h1>Products</h1>
+          <p>Browse what local businesses are selling.</p>
+        </div>
+        <div className="actions">
+          <button
+            className="btn-secondary"
+            onClick={() => {
+              void trackEvent('navigate_to_services', {})
+              navigate('/services')
+            }}
+          >
+            Services
+          </button>
           <button
             className="btn-primary"
             onClick={() => {
@@ -83,23 +96,10 @@ const ProductsPage: React.FC = () => {
               void trackEvent('product_form_toggle', { showForm: true })
             }}
           >
-            + Add Product
-          </button>
-          <button
-            className="btn-secondary"
-            onClick={() => {
-              void trackEvent('navigate_to_services', {})
-              window.location.href = '/services'
-            }}
-          >
-            Explore Services
+            + Add product
           </button>
         </div>
       </header>
-      
-      <div className="trust-chip badge-gold">
-        Trusted sellers and verified product offers
-      </div>
 
       {/* Render the unified modal component instead of inline form */}
       <CreateListingModal 
@@ -109,11 +109,12 @@ const ProductsPage: React.FC = () => {
         type="product" 
       />
 
-      <div className="products-filters">
+      <div className="listing-toolbar">
         <input
           className="search-input"
           type="text"
-          placeholder="Search products..."
+          placeholder="Search products"
+          aria-label="Search products"
           value={search}
           onChange={e => {
             setSearch(e.target.value)
@@ -121,11 +122,12 @@ const ProductsPage: React.FC = () => {
           }}
           maxLength={100}
         />
-        <div className="categories-list">
+        <div className="chip-row" role="group" aria-label="Category">
           {CATEGORIES.map(cat => (
             <button
               key={cat}
-              className={`category ${selectedCategory === cat ? 'active' : ''}`}
+              className={selectedCategory === cat ? 'active' : ''}
+              aria-pressed={selectedCategory === cat}
               onClick={() => {
                 setSelectedCategory(cat)
                 void trackEvent('product_filter', { category: cat })

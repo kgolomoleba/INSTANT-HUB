@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { timeAgo } from '../utils/time'
 import FeedPost from '../components/FeedPost'
+import { ListingSkeletons } from '../components/ui/Skeleton'
 import './FeedPage.css'
 import { errorMessage } from '../utils/errors'
 
@@ -154,26 +155,26 @@ const FeedPage: React.FC = () => {
 
   return (
     <main className="feed-container">
-      <header className="feed-header">
-        <h1>Community Feed</h1>
-        <p>Share your hustle, post hiring requests, ask for help, and promote your products or services.</p>
-        <div className="feed-actions">
+      <header className="page-head">
+        <div>
+          <h1>Community feed</h1>
+          <p>Share what you are working on, ask for help, post a job, or promote what you sell.</p>
+        </div>
+        <div className="actions">
           <button className="btn-primary" onClick={() => { setShowForm(v => !v); setError(null) }}>
-            {showForm ? 'Cancel' : '+ Create Post'}
+            {showForm ? 'Cancel' : '+ New post'}
           </button>
-          <button className="btn-secondary" onClick={() => window.location.href = '/products'}>Browse Products</button>
-          <button className="btn-secondary" onClick={() => window.location.href = '/services'}>Find Services</button>
         </div>
       </header>
 
       {showForm && (
         <section className="feed-form">
-          <h2>New Post</h2>
+          <h2>New post</h2>
           {error && <p className="error-text">{error}</p>}
           <form onSubmit={handleSubmit} noValidate>
             <div className="feed-form-grid">
               <div className="form-group">
-                <label htmlFor="type">Post Type</label>
+                <label htmlFor="type">Type of post</label>
                 <select id="type" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                   <option value="general">General</option>
                   <option value="product">Product</option>
@@ -195,7 +196,7 @@ const FeedPage: React.FC = () => {
                 </div>
               )}
               <div className="form-group form-group-full">
-                <label htmlFor="title">Title * <span style={{ color: '#444', fontWeight: 400 }}>{form.title.length}/100</span></label>
+                <label htmlFor="title">Title * <span className="count-hint">{form.title.length}/100</span></label>
                 <input
                   id="title"
                   type="text"
@@ -207,7 +208,7 @@ const FeedPage: React.FC = () => {
                 />
               </div>
               <div className="form-group form-group-full">
-                <label htmlFor="description">Description <span style={{ color: '#444', fontWeight: 400 }}>{form.description.length}/500</span></label>
+                <label htmlFor="description">Description <span className="count-hint">{form.description.length}/500</span></label>
                 <textarea
                   id="description"
                   placeholder="Tell the community more..."
@@ -229,17 +230,18 @@ const FeedPage: React.FC = () => {
               </div>
             </div>
             <button className="btn-primary" type="submit" disabled={submitting}>
-              {submitting ? 'Posting...' : 'Post to Community'}
+              {submitting ? 'Posting…' : 'Post to the community'}
             </button>
           </form>
         </section>
       )}
 
-      <div className="feed-filters">
+      <div className="chip-row feed-filters" role="group" aria-label="Post type">
         {POST_TYPES.map(type => (
           <button
             key={type}
-            className={`feed-filter-btn ${filter === type ? 'active' : ''}`}
+            className={filter === type ? 'active' : ''}
+            aria-pressed={filter === type}
             onClick={() => setFilter(type)}
           >
             {TYPE_LABELS[type]}
@@ -249,7 +251,7 @@ const FeedPage: React.FC = () => {
 
       <section className="feed-posts">
         {loading ? (
-          <p className="loading-text">Loading posts...</p>
+          <ListingSkeletons count={4} />
         ) : filtered.length === 0 ? (
           <div className="empty-state">
             <p>No posts yet. Be the first to share something!</p>

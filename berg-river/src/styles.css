@@ -1493,3 +1493,55 @@ select.big {
     animation: none;
   }
 }
+
+/* ===================================================== v4: modern type, depth and rhythm */
+:root {
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-head: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --radius: 16px;
+  --glow: radial-gradient(60% 50% at 10% 0%, rgba(47, 107, 58, 0.10), transparent 70%);
+  font-family: var(--font-body);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme='light']) { --glow: radial-gradient(60% 50% at 10% 0%, rgba(124, 194, 138, 0.10), transparent 70%); } }
+:root[data-theme='dark'] { --glow: radial-gradient(60% 50% at 10% 0%, rgba(124, 194, 138, 0.10), transparent 70%); }
+
+body { background: var(--glow), var(--bg); background-attachment: fixed; font-feature-settings: 'cv11'; }
+h1, h2, h3, .verdict-title, .figure-value, .tile-values { font-family: var(--font-head); letter-spacing: -0.02em; }
+.top h1 { font-size: clamp(1.5rem, 3vw, 2rem); font-weight: 800; letter-spacing: -0.03em; }
+.top .tagline { font-size: 0.95rem; }
+.app { max-width: 1240px; padding: 20px clamp(14px, 3vw, 28px) 48px; }
+
+/* The period picker stays in view while scrolling */
+.controls { position: sticky; top: 8px; z-index: 40; border-radius: 18px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); background: color-mix(in srgb, var(--surface) 86%, transparent); box-shadow: 0 6px 24px rgb(0 0 0 / 0.07); }
+.chip { transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s; }
+.chip:active { transform: scale(0.97); }
+
+/* Surfaces */
+.find, .figure, .tile, .chart, .crops, .farm-list, .boundaries, .empty, .table-wrap, .diary-list { border-radius: var(--radius); border-color: color-mix(in srgb, var(--border) 80%, transparent); }
+.figure, .chart { box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 8px 24px rgb(0 0 0 / 0.04); transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s; }
+.figure:hover { transform: translateY(-2px); box-shadow: 0 1px 2px rgb(0 0 0 / 0.04), 0 14px 32px rgb(0 0 0 / 0.08); }
+
+/* Verdict: the answer, as the biggest thing on the screen */
+.verdict { border-radius: 20px; padding: 18px 20px; position: relative; overflow: hidden; }
+.verdict-title { font-size: clamp(1.25rem, 2.4vw, 1.6rem); font-weight: 800; letter-spacing: -0.03em; }
+.verdict.good { background: linear-gradient(135deg, color-mix(in srgb, var(--ok-bg) 100%, transparent), var(--surface) 90%); }
+.verdict.bad { background: linear-gradient(135deg, var(--error-bg), var(--surface) 90%); }
+
+.figure-value { font-weight: 800; }
+.figure-label { text-transform: none; }
+.farm-list li.active { background: var(--brand-soft); box-shadow: inset 3px 0 0 var(--brand); }
+.farm-list li button:first-child { transition: background 0.2s; }
+.farm-list li:hover:not(.active) { background: color-mix(in srgb, var(--brand-soft) 50%, transparent); }
+
+button.primary, .actions button:first-child { box-shadow: 0 6px 16px color-mix(in srgb, var(--brand) 28%, transparent); }
+.tabs button { font-family: var(--font-head); font-weight: 600; }
+.tabs button.on { border-bottom-width: 3px; }
+.lang { border-radius: 999px; }
+.map { border-radius: 16px; box-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 8px 24px rgb(0 0 0 / 0.06); }
+.empty { background: color-mix(in srgb, var(--surface) 70%, transparent); border-style: dashed; padding: 28px; }
+.empty h2 { font-size: 1.4rem; }
+.welcome ol { counter-reset: s; list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.welcome ol li { counter-increment: s; display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start; }
+.welcome ol li::before { content: counter(s); width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--brand); color: var(--on-brand); font-weight: 800; font-family: var(--font-head); }
+
+@media (max-width: 600px) { .controls { top: 4px; padding: 10px; } .verdict { padding: 14px 16px; border-radius: 16px; } }

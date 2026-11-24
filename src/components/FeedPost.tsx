@@ -108,7 +108,7 @@ const FeedPost: React.FC<FeedPostProps> = ({
           <span className="feed-post-date">{createdAt}</span>
         </div>
         <span className={`feed-post-badge ${TYPE_COLORS[type]}`}>
-          {type.toUpperCase()}
+          {type}
         </span>
         {isOwner && onDelete && (
           <button
@@ -158,16 +158,15 @@ const FeedPost: React.FC<FeedPostProps> = ({
             {isInquiring ? 'Cancel' : 'Message'}
           </button>
         )}
-        {type === 'product' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">Buy Now</button>}
-        {type === 'service' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">Hire</button>}
-        {type === 'request' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">Offer to help</button>}
-        {type === 'general' && <button className="feed-action-btn" type="button">Like</button>}
+        {!isOwner && type === 'product' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">I'm interested</button>}
+        {!isOwner && type === 'service' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">Hire</button>}
+        {!isOwner && type === 'request' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">Offer to help</button>}
       </div>
 
       {/* Inline Messenger Dropdown View */}
       {isInquiring && (
         <div className="feed-post-inquiry-box">
-          <h4>Inquire about this {type}</h4>
+          <h4>Message @{author}</h4>
           {actionStatus.success && <p className="success-text">Message sent. They'll see it on their dashboard.</p>}
           {actionStatus.error && <p className="error-text">{actionStatus.error}</p>}
           

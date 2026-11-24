@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react'
-import './Login.css'
+import './Auth.css'
+import AuthAside from '../components/AuthAside'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { errorMessage } from '../utils/errors'
@@ -92,12 +93,13 @@ export default function Login() {
   }
 
   return (
-    <div className="login-container">
+    <div className="login-container auth-page">
+      <AuthAside />
       <div className="login-card">
 
         <div className="login-header">
-          <h1>Welcome Back</h1>
-          <p>Sign in to your Instant Hub account</p>
+          <h1>Welcome back</h1>
+          <p>Sign in to your Instant Hub account.</p>
         </div>
 
         {successMessage && (
@@ -148,7 +150,7 @@ export default function Login() {
           </div>
 
           <button type="submit" className="btn-login" disabled={isSubmitting}>
-            {isSubmitting ? 'Signing in...' : 'Sign In'}
+            {isSubmitting ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
 

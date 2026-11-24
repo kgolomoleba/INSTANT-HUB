@@ -105,3 +105,25 @@ New: `/finance` for business owners, `/report/<token>` for shared links,
   cache), tab transitions, offline banner (English and Afrikaans).
 - Fixed on the way: Berg River's offline cache missed the app's script files on
   a first visit (blank screen offline).
+
+## Redesign (2026-11-24)
+
+A new design system and structure across Instant Hub, plus a polish pass on Berg River.
+
+- **Foundation:** one set of colours, type (Inter + Plus Jakarta Sans, sentence
+  case, no more spaced-out poster headings), buttons, inputs, chips, cards and
+  pop-ups (`src/App.css`, `src/components/Modal.css`); a slim full-width top bar;
+  one wide page container (pages used to shrink to their content and float in a
+  narrow column).
+- **Pages rebuilt:** landing page, sign in / sign up (split layout), dashboard
+  (numbers row, inbox, checklist, trust status), marketplace, products and
+  services (filter bar and four-column card grid), community feed, profile
+  (two columns), and the pop-ups (the listing form was a white sheet in a dark
+  app).
+- **Behaviour fixes found on the way:** buttons that reloaded the whole page
+  now navigate instantly; a "Like" button that did nothing was removed;
+  profile showed the same checklist twice, a stray "\n", and told users an
+  admin approves them "from Supabase"; the signed-out phone menu button was
+  covered by a desktop-only button.
+- **Berg River:** same type and spacing language, sticky period picker, larger
+  verdict, numbered welcome steps.

@@ -61,9 +61,9 @@ function seed(): Record<string, Row[]> {
       { id: 's4', user_id: 'u4', title: 'Website for small businesses', description: 'Simple, fast, mobile-friendly sites.', price: 4500, location: 'Paarl', image_url: '', category: 'Web Development', created_at: iso(12 * day) },
     ],
     posts: [
-      { id: 'f1', user_id: 'u2', username: 'sipho_builds', title: 'Looking for 6 seasonal pickers', content: 'Work starts next week near Riebeek West. Transport provided.', type: 'request', created_at: iso(125) },
-      { id: 'f2', user_id: 'u3', username: 'nomsa_bakes', title: 'Selling surplus flour, 12.5 kg bags', content: 'Bulk price for other bakers. Pickup in Wellington.', type: 'product', created_at: iso(7 * 60) },
-      { id: 'f3', user_id: 'u4', username: 'karoo_tutors', title: 'Free exam-prep workshop on Saturday', content: 'Grade 12 maths paper 1. Bring a calculator.', type: 'general', created_at: iso(2 * day) },
+      { id: 'f1', user_id: 'u2', username: 'sipho_builds', title: 'Looking for 6 seasonal pickers', description: 'Work starts next week near Riebeek West. Transport provided.', price: null, type: 'request', created_at: iso(125) },
+      { id: 'f2', user_id: 'u3', username: 'nomsa_bakes', title: 'Selling surplus flour, 12.5 kg bags', description: 'Bulk price for other bakers. Pickup in Wellington.', price: 'R280', type: 'product', created_at: iso(7 * 60) },
+      { id: 'f3', user_id: 'u4', username: 'karoo_tutors', title: 'Free exam-prep workshop on Saturday', description: 'Grade 12 maths paper 1. Bring a calculator.', type: 'general', created_at: iso(2 * day) },
     ],
     inquiries: [
       { id: 'i1', sender_id: 'u2', recipient_id: ME, sender_username: 'sipho_builds', listing_type: 'product', listing_title: 'Organic butternut (10 kg bag)', message: 'Hi Thandi, can you deliver 5 bags to Porterville on Friday?', read: false, status: 'sent', created_at: iso(95) },

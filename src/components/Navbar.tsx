@@ -43,8 +43,8 @@ export default function Navbar() {
         ) : (
           <>
             <li><a href="#features">Features</a></li>
-            <li><a href="#ecosystem">Ecosystem</a></li>
-            <li><a href="#services">Services</a></li>
+            <li><a href="#who">Who it is for</a></li>
+            <li><a href="#how">How it works</a></li>
           </>
         )}
       </ul>
@@ -62,8 +62,8 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <NavLink viewTransition to="/login" className="btn-nav-ghost nav-desktop-only">Log In</NavLink>
-            <NavLink viewTransition to="/register" className="btn-nav-gold nav-desktop-only">Join Free</NavLink>
+            <NavLink viewTransition to="/login" className="btn-nav-ghost nav-desktop-only">Log in</NavLink>
+            <NavLink viewTransition to="/register" className="btn-nav-gold nav-desktop-only">Get started</NavLink>
           </>
         )}
 
@@ -102,8 +102,8 @@ export default function Navbar() {
             ) : (
               <>
                 <li><a href="#features" onClick={closeMobile}>Features</a></li>
-                <li><a href="#ecosystem" onClick={closeMobile}>Ecosystem</a></li>
-                <li><a href="#services" onClick={closeMobile}>Services</a></li>
+                <li><a href="#who" onClick={closeMobile}>Who it is for</a></li>
+                <li><a href="#how" onClick={closeMobile}>How it works</a></li>
               </>
             )}
           </ul>
@@ -112,8 +112,8 @@ export default function Navbar() {
               <button className="btn-nav-ghost" onClick={handleLogout} type="button">Logout</button>
             ) : (
               <>
-                <NavLink viewTransition to="/login" className="btn-nav-ghost" onClick={closeMobile}>Log In</NavLink>
-                <NavLink viewTransition to="/register" className="btn-nav-gold" onClick={closeMobile}>Join Free</NavLink>
+                <NavLink viewTransition to="/login" className="btn-nav-ghost" onClick={closeMobile}>Log in</NavLink>
+                <NavLink viewTransition to="/register" className="btn-nav-gold" onClick={closeMobile}>Get started</NavLink>
               </>
             )}
           </div>

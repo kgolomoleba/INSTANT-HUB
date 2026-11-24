@@ -5,6 +5,7 @@ import { withProfiles } from '../utils/publicProfiles'
 import { ListingSkeletons } from '../components/ui/Skeleton'
 import ProductCard from '../components/ProductCard'
 import ServiceCard from '../components/ServiceCard'
+import './Listings.css'
 import './Marketplace.css'
 
 interface ProfileData {
@@ -85,63 +86,36 @@ export default function Marketplace() {
 
   return (
     <main className="marketplace-container">
-      <section className="marketplace-hero">
-        <div className="marketplace-hero-grid" aria-hidden="true" />
-        <span className="marketplace-label">Instant Hub Marketplace</span>
-        <h1 className="marketplace-title">MARKETPLACE<br /><span className="marketplace-gold">FOR PRODUCTS & SERVICES</span></h1>
-        <div className="marketplace-pill-row">
-          <span className="marketplace-pill">Verified • Local</span>
-          <span className="marketplace-pill">Fast inquiries</span>
-          <span className="marketplace-pill">Trusted businesses</span>
+      <header className="page-head">
+        <div>
+          <h1>Marketplace</h1>
+          <p>
+            {totals.products} products and {totals.services} services from local businesses. Hiring or asking for help? Use the{' '}
+            <Link to="/feed">Community Feed</Link>.
+          </p>
         </div>
-        <p className="marketplace-desc">
-          Browse verified products and services from trusted businesses, suppliers and local providers.
-        </p>
-        <p className="marketplace-note">
-          The marketplace is for paid product listings and service offers. For hiring, requests and talent sourcing, use the Community Feed.
-        </p>
-        <div className="marketplace-search-wrap">
-          <input
-            className="marketplace-search"
-            type="text"
-            placeholder="Search products and services..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            aria-label="Search marketplace"
-            maxLength={100}
-          />
+        <div className="actions">
+          <Link to="/products" className="btn-secondary">List a product</Link>
+          <Link to="/services" className="btn-primary">Offer a service</Link>
         </div>
-        <div className="marketplace-stats">
-          <div className="mp-stat">
-            <span className="mp-stat-num">{totals.products}</span>
-            <span className="mp-stat-label">Products</span>
-          </div>
-          <div className="mp-stat-divider" />
-          <div className="mp-stat">
-            <span className="mp-stat-num">{totals.services}</span>
-            <span className="mp-stat-label">Services</span>
-          </div>
-          <div className="mp-stat-divider" />
-          <div className="mp-stat">
-            <span className="mp-stat-num">ZA</span>
-            <span className="mp-stat-label">Based</span>
-          </div>
-        </div>
-      </section>
+      </header>
 
-      <div className="marketplace-tabs">
-        {(['all', 'products', 'services'] as Tab[]).map(t => (
-          <button
-            key={t}
-            className={`marketplace-tab ${tab === t ? 'active' : ''}`}
-            onClick={() => setTab(t)}
-          >
-            {t === 'all' ? 'All Listings' : t === 'products' ? 'Products' : 'Services'}
-          </button>
-        ))}
-        <div className="marketplace-tab-actions">
-          <Link to="/products" className="btn-mp-outline">List Product</Link>
-          <Link to="/services" className="btn-mp-outline">Offer Service</Link>
+      <div className="listing-toolbar">
+        <input
+          className="search-input"
+          type="text"
+          placeholder="Search products and services"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          aria-label="Search marketplace"
+          maxLength={100}
+        />
+        <div className="chip-row" role="group" aria-label="Show">
+          {(['all', 'products', 'services'] as Tab[]).map(t => (
+            <button key={t} className={tab === t ? 'active' : ''} aria-pressed={tab === t} onClick={() => setTab(t)}>
+              {t === 'all' ? 'Everything' : t === 'products' ? 'Products' : 'Services'}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -153,7 +127,7 @@ export default function Marketplace() {
             <section className="marketplace-section">
               <div className="marketplace-section-header">
                 <h2>Products</h2>
-                <Link to="/products" className="marketplace-see-all">See all →</Link>
+                <Link to="/products" className="marketplace-see-all">See all</Link>
               </div>
               {filteredProducts.length === 0 ? (
                 <div className="marketplace-empty">
@@ -184,7 +158,7 @@ export default function Marketplace() {
             <section className="marketplace-section">
               <div className="marketplace-section-header">
                 <h2>Services</h2>
-                <Link to="/services" className="marketplace-see-all">See all →</Link>
+                <Link to="/services" className="marketplace-see-all">See all</Link>
               </div>
               {filteredServices.length === 0 ? (
                 <div className="marketplace-empty">

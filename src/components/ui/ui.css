@@ -1,7 +1,7 @@
 /* Instant Hub shared UI: one look for buttons, cards, headings, notices and forms. */
-.ui-page { max-width: 1040px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; display: flex; flex-direction: column; gap: 1.25rem; color: var(--white); }
+.ui-page { display: flex; flex-direction: column; gap: 1.25rem; color: var(--ink); }
 .ui-page-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.75rem 1.5rem; }
-.ui-page-header h1 { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 2.6rem); letter-spacing: 2px; line-height: 1; margin: 0; color: var(--white); }
+.ui-page-header h1 { margin: 0; }
 .ui-page-header p { margin: 0.4rem 0 0; color: var(--gray); max-width: 640px; }
 .ui-page-header .ui-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
@@ -45,7 +45,6 @@
 .ui-badge.green { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
 
 @media (max-width: 600px) {
-  .ui-page { padding: 1rem 0.75rem 3rem; }
   .ui-card { padding: 1rem; }
   .ui-btn { min-height: 44px; }
 }
@@ -78,8 +77,3 @@
   .ui-skel::after, .ui-toast { animation: none; }
 }
 
-/* listing card actions */
-.card-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-.card-actions .btn-contact { flex: 1; }
-.btn-share { display: inline-flex; align-items: center; gap: 0.3rem; min-height: 40px; padding: 0.55rem 0.9rem; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.16); background: transparent; color: var(--white); font: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer; margin-top: 0.2rem; }
-.btn-share:hover { border-color: rgba(255, 255, 255, 0.35); }

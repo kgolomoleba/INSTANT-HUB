@@ -8,87 +8,51 @@ interface OnboardingPanelProps {
   services: number
 }
 
+/** A short checklist that goes away once the account is set up. */
 export default function OnboardingPanel({ profileComplete, products, services }: OnboardingPanelProps) {
-  const hasProducts = products > 0
-  const hasServices = services > 0
-  const needsHelp = !profileComplete || !hasProducts || !hasServices
+  const tasks = [
+    { done: profileComplete, title: 'Complete your profile', hint: 'Add your role, location and a short bio so buyers can trust you.', to: '/profile', cta: 'Open profile', event: 'onboarding_complete_profile_click' },
+    { done: products > 0, title: 'Publish a product', hint: 'List something you sell so buyers can contact you.', to: '/products', cta: 'Add product', event: 'onboarding_publish_product_click' },
+    { done: services > 0, title: 'Offer a service', hint: 'Tell local businesses and buyers what you can do.', to: '/services', cta: 'Add service', event: 'onboarding_publish_service_click' },
+  ]
+  const doneCount = tasks.filter((t) => t.done).length
+  if (doneCount === tasks.length) return null
 
-  const onActionClick = (eventName: string) => {
+  const track = (event: string) => {
     try {
-      trackEvent(eventName, { profileComplete, products, services })
+      void trackEvent(event, { profileComplete, products, services })
     } catch {
-      // ignore analytics errors
+      /* analytics must never break the page */
     }
   }
 
   return (
     <section className="onboarding-panel" aria-labelledby="onboarding-title">
-      <div className="onboarding-panel-header">
-        <div>
-          <span className="onboarding-badge">New</span>
-          <h2 id="onboarding-title">Get started with Instant Hub</h2>
-        </div>
-        <p className="onboarding-panel-copy">
-          Follow this quick launch checklist to make your account discoverable, list your first offers, and start connecting with buyers.
-        </p>
+      <div className="onboarding-head">
+        <h2 id="onboarding-title">Get started</h2>
+        <span className="onboarding-count">
+          {doneCount} of {tasks.length}
+        </span>
       </div>
-
-      {needsHelp ? (
-        <div className="onboarding-tasks">
-          <article className={`task-card ${profileComplete ? 'task-complete' : ''}`}>
-            <div>
-              <h3>Complete your profile</h3>
-              <p>{profileComplete ? 'Your profile is ready to be found by customers.' : 'Add your role, location, and bio so buyers can trust your business.'}</p>
+      <div className="onboarding-bar" role="progressbar" aria-valuemin={0} aria-valuemax={tasks.length} aria-valuenow={doneCount}>
+        <span style={{ width: `${(doneCount / tasks.length) * 100}%` }} />
+      </div>
+      <ul className="onboarding-tasks">
+        {tasks.map((t) => (
+          <li key={t.title} className={`task-card ${t.done ? 'task-complete' : ''}`}>
+            <span className="task-check" aria-hidden="true">{t.done ? '✓' : ''}</span>
+            <div className="task-text">
+              <h3>{t.title}</h3>
+              {!t.done && <p>{t.hint}</p>}
             </div>
-            <Link
-              to="/profile"
-              className="btn-task"
-              onClick={() => onActionClick('onboarding_complete_profile_click')}
-            >
-              {profileComplete ? 'View Profile' : 'Complete Profile'}
-            </Link>
-          </article>
-
-          <article className={`task-card ${hasProducts ? 'task-complete' : ''}`}>
-            <div>
-              <h3>Publish a product</h3>
-              <p>{hasProducts ? 'You already have product listings live.' : 'Share a product listing so buyers can start contacting you.'}</p>
-            </div>
-            <Link
-              to="/products"
-              className="btn-task"
-              onClick={() => onActionClick('onboarding_publish_product_click')}
-            >
-              {hasProducts ? 'Manage Products' : 'Add Product'}
-            </Link>
-          </article>
-
-          <article className={`task-card ${hasServices ? 'task-complete' : ''}`}>
-            <div>
-              <h3>Offer a service</h3>
-              <p>{hasServices ? 'Your service offerings are visible to the marketplace.' : 'List a service to reach local businesses and buyers.'}</p>
-            </div>
-            <Link
-              to="/services"
-              className="btn-task"
-              onClick={() => onActionClick('onboarding_publish_service_click')}
-            >
-              {hasServices ? 'Manage Services' : 'Add Service'}
-            </Link>
-          </article>
-        </div>
-      ) : (
-        <div className="onboarding-success">
-          <h3>Everything looks good.</h3>
-          <p>You're ready to build momentum. Browse the marketplace to convert interest into real business.</p>
-          <Link
-            to="/marketplace"
-            className="btn-primary"
-            onClick={() => onActionClick('onboarding_browse_marketplace_click')}
-          >
-            Explore Marketplace</Link>
-        </div>
-      )}
+            {!t.done && (
+              <Link to={t.to} className="btn-task" onClick={() => track(t.event)}>
+                {t.cta}
+              </Link>
+            )}
+          </li>
+        ))}
+      </ul>
     </section>
   )
 }

@@ -1,204 +1,109 @@
 import { Link } from 'react-router-dom'
 import './Home.css'
 
+const FEATURES = [
+  { title: 'A marketplace for local trade', text: 'List products and services, search by category, and let buyers send you an inquiry in one tap.', tone: 'wide' },
+  { title: 'Verified businesses', text: 'Submit proof of your business and earn a badge that buyers can see on every listing.', tone: '' },
+  { title: 'Financial health you can share', text: 'Track money in and out each month. Give a funder a private link to a clear health report, choose what it shows, and switch it off any time.', tone: 'wide accent' },
+  { title: 'Community feed', text: 'Post a job, ask for help or offer a deal to people nearby.', tone: '' },
+  { title: 'One inbox for inquiries', text: 'Every message lands on your dashboard, with unread counts and replies tracked.', tone: '' },
+  { title: 'Made for your phone', text: 'Add it to your home screen. Pages you have opened still work without signal.', tone: '' },
+]
+
+const ROLES = ['Buyers', 'Sellers', 'Suppliers', 'Manufacturers', 'Skilled workers', 'HR professionals', 'Entrepreneurs', 'Investors and funders']
+
+const STEPS = [
+  { title: 'Create a free account', text: 'Add your business, role and location so people know who you are.' },
+  { title: 'List what you offer', text: 'Publish products or services, and submit proof to get a verified badge.' },
+  { title: 'Grow with confidence', text: 'Answer inquiries, track your finances and share your progress with funders.' },
+]
+
 export default function Home() {
   return (
-    <div className="home-wrapper">
-
-      {/* HERO */}
+    <div className="home">
       <section className="hero" role="banner">
-        <div className="hero-grid" aria-hidden="true" />
-        <div className="hero-glow" aria-hidden="true" />
-
-        <div className="hero-content">
-          <div className="hero-badge">
-            <span className="hero-dot" aria-hidden="true" />
-            Verified · Local · African
-          </div>
-
-          <h1 className="hero-title">
-            WHERE <span className="hero-gold">AFRICAN</span><br />
-            BUSINESS<br />
-            HAPPENS
-          </h1>
-
-          <p className="hero-sub">Verified trade, local sourcing and trusted business relationships</p>
-
-          <p className="hero-desc">
-            One platform for <strong>buyers, sellers, suppliers, contractors,
-            entrepreneurs and investors</strong>, built to make business across Africa easier and more reliable.
+        <div className="hero-copy">
+          <span className="hero-pill">
+            <span aria-hidden="true" className="hero-dot" /> For South African small business
+          </span>
+          <h1>Sell, find and fund small business in one place.</h1>
+          <p className="hero-sub">
+            Instant Hub connects buyers, sellers, suppliers and funders. List what you offer, get inquiries, and show the people who back you how your business is really doing.
           </p>
-          <p className="hero-desc">
-            The marketplace is for fee-based products and services. Hiring, work requests and talent sourcing are handled in the Community Feed.
-          </p>
-
           <div className="hero-cta">
-            <Link to="/register" className="btn-hero">Create Free Account</Link>
-            <Link to="/products" className="btn-hero-outline">Explore Marketplace</Link>
+            <Link to="/register" className="btn-primary big">Create free account</Link>
+            <Link to="/login" className="btn-secondary big">Log in</Link>
           </div>
+        </div>
 
-          <div className="hero-preview" aria-label="Platform highlights">
-            <div className="preview-card">
-              <div className="preview-top">
-                <span className="preview-chip">Live network</span>
-                <span className="preview-pill">Verified • Fast</span>
-              </div>
-              <div className="preview-list">
-                <div className="preview-item">
-                  <span className="preview-bullet" />
-                  <span>Discover trusted products, services, and talent</span>
-                </div>
-                <div className="preview-item">
-                  <span className="preview-bullet" />
-                  <span>Connect with verified business partners in minutes</span>
-                </div>
-                <div className="preview-item">
-                  <span className="preview-bullet" />
-                  <span>Launch deals and grow with one modern hub</span>
-                </div>
-              </div>
+        <div className="hero-art" aria-hidden="true">
+          <span className="art-label">Example</span>
+          <div className="art-card art-listing">
+            <div className="art-img">O</div>
+            <div>
+              <b>Organic butternut, 10 kg bag</b>
+              <span className="art-price">R120.00</span>
+              <span className="art-meta">Paarl · <em>Verified</em></span>
             </div>
           </div>
-
-          <div className="hero-stats">
-            <div className="hero-stat">
-              <span className="stat-num">9+</span>
-              <span className="stat-label">User Roles</span>
+          <div className="art-card art-health">
+            <span className="art-health-title">🟢 Financial health: Healthy</span>
+            <span>Profitable in 6 of 7 months</span>
+            <div className="art-bars">
+              {[40, 55, 48, 66, 72, 88, 80].map((h, i) => (
+                <i key={i} style={{ height: `${h}%` }} />
+              ))}
             </div>
-            <div className="stat-divider" aria-hidden="true" />
-            <div className="hero-stat">
-              <span className="stat-num">1</span>
-              <span className="stat-label">Platform</span>
-            </div>
-            <div className="stat-divider" aria-hidden="true" />
-            <div className="hero-stat">
-              <span className="stat-num">∞</span>
-              <span className="stat-label">Opportunities</span>
-            </div>
-            <div className="stat-divider" aria-hidden="true" />
-            <div className="hero-stat">
-              <span className="stat-num">ZA</span>
-              <span className="stat-label">Starting Here</span>
+          </div>
+          <div className="art-card art-inquiry">
+            <span className="art-avatar">S</span>
+            <div>
+              <b>New inquiry</b>
+              <span>Can you deliver 5 bags on Friday?</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* WHO WE CONNECT */}
-      <section className="ecosystem-section" id="ecosystem" aria-labelledby="ecosystem-title">
-        <span className="section-label">The Ecosystem</span>
-        <h2 id="ecosystem-title" className="section-title">WHO WE CONNECT</h2>
-        <p className="section-desc">Every role in African commerce on one verified business network.</p>
-
-        <div className="roles-grid">
-          {[
-            { name: 'Buyers', desc: 'Find verified products and services', icon: '01' },
-            { name: 'Sellers', desc: 'Reach the right customers', icon: '02' },
-            { name: 'Suppliers', desc: 'Connect with businesses at scale', icon: '03' },
-            { name: 'Manufacturers', desc: 'Showcase capacity and output', icon: '04' },
-            { name: 'Workers', desc: 'Skilled and semi-skilled talent', icon: '05' },
-            { name: 'HR Pros', desc: 'Source verified candidates', icon: '06' },
-            { name: 'Entrepreneurs', desc: 'Build, launch, and grow', icon: '07' },
-            { name: 'Investors', desc: 'Discover fundable businesses', icon: '08' },
-          ].map((role) => (
-            <div className="role-card" key={role.name}>
-              <span className="role-icon">{role.icon}</span>
-              <span className="role-name">{role.name}</span>
-              <span className="role-desc">{role.desc}</span>
-            </div>
+      <section id="features" className="home-section" aria-labelledby="features-title">
+        <h2 id="features-title">Everything a small business needs to be trusted</h2>
+        <div className="bento">
+          {FEATURES.map((f) => (
+            <article key={f.title} className={`bento-tile ${f.tone}`}>
+              <h3>{f.title}</h3>
+              <p>{f.text}</p>
+            </article>
           ))}
         </div>
       </section>
 
-      {/* PROBLEMS WE SOLVE */}
-      <section className="problems-section" aria-labelledby="problems-title">
-        <span className="section-label">Why Instant Hub</span>
-        <h2 id="problems-title" className="section-title">PROBLEMS WE SOLVE</h2>
-        <p className="section-desc">The issues holding back real commerce and how our marketplace solves them.</p>
-
-        <div className="problems-grid">
-          <div className="problem-card">
-            <span className="problem-num" aria-hidden="true">01</span>
-            <h3 className="problem-title">Invisibility</h3>
-            <p className="problem-desc">Many businesses struggle to be seen by the right buyers, suppliers, and partners. We make every listing searchable and easier to discover.</p>
-            <span className="problem-tag">Improved discovery</span>
-          </div>
-          <div className="problem-card">
-            <span className="problem-num" aria-hidden="true">02</span>
-            <h3 className="problem-title">Unverified partners</h3>
-            <p className="problem-desc">It is hard to trust suppliers, contractors and buyers without a verified business identity. Instant Hub gives every listing and profile a trust signal.</p>
-            <span className="problem-tag">Verified profiles</span>
-          </div>
-          <div className="problem-card">
-            <span className="problem-num" aria-hidden="true">03</span>
-            <h3 className="problem-title">Fragmentation</h3>
-            <p className="problem-desc">Sourcing, listing and hiring are spread across too many disconnected platforms. Instant Hub brings them together in one secure business network.</p>
-            <span className="problem-tag">One business network</span>
-          </div>
-        </div>
-      </section>
-
-      {/* CURRENT SERVICES */}
-      <section className="services-section" id="services" aria-labelledby="services-title">
-        <span className="section-label">The Bootstrap</span>
-        <h2 id="services-title" className="section-title">CURRENT SERVICES</h2>
-        <p className="section-desc">Real services from sellers, contractors, and business operators you can hire, book or collaborate with today.</p>
-
-        <div className="services-grid" id="features">
-          {[
-            { name: 'Auto Care', desc: 'Mobile car washing and detailing', status: 'Running', cls: 'status-running' },
-            { name: 'Procurement', desc: 'Connecting products and services for a fee', status: 'Running', cls: 'status-running' },
-            { name: 'Hygienic Services', desc: 'Commercial and residential cleaning', status: 'Launching', cls: 'status-launching' },
-            { name: 'The App', desc: 'First version of the ecosystem platform', status: 'In Dev', cls: 'status-dev' },
-            { name: 'Automation', desc: 'Business automation for African SMEs', status: 'Coming Soon', cls: 'status-soon' },
-          ].map((s) => (
-            <div className="service-item" key={s.name}>
-              <span className={`service-status ${s.cls}`}>{s.status}</span>
-              <span className="service-name">{s.name}</span>
-              <span className="service-desc">{s.desc}</span>
-            </div>
+      <section id="who" className="home-section" aria-labelledby="who-title">
+        <h2 id="who-title">Built for everyone in the deal</h2>
+        <div className="chip-cloud">
+          {ROLES.map((r) => (
+            <span key={r} className="chip">{r}</span>
           ))}
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section className="how-section" aria-labelledby="how-title">
-        <span className="section-label">Simple Process</span>
-        <h2 id="how-title" className="section-title">HOW IT WORKS</h2>
-        <div className="steps-grid">
-          <div className="step-card">
-            <span className="step-num">01</span>
-            <h3>Sign Up</h3>
-            <p>Create your free verified account and personalize your profile.</p>
-          </div>
-          <div className="step-card">
-            <span className="step-num">02</span>
-            <h3>List or Explore</h3>
-            <p>Post your products, offer your skills, or browse the marketplace.</p>
-          </div>
-          <div className="step-card">
-            <span className="step-num">03</span>
-            <h3>Connect & Grow</h3>
-            <p>Our network connects you with the right buyers, suppliers and partners so your business can scale.</p>
-          </div>
-        </div>
+      <section id="how" className="home-section" aria-labelledby="how-title">
+        <h2 id="how-title">How it works</h2>
+        <ol className="steps">
+          {STEPS.map((s, i) => (
+            <li key={s.title}>
+              <span className="step-dot">{i + 1}</span>
+              <h3>{s.title}</h3>
+              <p>{s.text}</p>
+            </li>
+          ))}
+        </ol>
       </section>
 
-      {/* CTA */}
-      <section className="cta-section" aria-labelledby="cta-title">
-        <div className="cta-glow" aria-hidden="true" />
-        <h2 id="cta-title" className="cta-title">
-          READY TO JOIN<br />THE <span className="hero-gold">ECOSYSTEM?</span>
-        </h2>
-        <p className="cta-desc">
-          Join free and start listing products, booking services, or sourcing trusted suppliers. <strong>No credit card required.</strong>
-        </p>
-        <div className="hero-cta">
-          <Link to="/register" className="btn-hero">Create Your Account</Link>
-          <Link to="/products" className="btn-hero-outline">Browse Marketplace</Link>
-        </div>
+      <section className="home-cta" aria-labelledby="cta-title">
+        <h2 id="cta-title">Start with a free account</h2>
+        <p>It takes a minute. List your first product or service today.</p>
+        <Link to="/register" className="btn-primary big">Create free account</Link>
       </section>
-
     </div>
   )
 }
