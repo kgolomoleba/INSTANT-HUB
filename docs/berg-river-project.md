@@ -61,6 +61,12 @@ weather effects across different time periods.
   (`berg-river/supabase/migrations/`). Without Supabase settings the app keeps
   farms in the browser. Not yet run against a real Supabase project.
 
+- **2026-11-24 — Version 2** (focus: looks, reliability, features, speed):
+  period presets, tabs, rename, satellite map, phone-first layout, farm diary
+  (Supabase table `berg_farm_diary`, markers on charts), CSV export, print
+  report, share links, retries/timeouts, on-device cache, partial results,
+  all-farms in parallel with sorting.
+
 ## Verified against real services
 
 - **Open-Meteo**: real response checked, format matches; sends CORS `*`.

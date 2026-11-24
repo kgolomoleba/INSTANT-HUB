@@ -1,0 +1,181 @@
+/**
+ * Network helpers: timeouts, retries, and a cache that survives page reloads.
+ *
+ * Past satellite and weather data never changes, so it's kept on the device
+ * (IndexedDB) and a farm you've looked at before opens without waiting.
+ */
+
+export class FetchError extends Error {
+  constructor(
+    message: string,
+    /** network: blocked/offline/CORS; timeout; http: the server answered with an error */
+    readonly kind: 'network' | 'timeout' | 'http',
+    readonly status?: number
+  ) {
+    super(message)
+  }
+}
+
+type Options = {
+  headers?: Record<string, string>
+  /** How long a saved answer stays valid. 0 = don't save on the device. */
+  ttlMs?: number
+  timeoutMs?: number
+  retries?: number
+  /** Readable name of the service, for error messages. */
+  label?: string
+}
+
+const DAY = 86_400_000
+export const TTL = { past: 30 * DAY, recent: DAY / 4, none: 0 }
+
+const memory = new Map<string, Promise<unknown>>()
+
+export function fetchJson<T>(url: string, opts: Options = {}): Promise<T> {
+  const hit = memory.get(url)
+  if (hit) return hit as Promise<T>
+  const p = (async () => {
+    if (opts.ttlMs) {
+      const saved = await store.get<T>(url)
+      if (saved !== undefined) return saved
+    }
+    const data = await fetchWithRetry<T>(url, opts)
+    if (opts.ttlMs) void store.set(url, data, opts.ttlMs)
+    return data
+  })()
+  p.catch(() => memory.delete(url))
+  memory.set(url, p)
+  return p
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+
+async function fetchOnce<T>(
+  url: string,
+  opts: Options,
+  label: string
+): Promise<T> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? 45_000)
+  try {
+    let res: Response
+    try {
+      res = await fetch(url, {
+        headers: { Accept: 'application/json', ...opts.headers },
+        signal: ctrl.signal,
+      })
+    } catch (e) {
+      if (e instanceof DOMException && e.name === 'AbortError')
+        throw new FetchError(`${label} took too long to answer`, 'timeout')
+      throw new FetchError(`couldn't reach ${label}`, 'network')
+    }
+    if (!res.ok)
+      throw new FetchError(
+        `${label} answered ${res.status}`,
+        'http',
+        res.status
+      )
+    try {
+      return (await res.json()) as T
+    } catch {
+      throw new FetchError(
+        `${label} sent an unreadable answer`,
+        'http',
+        res.status
+      )
+    }
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/** Worth trying again: busy, rate-limited, briefly down, or slow. */
+function retryable(e: FetchError, attempt: number): boolean {
+  if (e.kind === 'timeout') return true
+  if (e.kind === 'http') return e.status === 429 || (e.status ?? 0) >= 500
+  // A blocked (CORS) request fails the same way every time: retry once only.
+  return attempt === 0
+}
+
+async function fetchWithRetry<T>(url: string, opts: Options): Promise<T> {
+  const retries = opts.retries ?? 2
+  const label = opts.label ?? new URL(url).host
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fetchOnce<T>(url, opts, label)
+    } catch (e) {
+      const err = e as FetchError
+      if (attempt >= retries || !retryable(err, attempt)) throw err
+      await sleep(800 * 2 ** attempt + Math.random() * 300)
+    }
+  }
+}
+
+// ---------------------------------------------------------------- IndexedDB
+type Entry = { v: unknown; exp: number }
+const DB = 'berg-river-cache'
+const OS = 'responses'
+let dbp: Promise<IDBDatabase | null> | null = null
+
+function db(): Promise<IDBDatabase | null> {
+  if (!dbp)
+    dbp = new Promise((resolve) => {
+      try {
+        const req = indexedDB.open(DB, 1)
+        req.onupgradeneeded = () => req.result.createObjectStore(OS)
+        req.onsuccess = () => resolve(req.result)
+        req.onerror = () => resolve(null)
+        req.onblocked = () => resolve(null)
+      } catch {
+        resolve(null) // private mode, no IndexedDB, tests
+      }
+    })
+  return dbp
+}
+
+function tx<R>(
+  mode: IDBTransactionMode,
+  fn: (s: IDBObjectStore) => IDBRequest<R>
+): Promise<R | undefined> {
+  return db().then(
+    (d) =>
+      new Promise((resolve) => {
+        if (!d) return resolve(undefined)
+        try {
+          const r = fn(d.transaction(OS, mode).objectStore(OS))
+          r.onsuccess = () => resolve(r.result)
+          r.onerror = () => resolve(undefined)
+        } catch {
+          resolve(undefined)
+        }
+      })
+  )
+}
+
+export const store = {
+  async get<T>(key: string): Promise<T | undefined> {
+    const e = (await tx('readonly', (s) => s.get(key))) as Entry | undefined
+    if (!e) return undefined
+    if (e.exp < Date.now()) {
+      void tx('readwrite', (s) => s.delete(key))
+      return undefined
+    }
+    return e.v as T
+  },
+  async set(key: string, v: unknown, ttlMs: number): Promise<void> {
+    await tx('readwrite', (s) =>
+      s.put({ v, exp: Date.now() + ttlMs } satisfies Entry, key)
+    )
+  },
+  async clear(): Promise<void> {
+    memory.clear()
+    await tx('readwrite', (s) => s.clear())
+  },
+}
+
+/** Past data never changes; data reaching into the last ~10 days may still be filled in. */
+export function ttlFor(endDate: string): number {
+  return Date.parse(endDate + 'T00:00:00Z') < Date.now() - 10 * DAY
+    ? TTL.past
+    : TTL.recent
+}

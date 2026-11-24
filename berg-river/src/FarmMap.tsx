@@ -23,10 +23,26 @@ export default function FarmMap({ farms, selectedId, onSelect, onAdd }: Props) {
       [-33.25, 18.75],
       9
     )
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18,
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(m)
+    const streets = L.tileLayer(
+      'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+      {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors',
+      }
+    )
+    const satellite = L.tileLayer(
+      'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      {
+        maxZoom: 19,
+        attribution: 'Imagery &copy; Esri, Maxar, Earthstar Geographics',
+      }
+    )
+    satellite.addTo(m)
+    L.control
+      .layers({ Satellite: satellite, Map: streets }, undefined, {
+        position: 'topright',
+      })
+      .addTo(m)
     L.polyline(RIVER_LINE, {
       color: '#2a78d6',
       weight: 3,

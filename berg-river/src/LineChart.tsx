@@ -7,19 +7,24 @@ export type ChartSeries = {
   color: string
   points: ChartPoint[]
 }
+/** A dated note drawn as a marker on the chart (from the farm diary). */
+export type ChartEvent = { x: number; label: string; color: string }
 
 type Props = {
   title: string
   series: ChartSeries[]
   xMax: number
   format: (y: number) => string
+  /** Label for an x value (day of period), e.g. "1 Jun". */
+  xLabel?: (x: number) => string
   yMin?: number
   yMaxFloor?: number
   markers?: boolean
+  events?: ChartEvent[]
 }
 
 const H = 240
-const M = { top: 12, right: 16, bottom: 28, left: 48 }
+const M = { top: 18, right: 16, bottom: 28, left: 48 }
 
 function niceTicks(min: number, max: number, count = 4): number[] {
   const span = max - min || 1
@@ -39,9 +44,11 @@ export default function LineChart({
   series,
   xMax,
   format,
+  xLabel = (x) => (x === 0 ? 'day 0' : String(x)),
   yMin = 0,
   yMaxFloor = 0,
   markers,
+  events = [],
 }: Props) {
   const wrap = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(600)
@@ -65,7 +72,9 @@ export default function LineChart({
   const ih = H - M.top - M.bottom
   const sx = (x: number) => M.left + (x / Math.max(1, xMax)) * iw
   const sy = (y: number) => M.top + ih - ((y - yMin) / (yTop - yMin || 1)) * ih
-  const ticksX = niceTicks(0, xMax, Math.max(2, Math.floor(iw / 90)))
+  // Ticks at whole months would need the period start; evenly spaced days work for any period.
+  const tickCount = Math.max(2, Math.floor(iw / 80))
+  const ticksX = niceTicks(0, xMax, tickCount).filter((t) => t <= xMax)
 
   const nearest = (s: ChartSeries, x: number) => {
     let best: ChartPoint | null = null
@@ -82,6 +91,10 @@ export default function LineChart({
 
   const hovered =
     hoverX == null ? [] : series.map((s) => ({ s, p: nearest(s, hoverX) }))
+  const hoveredEvents =
+    hoverX == null
+      ? []
+      : events.filter((ev) => Math.abs(ev.x - hoverX) <= Math.max(2, xMax / 60))
   const tipLeft = hoverX == null ? 0 : sx(hoverX)
 
   return (
@@ -95,6 +108,11 @@ export default function LineChart({
               {s.label}
             </span>
           ))}
+          {events.length > 0 && (
+            <span className="legend-item">
+              <b className="event-key">◆</b>diary note
+            </span>
+          )}
         </span>
       </figcaption>
       <div className="chart-body">
@@ -127,8 +145,27 @@ export default function LineChart({
               y={H - 8}
               textAnchor="middle"
             >
-              {t === 0 ? 'day 0' : t}
+              {xLabel(t)}
             </text>
+          ))}
+          {events.map((ev, i) => (
+            <g key={i} className="event">
+              <line
+                x1={sx(ev.x)}
+                x2={sx(ev.x)}
+                y1={M.top}
+                y2={M.top + ih}
+                stroke={ev.color}
+              />
+              <text
+                x={sx(ev.x)}
+                y={M.top - 4}
+                textAnchor="middle"
+                fill={ev.color}
+              >
+                ◆
+              </text>
+            </g>
           ))}
           {series.map((s) => {
             const d = s.points
@@ -205,21 +242,31 @@ export default function LineChart({
             height={ih}
             fill="transparent"
             onPointerMove={onMove}
+            onPointerDown={onMove}
             onPointerLeave={() => setHoverX(null)}
           />
         </svg>
         {hoverX != null && (
           <div
             className="tooltip"
-            style={{ left: Math.min(Math.max(tipLeft, 90), w - 90) }}
+            style={{ left: Math.min(Math.max(tipLeft, 100), w - 100) }}
           >
-            <div className="tooltip-head">Day {hoverX}</div>
+            <div className="tooltip-head">{xLabel(hoverX)}</div>
             {hovered.map(({ s, p }) => (
               <div key={s.key} className="tooltip-row">
                 <i style={{ background: s.color }} />
                 <span>{s.label}</span>
                 <b>{p ? format(p.y) : '—'}</b>
                 <small>{p?.date ?? ''}</small>
+              </div>
+            ))}
+            {hoveredEvents.map((ev, i) => (
+              <div
+                key={i}
+                className="tooltip-event"
+                style={{ borderColor: ev.color }}
+              >
+                {ev.label}
               </div>
             ))}
           </div>

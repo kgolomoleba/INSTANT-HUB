@@ -1,0 +1,123 @@
+import { useEffect, useState } from 'react'
+import {
+  fetchNdvi,
+  fetchWeather,
+  type DailyWeather,
+  type NdviPoint,
+} from './api'
+import type { Farm } from './farms'
+import {
+  computeStats,
+  partialStats,
+  type Period,
+  type PeriodStats,
+} from './stats'
+
+export type Part<T> = {
+  data: [T, T] | null
+  loading: boolean
+  error: string | null
+}
+
+export type FarmData = {
+  weather: Part<DailyWeather>
+  ndvi: Part<NdviPoint[]>
+  /** Available as soon as either source has loaded; missing values show as —. */
+  stats: [PeriodStats, PeriodStats] | null
+}
+
+const empty = <T>(): Part<T> => ({ data: null, loading: false, error: null })
+const msg = (e: unknown) => (e instanceof Error ? e.message : String(e))
+
+export function ndviArea(f: Farm, size: 0 | 1) {
+  return f.boundary
+    ? ({ kind: 'boundary', boundary: f.boundary } as const)
+    : ({ kind: 'square', km: size } as const)
+}
+
+/** Weather and satellite data load independently: one failing doesn't hide the other. */
+export function useFarmData(
+  farm: Farm | null,
+  periods: [Period, Period],
+  size: 0 | 1,
+  enabled: boolean,
+  reloadKey = 0
+): FarmData {
+  const [weather, setWeather] = useState<Part<DailyWeather>>(empty)
+  const [ndvi, setNdvi] = useState<Part<NdviPoint[]>>(empty)
+  const [a, b] = periods
+
+  useEffect(() => {
+    if (!farm || !enabled) {
+      setWeather(empty())
+      setNdvi(empty())
+      return
+    }
+    let live = true
+    setWeather({ data: null, loading: true, error: null })
+    setNdvi({ data: null, loading: true, error: null })
+    Promise.all([
+      fetchWeather(farm.lat, farm.lon, a.start, a.end),
+      fetchWeather(farm.lat, farm.lon, b.start, b.end),
+    ])
+      .then((d) => live && setWeather({ data: d, loading: false, error: null }))
+      .catch(
+        (e) => live && setWeather({ data: null, loading: false, error: msg(e) })
+      )
+    const area = ndviArea(farm, size)
+    Promise.all([
+      fetchNdvi(farm.lat, farm.lon, a.start, a.end, area),
+      fetchNdvi(farm.lat, farm.lon, b.start, b.end, area),
+    ])
+      .then((d) => live && setNdvi({ data: d, loading: false, error: null }))
+      .catch(
+        (e) => live && setNdvi({ data: null, loading: false, error: msg(e) })
+      )
+    return () => {
+      live = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [farm, a.start, a.end, b.start, b.end, size, enabled, reloadKey])
+
+  const stats: FarmData['stats'] =
+    weather.data || ndvi.data
+      ? ([0, 1].map((i) =>
+          partialStats(weather.data?.[i] ?? null, ndvi.data?.[i] ?? null)
+        ) as [PeriodStats, PeriodStats])
+      : null
+  return { weather, ndvi, stats }
+}
+
+/** Load several farms a few at a time (for the all-farms table). */
+export async function loadFarmStats(
+  farm: Farm,
+  periods: [Period, Period],
+  size: 0 | 1
+): Promise<[PeriodStats, PeriodStats]> {
+  const [a, b] = periods
+  const area = ndviArea(farm, size)
+  const [wa, wb, na, nb] = await Promise.all([
+    fetchWeather(farm.lat, farm.lon, a.start, a.end),
+    fetchWeather(farm.lat, farm.lon, b.start, b.end),
+    fetchNdvi(farm.lat, farm.lon, a.start, a.end, area),
+    fetchNdvi(farm.lat, farm.lon, b.start, b.end, area),
+  ])
+  return [computeStats(wa, na), computeStats(wb, nb)]
+}
+
+export async function mapLimit<T, R>(
+  items: T[],
+  limit: number,
+  fn: (t: T, i: number) => Promise<R>
+): Promise<void> {
+  let next = 0
+  const worker = async () => {
+    while (next < items.length) {
+      const i = next++
+      await fn(items[i], i)
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, worker)
+  )
+}

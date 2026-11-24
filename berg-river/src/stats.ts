@@ -67,6 +67,31 @@ export function computeStats(w: DailyWeather, ndvi: NdviPoint[]): PeriodStats {
   }
 }
 
+/** Stats when one source failed: the missing source's values are NaN (shown as —). */
+export function partialStats(
+  w: DailyWeather | null,
+  ndvi: NdviPoint[] | null
+): PeriodStats {
+  const s = computeStats(
+    w ?? { dates: [], rain: [], tmax: [], tmin: [], et0: [] },
+    ndvi ?? []
+  )
+  if (!w)
+    for (const k of [
+      'totalRain',
+      'rainDays',
+      'meanTmax',
+      'hotDays',
+      'frostDays',
+      'longestDrySpell',
+      'et0',
+      'waterBalance',
+      'days',
+    ] as const)
+      s[k] = NaN
+  return s
+}
+
 export function dayIndex(start: string, date: string): number {
   return Math.round(
     (Date.parse(date + 'T00:00:00Z') - Date.parse(start + 'T00:00:00Z')) /

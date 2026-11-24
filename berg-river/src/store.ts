@@ -113,3 +113,48 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 export function withUuid(f: Farm): Farm {
   return UUID.test(f.id) ? f : { ...f, id: newId() }
 }
+
+// ------------------------------------------------------------------- diary
+export type DiaryEntry = {
+  id: string
+  farmId: string
+  day: string
+  note: string
+}
+
+type DiaryRow = { id: string; farm_id: string; day: string; note: string }
+
+export async function fetchDiary(): Promise<DiaryEntry[]> {
+  const { data, error } = await need()
+    .from('berg_farm_diary')
+    .select('id,farm_id,day,note')
+    .order('day')
+  if (error) throw new Error(error.message)
+  return (data as DiaryRow[]).map((r) => ({
+    id: r.id,
+    farmId: r.farm_id,
+    day: r.day,
+    note: r.note,
+  }))
+}
+
+export async function insertDiary(entries: DiaryEntry[]): Promise<void> {
+  if (!entries.length) return
+  const { error } = await need()
+    .from('berg_farm_diary')
+    .upsert(
+      entries.map((e) => ({
+        id: e.id,
+        farm_id: e.farmId,
+        day: e.day,
+        note: e.note,
+      })),
+      { onConflict: 'id', ignoreDuplicates: true }
+    )
+  if (error) throw new Error(error.message)
+}
+
+export async function deleteDiary(id: string): Promise<void> {
+  const { error } = await need().from('berg_farm_diary').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}

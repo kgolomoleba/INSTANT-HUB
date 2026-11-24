@@ -1,3 +1,4 @@
+import type { DiaryEntry } from './store'
 import type { MultiPolygon } from './geo'
 import { CFM_SG_SERVICE } from './boundaries'
 
@@ -67,5 +68,29 @@ export function saveLayerUrl(url: string) {
     localStorage.setItem(LAYER_KEY, url)
   } catch {
     /* ignore */
+  }
+}
+
+// Diary entries kept in this browser when signed out.
+const DIARY_KEY = 'berg-river:diary'
+export function loadLocalDiary(): DiaryEntry[] {
+  try {
+    const v = JSON.parse(
+      localStorage.getItem(DIARY_KEY) ?? '[]'
+    ) as DiaryEntry[]
+    return Array.isArray(v)
+      ? v.filter(
+          (e) => e && typeof e.day === 'string' && typeof e.note === 'string'
+        )
+      : []
+  } catch {
+    return []
+  }
+}
+export function saveLocalDiary(entries: DiaryEntry[]) {
+  try {
+    localStorage.setItem(DIARY_KEY, JSON.stringify(entries))
+  } catch {
+    /* storage unavailable */
   }
 }

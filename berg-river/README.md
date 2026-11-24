@@ -3,22 +3,30 @@
 A standalone web app that compares **vegetation (crop) cover** on farms along the
 Berg River with the **weather**, between two time periods.
 
-## What it shows
+## What it does
 
-For a selected farm and two periods (A and B):
+- **Compare two periods** with one tap: this winter season vs last year's,
+  summer vs summer, the last 90 days vs a year ago, or the last 12 months vs
+  the 12 before. Or pick custom dates.
+- **Per farm**, in tabs:
+  - **Overview**: a plain-language summary and side-by-side figures (green
+    cover, rainfall, longest dry spell, daily highs, hot and frost days, rain
+    minus evaporation).
+  - **Charts**: green cover and rainfall through each period, with diary
+    notes marked on them.
+  - **Crops**: crops recorded on the farm in the Western Cape crop census.
+  - **Diary**: dated notes (planting, spraying, hail, fire...). Notes inside
+    the compared periods appear as ◆ on the charts.
+- **Download** a farm's data as a spreadsheet (one row per day), **print** a
+  report, or **share a link** that opens the same farm and periods.
+- **All farms**: the same comparison for every farm, biggest drop in green
+  cover first, downloadable as a spreadsheet.
+- **Satellite map** (with a street map option) for finding farms.
 
-- **Green cover**: estimated % of vegetation cover from NASA MODIS NDVI
-  (250 m, one reading every 16 days), drawn over the period.
-- **Rainfall**: cumulative rainfall over the period.
-- **Comparison tiles**: average green cover and NDVI, rainfall, rain days, longest
-  dry spell, average daily high, days at or above 35 °C, frost days, and rainfall
-  minus evaporation (ET0).
-- **Plain-language summary** of what changed between A and B.
-- **All farms table**: the same comparison across every farm at once.
-
-Click the map to add farms. Signed out, they're saved in this browser.
-Signed in, they're saved to your account and show on every device; farms
-added before signing in are moved into the account.
+Weather and satellite data load separately, so if one service is down the
+other still shows, with a "Try again" button. Requests that fail because a
+service is busy are retried automatically, and data you've viewed is kept on
+the device (IndexedDB) so it opens instantly next time.
 
 ## Farm boundaries
 
@@ -54,13 +62,13 @@ Satellite, weather and boundary data are fetched directly from the browser.
 
 ## Accounts (optional, Supabase)
 
-Without Supabase settings the app works fully, with farms kept in the browser.
+Without Supabase settings the app works fully, with farms and diary kept in the browser.
 To turn on sign-in (email link) and online saving:
 
 1. In a Supabase project (Instant Hub's or a new one), run
-   `supabase/migrations/20261124000000_create_berg_farms.sql` (SQL editor, or
-   `supabase db push`). It creates the `berg_farms` table; row-level security
-   lets each user see and change only their own farms.
+   the migrations in `supabase/migrations/` (SQL editor, or `supabase db push`).
+   They create `berg_farms` and `berg_farm_diary`; row-level security lets each
+   user see and change only their own farms and notes.
 2. In Supabase → Authentication → URL Configuration, add the app's address
    (e.g. `http://localhost:5173`) to the redirect URLs.
 3. Deploy the satellite fallback function (used only if a browser can't reach
@@ -80,4 +88,11 @@ It's a rough, generic estimate: read it as a trend, not an exact percentage.
 cd berg-river
 npm install
 npm run dev
+```
+
+## Tests
+
+```bash
+npm test          # app logic: stats, periods, polygons, imports, exports, network retries
+npm run test:db   # database rules on a throwaway local PostgreSQL (needs PostgreSQL installed)
 ```
