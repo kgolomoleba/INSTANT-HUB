@@ -2,3 +2,6 @@
 [functions.modis-ndvi]
 # Public satellite data: callable with the anon key, no signed-in user needed.
 verify_jwt = false
+
+[functions.sentinel-ndvi]
+verify_jwt = false

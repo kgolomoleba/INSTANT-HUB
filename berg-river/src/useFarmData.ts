@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import {
-  fetchNdvi,
+  fetchGreenness,
   fetchWeather,
   type DailyWeather,
   type NdviPoint,
+  type Satellite,
 } from './api'
 import type { Farm } from './farms'
 import {
@@ -17,6 +18,8 @@ export type Part<T> = {
   data: [T, T] | null
   loading: boolean
   error: string | null
+  /** Which satellite the green-cover readings came from. */
+  satellite?: Satellite
 }
 
 export type FarmData = {
@@ -64,12 +67,17 @@ export function useFarmData(
       .catch(
         (e) => live && setWeather({ data: null, loading: false, error: msg(e) })
       )
-    const area = ndviArea(farm, size)
-    Promise.all([
-      fetchNdvi(farm.lat, farm.lon, a.start, a.end, area),
-      fetchNdvi(farm.lat, farm.lon, b.start, b.end, area),
-    ])
-      .then((d) => live && setNdvi({ data: d, loading: false, error: null }))
+    fetchGreenness(farm.lat, farm.lon, [a, b], ndviArea(farm, size))
+      .then(
+        (g) =>
+          live &&
+          setNdvi({
+            data: g.points,
+            loading: false,
+            error: null,
+            satellite: g.satellite,
+          })
+      )
       .catch(
         (e) => live && setNdvi({ data: null, loading: false, error: msg(e) })
       )
@@ -96,13 +104,14 @@ export async function loadFarmStats(
 ): Promise<[PeriodStats, PeriodStats]> {
   const [a, b] = periods
   const area = ndviArea(farm, size)
-  const [wa, wb, na, nb] = await Promise.all([
-    fetchWeather(farm.lat, farm.lon, a.start, a.end),
-    fetchWeather(farm.lat, farm.lon, b.start, b.end),
-    fetchNdvi(farm.lat, farm.lon, a.start, a.end, area),
-    fetchNdvi(farm.lat, farm.lon, b.start, b.end, area),
+  const [[wa, wb], g] = await Promise.all([
+    Promise.all([
+      fetchWeather(farm.lat, farm.lon, a.start, a.end),
+      fetchWeather(farm.lat, farm.lon, b.start, b.end),
+    ]),
+    fetchGreenness(farm.lat, farm.lon, periods, area),
   ])
-  return [computeStats(wa, na), computeStats(wb, nb)]
+  return [computeStats(wa, g.points[0]), computeStats(wb, g.points[1])]
 }
 
 export async function mapLimit<T, R>(

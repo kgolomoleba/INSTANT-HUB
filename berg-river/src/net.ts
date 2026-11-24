@@ -18,6 +18,8 @@ export class FetchError extends Error {
 
 type Options = {
   headers?: Record<string, string>
+  /** Send as a JSON POST. Part of the cache key. */
+  body?: unknown
   /** How long a saved answer stays valid. 0 = don't save on the device. */
   ttlMs?: number
   timeoutMs?: number
@@ -32,19 +34,21 @@ export const TTL = { past: 30 * DAY, recent: DAY / 4, none: 0 }
 const memory = new Map<string, Promise<unknown>>()
 
 export function fetchJson<T>(url: string, opts: Options = {}): Promise<T> {
-  const hit = memory.get(url)
+  const key =
+    opts.body === undefined ? url : `${url} ${JSON.stringify(opts.body)}`
+  const hit = memory.get(key)
   if (hit) return hit as Promise<T>
   const p = (async () => {
     if (opts.ttlMs) {
-      const saved = await store.get<T>(url)
+      const saved = await store.get<T>(key)
       if (saved !== undefined) return saved
     }
     const data = await fetchWithRetry<T>(url, opts)
-    if (opts.ttlMs) void store.set(url, data, opts.ttlMs)
+    if (opts.ttlMs) void store.set(key, data, opts.ttlMs)
     return data
   })()
-  p.catch(() => memory.delete(url))
-  memory.set(url, p)
+  p.catch(() => memory.delete(key))
+  memory.set(key, p)
   return p
 }
 
@@ -61,7 +65,15 @@ async function fetchOnce<T>(
     let res: Response
     try {
       res = await fetch(url, {
-        headers: { Accept: 'application/json', ...opts.headers },
+        method: opts.body === undefined ? 'GET' : 'POST',
+        headers: {
+          Accept: 'application/json',
+          ...(opts.body === undefined
+            ? {}
+            : { 'Content-Type': 'application/json' }),
+          ...opts.headers,
+        },
+        body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
         signal: ctrl.signal,
       })
     } catch (e) {

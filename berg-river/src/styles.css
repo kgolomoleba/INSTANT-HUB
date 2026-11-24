@@ -1147,3 +1147,8 @@ td.drop {
     text-decoration: none;
   }
 }
+.satellite-note {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: var(--text-3);
+}

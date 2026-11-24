@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import CropsPanel from './CropsPanel'
 import LineChart, { type ChartEvent, type ChartSeries } from './LineChart'
 import { LATEST, periodName } from './periods'
+import { SATELLITE_LABEL } from './api'
 import { download, farmCsv, fileSafe } from './exports'
 import type { Farm } from './farms'
 import { fmtHa } from './Sidebar'
@@ -102,6 +103,11 @@ export default function FarmView(p: Props) {
         onSize={p.onSize}
         onRename={p.onRename}
       />
+      {p.data.ndvi.satellite && (
+        <p className="satellite-note">
+          Satellite: {SATELLITE_LABEL[p.data.ndvi.satellite]}
+        </p>
+      )}
 
       <div className="actions no-print">
         <button

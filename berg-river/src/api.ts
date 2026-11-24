@@ -248,3 +248,86 @@ export function pixelMask(
   if (!mask.some(Boolean)) mask[nearest] = true
   return mask
 }
+
+// ------------------------------------------------------------ Sentinel-2
+export type Satellite = 'sentinel-2' | 'modis'
+export const SATELLITE_LABEL: Record<Satellite, string> = {
+  'sentinel-2': 'Sentinel-2 (10 m, every 5 days)',
+  modis: 'NASA MODIS (250 m, every 16 days)',
+}
+const SENTINEL_START = '2017-03-28'
+let sentinelOff = !SUPABASE_URL || !SUPABASE_KEY
+
+function areaGeometry(lat: number, lon: number, area: NdviArea) {
+  if (area.kind === 'boundary')
+    return { type: 'MultiPolygon', coordinates: area.boundary }
+  const dy = (area.km === 1 ? 1000 : 125) / 111_320
+  const dx = dy / Math.cos((lat * Math.PI) / 180)
+  const ring = [
+    [lon - dx, lat + dy],
+    [lon + dx, lat + dy],
+    [lon + dx, lat - dy],
+    [lon - dx, lat - dy],
+    [lon - dx, lat + dy],
+  ]
+  return { type: 'Polygon', coordinates: [ring] }
+}
+
+async function fetchSentinel(
+  lat: number,
+  lon: number,
+  start: string,
+  end: string,
+  area: NdviArea
+): Promise<NdviPoint[]> {
+  const r = await fetchJson<{ points: { date: string; ndvi: number }[] }>(
+    `${SUPABASE_URL!.replace(/\/$/, '')}/functions/v1/sentinel-ndvi`,
+    {
+      body: { geometry: areaGeometry(lat, lon, area), start, end },
+      headers: {
+        apikey: SUPABASE_KEY!,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+      },
+      ttlMs: ttlFor(end),
+      timeoutMs: 90_000,
+      retries: 1,
+      label: 'the Sentinel-2 service',
+    }
+  )
+  return r.points.map((p) => ({ date: p.date, ndvi: p.ndvi }))
+}
+
+/**
+ * Green-cover readings for both periods from the same satellite: Sentinel-2
+ * when it's set up and covers both periods, otherwise NASA MODIS.
+ */
+export async function fetchGreenness(
+  lat: number,
+  lon: number,
+  periods: [{ start: string; end: string }, { start: string; end: string }],
+  area: NdviArea
+): Promise<{ satellite: Satellite; points: [NdviPoint[], NdviPoint[]] }> {
+  const [a, b] = periods
+  if (!sentinelOff && a.start >= SENTINEL_START && b.start >= SENTINEL_START) {
+    try {
+      const points = (await Promise.all([
+        fetchSentinel(lat, lon, a.start, a.end, area),
+        fetchSentinel(lat, lon, b.start, b.end, area),
+      ])) as [NdviPoint[], NdviPoint[]]
+      return { satellite: 'sentinel-2', points }
+    } catch (e) {
+      // Not deployed (404) or not set up (503): stop trying for this visit.
+      if (
+        e instanceof FetchError &&
+        e.kind === 'http' &&
+        (e.status === 404 || e.status === 503)
+      )
+        sentinelOff = true
+    }
+  }
+  const points = (await Promise.all([
+    fetchNdvi(lat, lon, a.start, a.end, area),
+    fetchNdvi(lat, lon, b.start, b.end, area),
+  ])) as [NdviPoint[], NdviPoint[]]
+  return { satellite: 'modis', points }
+}
