@@ -3,6 +3,24 @@
 A standalone web app that compares **vegetation (crop) cover** on farms along the
 Berg River with the **weather**, between two time periods.
 
+## Made for everyone
+
+- **English and Afrikaans** (switch at the top; phones set to Afrikaans open in
+  Afrikaans). The Afrikaans was written carefully but should be checked by a
+  native speaker.
+- **One clear answer first**: 🟢 greener / 🟡 about the same / 🔴 less green
+  than last year, with the reason in one line.
+- **Four figures** (green cover, rain, longest dry spell, hot days) with ↑/↓,
+  colour and words ("7 less than 2024–25"); everything else under "More details".
+- **Find your farm** with "Use my location" or a list of Berg River towns, then
+  tap inside the farm. In-app dialogs instead of browser pop-ups; big buttons
+  on phones.
+- **Each farm gets the right season automatically** from the crop census:
+  summer for vineyards and orchards, winter for wheat and canola, the whole
+  year for grazing. Tapping a season remembers it for that farm.
+- **Berg River area**: the official G10 catchment and DWS river line are drawn
+  on the map, and adding a farm outside the catchment asks first.
+
 ## What it does
 
 - **Compare two periods** with one tap: this winter season vs last year's,
@@ -67,7 +85,7 @@ To turn on sign-in (email link) and online saving:
 
 1. In a Supabase project (Instant Hub's or a new one), run
    the migrations in `supabase/migrations/` (SQL editor, or `supabase db push`).
-   They create `berg_farms` and `berg_farm_diary`; row-level security lets each
+   They create `berg_farms` (with each farm's `season`) and `berg_farm_diary`; row-level security lets each
    user see and change only their own farms and notes.
 2. In Supabase → Authentication → URL Configuration, add the app's address
    (e.g. `http://localhost:5173`) to the redirect URLs.

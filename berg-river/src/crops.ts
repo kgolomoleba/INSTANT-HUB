@@ -197,3 +197,24 @@ export async function cropCensus(farm: {
     })
   )
 }
+
+/**
+ * The farm's main growing season from the crop census (2023, else 2017):
+ * vineyards and orchards show up in the summer layers, wheat and canola in
+ * the winter ones. No crops recorded (e.g. grazing): the whole year.
+ */
+export function guessSeason(
+  census: CensusResult[]
+): 'winter' | 'summer' | 'year' {
+  for (const year of [2023, 2017, 2013]) {
+    const area = (season: string) =>
+      census
+        .filter((c) => c.year === year && c.season === season)
+        .flatMap((c) => c.rows)
+        .reduce((s, r) => s + r.areaHa, 0)
+    const w = area('Winter')
+    const s = area('Summer')
+    if (w + s > 0) return s > w ? 'summer' : 'winter'
+  }
+  return 'year'
+}

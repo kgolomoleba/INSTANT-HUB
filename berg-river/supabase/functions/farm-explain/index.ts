@@ -35,9 +35,11 @@ Write 3 to 5 short sentences in plain English for the farmer:
 - Green cover is an estimate from satellite readings, good for trends rather than exact percentages; mention this
   only if the change is small or the readings are few.
 - If something important is missing (for example no satellite readings), say so briefly.
-No headings, no bullet points, no jargon such as NDVI or ET0 unless you explain it.`
+No headings, no bullet points, no jargon such as NDVI or ET0 unless you explain it.
+Write in the language given in "language" (English or Afrikaans); for Afrikaans use plain, everyday farm Afrikaans.`
 
 type Body = {
+  language?: string
   farm?: { name?: string; areaHa?: number; satellite?: string }
   periods?: { a?: string; b?: string }
   stats?: Record<string, unknown>
@@ -67,6 +69,7 @@ Deno.serve(async (req) => {
 
   // Keep only what's needed; diary notes and names are the farmer's own text.
   const input = {
+    language: body.language === 'Afrikaans' ? 'Afrikaans' : 'English',
     farm: { name: String(body.farm?.name ?? '').slice(0, 200), area_ha: body.farm?.areaHa, satellite: body.farm?.satellite },
     period_a: String(body.periods.a).slice(0, 60),
     period_b: String(body.periods.b).slice(0, 60),

@@ -1,7 +1,11 @@
 import { useState } from 'react'
-import FarmMap from './FarmMap'
+import FarmMap, { type MapFocus } from './FarmMap'
+import { TOWNS } from './area'
 import { CFM_SG_SERVICE } from './boundaries'
+import { useDialog } from './Dialog'
 import type { Farm } from './farms'
+import type { MultiPolygon } from './geo'
+import { useI18n } from './i18n'
 import type { Notice } from './useFarms'
 
 export const fmtHa = (ha?: number) =>
@@ -15,6 +19,8 @@ type Props = {
   picking: boolean
   layerInput: string
   layerUrl: string | null
+  river: [number, number][][] | null
+  area: MultiPolygon | null
   onLayerInput: (v: string) => void
   onSelect: (id: string) => void
   onMapClick: (lat: number, lon: number) => void
@@ -23,52 +29,118 @@ type Props = {
 }
 
 export default function Sidebar(p: Props) {
+  const { t } = useI18n()
+  const dialog = useDialog()
   const [filter, setFilter] = useState('')
+  const [focus, setFocus] = useState<MapFocus | null>(null)
+  const [locating, setLocating] = useState(false)
+  const [findMsg, setFindMsg] = useState<{
+    text: string
+    error?: boolean
+  } | null>(null)
   const shown = filter
     ? p.farms.filter((f) => f.name.toLowerCase().includes(filter.toLowerCase()))
     : p.farms
 
+  const goTo = (lat: number, lon: number, zoom: number) => {
+    setFocus({ lat, lon, zoom, key: Date.now() })
+    setFindMsg({ text: t('find.tapFarm') })
+  }
+
+  const myLocation = () => {
+    if (!navigator.geolocation)
+      return setFindMsg({ text: t('find.noLocation'), error: true })
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false)
+        goTo(pos.coords.latitude, pos.coords.longitude, 15)
+      },
+      () => {
+        setLocating(false)
+        setFindMsg({ text: t('find.noLocation'), error: true })
+      },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 }
+    )
+  }
+
+  const message = p.picking
+    ? { text: t('find.lookingUp') }
+    : (p.notice ?? findMsg)
+
   return (
     <aside className="side" id="farms">
+      <div className="find">
+        <h2>{t('find.title')}</h2>
+        <div className="find-row">
+          <button
+            type="button"
+            className="primary big"
+            onClick={myLocation}
+            disabled={locating}
+          >
+            {locating ? t('find.locating') : t('find.myLocation')}
+          </button>
+          <select
+            className="big"
+            aria-label={t('find.town')}
+            value=""
+            onChange={(e) => {
+              const town = TOWNS.find((x) => x.name === e.target.value)
+              if (town) goTo(town.lat, town.lon, 13)
+            }}
+          >
+            <option value="">{t('find.townPick')}</option>
+            {TOWNS.map((x) => (
+              <option key={x.name} value={x.name}>
+                {x.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
       <FarmMap
         farms={p.farms}
         selectedId={p.selected?.id ?? ''}
         onSelect={p.onSelect}
         onAdd={p.onMapClick}
+        river={p.river}
+        area={p.area}
+        focus={focus}
+        labels={{
+          map: t('map.label'),
+          river: t('map.river'),
+          area: t('map.area'),
+        }}
       />
-      <p className="hint">
-        {p.picking
-          ? 'Looking up the farm boundary…'
-          : p.layerUrl
-            ? 'Tap inside a farm on the map to add it with its boundary.'
-            : 'Tap the map to add a farm as a point.'}
-      </p>
-      {p.notice && (
+      {message && (
         <p
-          className={`notice small ${p.notice.error ? 'error' : 'ok'}`}
-          role={p.notice.error ? 'alert' : 'status'}
+          className={`notice small ${message.error ? 'error' : 'ok'}`}
+          role={message.error ? 'alert' : 'status'}
         >
-          {p.notice.text}
+          {message.text}
         </p>
       )}
 
       <div className="farm-list-head">
         <h2>
-          Your farms {p.farms.length > 0 && <small>{p.farms.length}</small>}
+          {t('farms.title')}{' '}
+          {p.farms.length > 0 && <small>{p.farms.length}</small>}
         </h2>
         {p.farms.length > 6 && (
           <input
             type="search"
-            placeholder="Find a farm"
+            placeholder={t('farms.find')}
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            aria-label="Find a farm"
+            aria-label={t('farms.find')}
           />
         )}
       </div>
-      {p.loading && <p className="hint">Loading your farms…</p>}
+      {p.loading && <p className="hint">{t('farms.loading')}</p>}
       {!p.farms.length && !p.loading && (
-        <p className="hint empty-list">No farms yet.</p>
+        <p className="hint empty-list">{t('farms.none')}</p>
       )}
       {shown.length > 0 && (
         <ul className="farm-list">
@@ -80,18 +152,19 @@ export default function Sidebar(p: Props) {
                 aria-current={f.id === p.selected?.id}
               >
                 <span>{f.name}</span>
-                <small>{f.boundary ? fmtHa(f.areaHa) : 'point'}</small>
+                <small>{f.boundary ? fmtHa(f.areaHa) : t('farms.point')}</small>
               </button>
               <button
                 type="button"
                 className="remove"
-                onClick={() =>
-                  window.confirm(
-                    `Remove ${f.name}? Its diary notes are removed too.`
-                  ) && p.onRemove(f)
+                onClick={async () =>
+                  (await dialog.confirm(
+                    t('farms.removeConfirm', { name: f.name }),
+                    t('farms.remove')
+                  )) && p.onRemove(f)
                 }
-                aria-label={`Remove ${f.name}`}
-                title="Remove"
+                aria-label={`${t('farms.remove')} ${f.name}`}
+                title={t('farms.remove')}
               >
                 ×
               </button>
@@ -101,9 +174,9 @@ export default function Sidebar(p: Props) {
       )}
 
       <details className="boundaries">
-        <summary>Add farms another way</summary>
+        <summary>{t('farms.other')}</summary>
         <label className="file">
-          Import boundaries from a file (KML or GeoJSON)
+          {t('farms.import')}
           <input
             type="file"
             accept=".kml,.geojson,.json"
@@ -113,38 +186,33 @@ export default function Sidebar(p: Props) {
             }}
           />
         </label>
-        <label className="stack">
-          Boundary service (ArcGIS)
+        <details className="how">
+          <summary>{t('farms.advanced')}</summary>
           <input
             type="url"
             placeholder={CFM_SG_SERVICE}
             value={p.layerInput}
             onChange={(e) => p.onLayerInput(e.target.value)}
             disabled={p.picking}
+            aria-label={t('farms.advanced')}
           />
-        </label>
-        {p.layerInput && !p.layerUrl && (
-          <p className="notice small error">
-            That doesn't look like an ArcGIS address. It should end in
-            /MapServer or /FeatureServer, optionally followed by a layer number.
-          </p>
-        )}
-        <p className="hint">
-          {p.layerUrl === CFM_SG_SERVICE
-            ? "Using Cape Farm Mapper's Surveyor-General farm portions."
-            : p.layerUrl
-              ? 'Using a custom layer. '
-              : ''}
-          {p.layerUrl !== CFM_SG_SERVICE && (
-            <button
-              type="button"
-              className="link"
-              onClick={() => p.onLayerInput(CFM_SG_SERVICE)}
-            >
-              Use Cape Farm Mapper
-            </button>
+          {p.layerInput && !p.layerUrl && (
+            <p className="notice small error">{t('farms.badService')}</p>
           )}
-        </p>
+          <p className="hint">
+            {p.layerUrl === CFM_SG_SERVICE ? (
+              t('farms.cfm')
+            ) : (
+              <button
+                type="button"
+                className="link"
+                onClick={() => p.onLayerInput(CFM_SG_SERVICE)}
+              >
+                {t('farms.useCfm')}
+              </button>
+            )}
+          </p>
+        </details>
       </details>
     </aside>
   )

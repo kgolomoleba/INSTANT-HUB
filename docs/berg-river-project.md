@@ -75,6 +75,14 @@ weather effects across different time periods.
   low effort, refusal fallback on, signed-in users only). Keep it simple for
   users: extras appear automatically when configured, no new settings.
 
+- **2026-11-24 — For any farm in the Berg River area; English + Afrikaans.**
+  Farms of any kind (grain, vineyards/orchards, grazing); each farm's default
+  season from the crop census. Official G10 catchment + DWS river line from
+  the Western Cape DoA Water MapServer; farms outside the catchment need a
+  confirmation. Simpler screen for non-technical users: verdict first, four
+  figures, find-my-farm, welcome steps, in-app dialogs, big touch targets.
+  Afrikaans text to be checked by a native speaker.
+
 ## Verified against real services
 
 - **Open-Meteo**: real response checked, format matches; sends CORS `*`.

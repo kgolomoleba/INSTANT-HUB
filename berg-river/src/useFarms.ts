@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import {
   loadLocalDiary,
@@ -9,15 +9,22 @@ import {
 } from './farms'
 import * as store from './store'
 import type { DiaryEntry } from './store'
+import type { T } from './i18n'
 
 export type Notice = { text: string; error?: boolean } | null
-const msg = (e: unknown) => (e instanceof Error ? e.message : String(e))
 
 /**
  * The farm list and farm diary. Signed out: kept in this browser.
  * Signed in: kept in the account; anything added before signing in moves there.
  */
-export function useFarms(session: Session | null, notify: (n: Notice) => void) {
+export function useFarms(
+  session: Session | null,
+  notify: (n: Notice) => void,
+  tNow: T
+) {
+  const tRef = useRef(tNow)
+  tRef.current = tNow
+  const t: T = (k, v) => tRef.current(k, v)
   const signedIn = !!session
   const userId = session?.user.id
   const [farms, setFarms] = useState<Farm[]>(() =>
@@ -54,9 +61,7 @@ export function useFarms(session: Session | null, notify: (n: Notice) => void) {
           saveLocalDiary([])
         }
         if (live && local.length)
-          notify({
-            text: `Saved ${local.length} farm${local.length === 1 ? '' : 's'} from this browser to your account.`,
-          })
+          notify({ text: t('farms.moved', { n: local.length }) })
         const [remote, remoteDiary] = await Promise.all([
           store.fetchFarms(),
           store.fetchDiary().catch(() => []),
@@ -65,12 +70,8 @@ export function useFarms(session: Session | null, notify: (n: Notice) => void) {
           setFarms(remote)
           setDiary(remoteDiary)
         }
-      } catch (e) {
-        if (live)
-          notify({
-            text: `Couldn't load your saved farms: ${msg(e)}`,
-            error: true,
-          })
+      } catch {
+        if (live) notify({ text: t('farms.loadError'), error: true })
       } finally {
         if (live) setLoading(false)
       }
@@ -85,13 +86,10 @@ export function useFarms(session: Session | null, notify: (n: Notice) => void) {
       if (!added.length) return
       setFarms((fs) => [...added, ...fs])
       if (signedIn)
-        store.insertFarms(added).catch((e: unknown) => {
+        store.insertFarms(added).catch(() => {
           const ids = new Set(added.map((f) => f.id))
           setFarms((fs) => fs.filter((f) => !ids.has(f.id)))
-          notify({
-            text: `Couldn't save to your account: ${msg(e)}`,
-            error: true,
-          })
+          notify({ text: t('farms.saveError'), error: true })
         })
     },
     [signedIn, notify]
@@ -102,14 +100,11 @@ export function useFarms(session: Session | null, notify: (n: Notice) => void) {
       setFarms((fs) => fs.filter((f) => f.id !== farm.id))
       setDiary((d) => d.filter((e) => e.farmId !== farm.id))
       if (signedIn)
-        store.deleteFarm(farm.id).catch((e: unknown) => {
+        store.deleteFarm(farm.id).catch(() => {
           setFarms((fs) =>
             fs.some((f) => f.id === farm.id) ? fs : [farm, ...fs]
           )
-          notify({
-            text: `Couldn't remove ${farm.name} from your account: ${msg(e)}`,
-            error: true,
-          })
+          notify({ text: t('farms.saveError'), error: true })
         })
     },
     [signedIn, notify]
@@ -123,17 +118,24 @@ export function useFarms(session: Session | null, notify: (n: Notice) => void) {
         fs.map((f) => (f.id === farm.id ? { ...f, name: clean } : f))
       )
       if (signedIn)
-        store.renameFarm(farm.id, clean).catch((e: unknown) => {
+        store.renameFarm(farm.id, clean).catch(() => {
           setFarms((fs) =>
             fs.map((f) => (f.id === farm.id ? { ...f, name: farm.name } : f))
           )
-          notify({
-            text: `Couldn't rename ${farm.name}: ${msg(e)}`,
-            error: true,
-          })
+          notify({ text: t('farms.saveError'), error: true })
         })
     },
     [signedIn, notify]
+  )
+
+  const setSeason = useCallback(
+    (farm: Farm, season: NonNullable<Farm['season']>) => {
+      if (farm.season === season) return
+      setFarms((fs) => fs.map((f) => (f.id === farm.id ? { ...f, season } : f)))
+      // Best effort: an older database without the column just keeps it on this device for now.
+      if (signedIn) store.setFarmSeason(farm.id, season).catch(() => {})
+    },
+    [signedIn]
   )
 
   const addDiary = useCallback(
@@ -147,12 +149,9 @@ export function useFarms(session: Session | null, notify: (n: Notice) => void) {
       if (!entry.note) return
       setDiary((d) => [...d, entry].sort((a, b) => a.day.localeCompare(b.day)))
       if (signedIn)
-        store.insertDiary([entry]).catch((e: unknown) => {
+        store.insertDiary([entry]).catch(() => {
           setDiary((d) => d.filter((x) => x.id !== entry.id))
-          notify({
-            text: `Couldn't save the diary note: ${msg(e)}`,
-            error: true,
-          })
+          notify({ text: t('diary.saveError'), error: true })
         })
     },
     [signedIn, notify]
@@ -162,14 +161,11 @@ export function useFarms(session: Session | null, notify: (n: Notice) => void) {
     (entry: DiaryEntry) => {
       setDiary((d) => d.filter((x) => x.id !== entry.id))
       if (signedIn)
-        store.deleteDiary(entry.id).catch((e: unknown) => {
+        store.deleteDiary(entry.id).catch(() => {
           setDiary((d) =>
             [...d, entry].sort((a, b) => a.day.localeCompare(b.day))
           )
-          notify({
-            text: `Couldn't delete the diary note: ${msg(e)}`,
-            error: true,
-          })
+          notify({ text: t('diary.saveError'), error: true })
         })
     },
     [signedIn, notify]
@@ -184,5 +180,6 @@ export function useFarms(session: Session | null, notify: (n: Notice) => void) {
     renameFarm,
     addDiary,
     removeDiary,
+    setSeason,
   }
 }

@@ -2,15 +2,16 @@ import { useEffect, useRef, useState } from 'react'
 import CropsPanel from './CropsPanel'
 import LineChart, { type ChartEvent, type ChartSeries } from './LineChart'
 import { LATEST, periodName } from './periods'
-import { SATELLITE_LABEL } from './api'
 import { download, farmCsv, fileSafe } from './exports'
-import type { Farm } from './farms'
+import type { Farm, Season } from './farms'
+import { useI18n, locale, type Key, type T } from './i18n'
 import { fmtHa } from './Sidebar'
 import {
   coverFromNdvi,
   dayIndex,
   describe,
   periodDays,
+  verdict,
   type Period,
   type PeriodStats,
 } from './stats'
@@ -18,16 +19,12 @@ import type { DiaryEntry } from './store'
 import type { FarmData } from './useFarmData'
 
 type Tab = 'overview' | 'charts' | 'crops' | 'diary'
-const TABS: { id: Tab; label: string }[] = [
-  { id: 'overview', label: 'Overview' },
-  { id: 'charts', label: 'Charts' },
-  { id: 'crops', label: 'Crops' },
-  { id: 'diary', label: 'Diary' },
+const TABS: { id: Tab; key: Key }[] = [
+  { id: 'overview', key: 'tab.overview' },
+  { id: 'charts', key: 'tab.charts' },
+  { id: 'crops', key: 'tab.crops' },
+  { id: 'diary', key: 'tab.diary' },
 ]
-
-const fmt = (n: number, d = 0) => (Number.isFinite(n) ? n.toFixed(d) : '—')
-const signed = (n: number, d = 0) =>
-  Number.isFinite(n) ? `${n > 0 ? '+' : ''}${n.toFixed(d)}` : '—'
 
 type Props = {
   farm: Farm
@@ -40,27 +37,31 @@ type Props = {
   onAddDiary: (day: string, note: string) => void
   onRemoveDiary: (e: DiaryEntry) => void
   onRename: (name: string) => void
+  onSeason: (s: Season) => void
   shareUrl: string
-  /** Present when signed in with Supabase: enables 'Explain this season'. */
+  /** Present when signed in with Supabase: enables the plain-words explanation. */
   explain?: (payload: Record<string, unknown>) => Promise<string>
 }
 
 export default function FarmView(p: Props) {
+  const { t, lang } = useI18n()
   const [tab, setTab] = useState<Tab>('overview')
   const [printing, setPrinting] = useState(false)
   const [copied, setCopied] = useState(false)
+  const loc = locale(lang)
   const names: [string, string] = [
-    periodName(p.periods[0], p.periods[1]),
-    periodName(p.periods[1], p.periods[0]),
+    periodName(p.periods[0], p.periods[1], loc),
+    periodName(p.periods[1], p.periods[0], loc),
   ]
+  const loading = p.data.weather.loading || p.data.ndvi.loading
 
   useEffect(() => {
     if (!printing) return
     const done = () => setPrinting(false)
     window.addEventListener('afterprint', done)
-    const t = setTimeout(() => window.print(), 300) // let all sections render first
+    const timer = setTimeout(() => window.print(), 300)
     return () => {
-      clearTimeout(t)
+      clearTimeout(timer)
       window.removeEventListener('afterprint', done)
     }
   }, [printing])
@@ -82,7 +83,7 @@ export default function FarmView(p: Props) {
     try {
       if (navigator.share)
         await navigator.share({
-          title: `${p.farm.name}: Berg River Farms`,
+          title: `${p.farm.name}: ${t('app.title')}`,
           url: p.shareUrl,
         })
       else {
@@ -95,7 +96,7 @@ export default function FarmView(p: Props) {
     }
   }
 
-  const show = (t: Tab) => printing || tab === t
+  const show = (x: Tab) => printing || tab === x
 
   return (
     <article className="farm-view">
@@ -104,81 +105,58 @@ export default function FarmView(p: Props) {
         size={p.size}
         onSize={p.onSize}
         onRename={p.onRename}
+        onSeason={p.onSeason}
       />
-      {p.data.ndvi.satellite && (
-        <p className="satellite-note">
-          Satellite: {SATELLITE_LABEL[p.data.ndvi.satellite]}
-        </p>
-      )}
 
-      <div className="actions no-print">
-        <button
-          type="button"
-          onClick={exportCsv}
-          disabled={!p.data.weather.data && !p.data.ndvi.data}
-        >
-          Download data (CSV)
-        </button>
-        <button type="button" onClick={() => setPrinting(true)}>
-          Print report
-        </button>
-        <button type="button" onClick={share}>
-          {copied ? 'Link copied' : 'Share link'}
-        </button>
-      </div>
+      <Verdict stats={p.data.stats} names={names} loading={loading} t={t} />
 
       <div className="tabs no-print" role="tablist">
-        {TABS.map((t) => (
+        {TABS.map((x) => (
           <button
-            key={t.id}
+            key={x.id}
             type="button"
             role="tab"
-            aria-selected={tab === t.id}
-            className={tab === t.id ? 'on' : ''}
-            onClick={() => setTab(t.id)}
+            aria-selected={tab === x.id}
+            className={tab === x.id ? 'on' : ''}
+            onClick={() => setTab(x.id)}
           >
-            {t.label}
-            {t.id === 'diary' && p.diary.length > 0 && (
+            {t(x.key)}
+            {x.id === 'diary' && p.diary.length > 0 && (
               <span className="count">{p.diary.length}</span>
             )}
           </button>
         ))}
       </div>
 
-      <SourceStatus data={p.data} onRetry={p.onRetry} />
+      <Problems data={p.data} onRetry={p.onRetry} t={t} />
 
       {show('overview') && (
         <>
-          <Overview
-            stats={p.data.stats}
-            names={names}
-            loading={p.data.weather.loading || p.data.ndvi.loading}
-          />
-          {p.explain &&
-            p.data.stats &&
-            !p.data.ndvi.loading &&
-            !p.data.weather.loading && (
-              <Explain
-                key={`${p.periods[0].start}${p.periods[1].start}${p.periods[0].end}${p.periods[1].end}`}
-                run={() =>
-                  p.explain!({
-                    farm: {
-                      name: p.farm.name,
-                      areaHa: p.farm.areaHa,
-                      satellite: p.data.ndvi.satellite,
-                    },
-                    periods: { a: names[0], b: names[1] },
-                    stats: {
-                      a: roundStats(p.data.stats![0]),
-                      b: roundStats(p.data.stats![1]),
-                    },
-                    diary: p.diary.filter((e) =>
-                      p.periods.some((q) => e.day >= q.start && e.day <= q.end)
-                    ),
-                  })
-                }
-              />
-            )}
+          <Figures stats={p.data.stats} names={names} loading={loading} t={t} />
+          {p.explain && p.data.stats && !loading && (
+            <Explain
+              key={`${p.periods[0].start}${p.periods[1].start}${p.periods[0].end}${p.periods[1].end}${lang}`}
+              t={t}
+              run={() =>
+                p.explain!({
+                  language: lang === 'af' ? 'Afrikaans' : 'English',
+                  farm: {
+                    name: p.farm.name,
+                    areaHa: p.farm.areaHa,
+                    satellite: p.data.ndvi.satellite,
+                  },
+                  periods: { a: names[0], b: names[1] },
+                  stats: {
+                    a: roundStats(p.data.stats![0]),
+                    b: roundStats(p.data.stats![1]),
+                  },
+                  diary: p.diary.filter((e) =>
+                    p.periods.some((q) => e.day >= q.start && e.day <= q.end)
+                  ),
+                })
+              }
+            />
+          )}
         </>
       )}
       {show('charts') && (
@@ -198,6 +176,27 @@ export default function FarmView(p: Props) {
           onRemove={p.onRemoveDiary}
         />
       )}
+
+      <div className="actions no-print">
+        <button
+          type="button"
+          onClick={exportCsv}
+          disabled={!p.data.weather.data && !p.data.ndvi.data}
+        >
+          ⬇ {t('farm.download')}
+        </button>
+        <button type="button" onClick={() => setPrinting(true)}>
+          🖨 {t('farm.print')}
+        </button>
+        <button type="button" onClick={share}>
+          ↗ {copied ? t('farm.copied') : t('farm.share')}
+        </button>
+      </div>
+      {p.data.ndvi.satellite && (
+        <p className="satellite-note">
+          {t(`farm.satellite.${p.data.ndvi.satellite}` as Key)}
+        </p>
+      )}
     </article>
   )
 }
@@ -207,12 +206,15 @@ function FarmHeader({
   size,
   onSize,
   onRename,
+  onSeason,
 }: {
   farm: Farm
   size: 0 | 1
   onSize: (s: 0 | 1) => void
   onRename: (n: string) => void
+  onSeason: (s: Season) => void
 }) {
+  const { t } = useI18n()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(farm.name)
   const input = useRef<HTMLInputElement>(null)
@@ -220,10 +222,6 @@ function FarmHeader({
   useEffect(() => {
     if (editing) input.current?.select()
   }, [editing])
-  const save = () => {
-    onRename(name)
-    setEditing(false)
-  }
 
   return (
     <header className="farm-head">
@@ -232,7 +230,8 @@ function FarmHeader({
           className="rename"
           onSubmit={(e) => {
             e.preventDefault()
-            save()
+            onRename(name)
+            setEditing(false)
           }}
         >
           <input
@@ -240,16 +239,18 @@ function FarmHeader({
             value={name}
             onChange={(e) => setName(e.target.value)}
             maxLength={200}
-            aria-label="Farm name"
+            aria-label={t('farm.name')}
             onKeyDown={(e) => e.key === 'Escape' && setEditing(false)}
           />
-          <button type="submit">Save</button>
+          <button type="submit" className="primary">
+            {t('farm.save')}
+          </button>
           <button
             type="button"
             className="link"
             onClick={() => setEditing(false)}
           >
-            Cancel
+            {t('farm.cancel')}
           </button>
         </form>
       ) : (
@@ -260,188 +261,329 @@ function FarmHeader({
             className="link rename-btn no-print"
             onClick={() => setEditing(true)}
           >
-            Rename
+            {t('farm.rename')}
           </button>
         </h2>
       )}
       <p className="meta">
-        {farm.boundary ? (
-          <>
-            {fmtHa(farm.areaHa)} · boundary from{' '}
-            {farm.source === 'file' ? 'an imported file' : 'Cape Farm Mapper'} ·
-            satellite readings inside the boundary
-          </>
-        ) : (
-          <>
-            Point at {farm.lat.toFixed(3)}, {farm.lon.toFixed(3)} · satellite
-            readings from{' '}
-            <select
-              value={size}
-              onChange={(e) => onSize(Number(e.target.value) as 0 | 1)}
-              aria-label="Area around the point"
-            >
-              <option value={1}>a 2 × 2 km square around it</option>
-              <option value={0}>the single 250 m pixel</option>
-            </select>
-          </>
+        {farm.boundary
+          ? t('farm.meta.boundary', {
+              ha: fmtHa(farm.areaHa),
+              source: t(
+                farm.source === 'file' ? 'farm.meta.file' : 'farm.meta.cfm'
+              ),
+            })
+          : t('farm.meta.point', { area: '' })}
+        {!farm.boundary && (
+          <select
+            value={size}
+            onChange={(e) => onSize(Number(e.target.value) as 0 | 1)}
+            aria-label={t('farm.meta.point', { area: '' })}
+          >
+            <option value={1}>{t('farm.area.square')}</option>
+            <option value={0}>{t('farm.area.pixel')}</option>
+          </select>
         )}
+        <span className="no-print">
+          {' · '}
+          <label>
+            {t('farm.season')}{' '}
+            <select
+              value={farm.season ?? 'winter'}
+              onChange={(e) => onSeason(e.target.value as Season)}
+            >
+              <option value="winter">{t('season.winter')}</option>
+              <option value="summer">{t('season.summer')}</option>
+              <option value="year">{t('season.year')}</option>
+            </select>
+          </label>
+        </span>
       </p>
     </header>
   )
 }
 
-function SourceStatus({
+function Problems({
   data,
   onRetry,
+  t,
 }: {
   data: FarmData
   onRetry: () => void
+  t: T
 }) {
-  const errs = [
-    data.ndvi.error && `Satellite data: ${data.ndvi.error}.`,
-    data.weather.error && `Weather data: ${data.weather.error}.`,
-  ].filter(Boolean)
-  if (!errs.length) return null
+  const items = [
+    data.ndvi.error && {
+      text: t('problem.satellite'),
+      detail: data.ndvi.error,
+    },
+    data.weather.error && {
+      text: t('problem.weather'),
+      detail: data.weather.error,
+    },
+  ].filter(Boolean) as { text: string; detail: string }[]
+  if (!items.length) return null
   return (
     <div className="notice error source-error" role="alert">
       <div>
-        {errs.map((e) => (
-          <div key={e as string}>{e}</div>
+        {items.map((x) => (
+          <div key={x.text}>{x.text}</div>
         ))}
-        <small>Everything that did load is shown below.</small>
+        <small>{t('problem.hint')}</small>
+        <details>
+          <summary>{t('problem.details')}</summary>
+          {items.map((x) => (
+            <div key={x.detail}>{x.detail}</div>
+          ))}
+        </details>
       </div>
-      <button type="button" onClick={onRetry}>
-        Try again
+      <button type="button" className="primary" onClick={onRetry}>
+        {t('problem.retry')}
       </button>
     </div>
   )
 }
 
-function Overview({
+function Verdict({
   stats,
   names,
   loading,
+  t,
 }: {
   stats: [PeriodStats, PeriodStats] | null
   names: [string, string]
   loading: boolean
+  t: T
 }) {
+  if (!stats)
+    return loading ? (
+      <div className="verdict loading">{t('verdict.loading')}</div>
+    ) : null
+  const v = verdict(stats[0], stats[1], names[0], t)
+  if (v.tone === 'unknown') return null
+  const icon = v.tone === 'good' ? '🟢' : v.tone === 'bad' ? '🔴' : '🟡'
+  return (
+    <section className={`verdict ${v.tone}`} aria-live="polite">
+      <div className="verdict-title">
+        <span aria-hidden="true">{icon}</span> {names[1]}: {v.title}
+      </div>
+      {v.reasons.length > 0 && (
+        <div className="verdict-why">{v.reasons.join(' ')}</div>
+      )}
+    </section>
+  )
+}
+
+type Fig = {
+  key: Key
+  a: number
+  b: number
+  unit: string
+  d?: number
+  better?: 'up' | 'down'
+}
+
+function Figures({
+  stats,
+  names,
+  loading,
+  t,
+}: {
+  stats: [PeriodStats, PeriodStats] | null
+  names: [string, string]
+  loading: boolean
+  t: T
+}) {
+  const [more, setMore] = useState(false)
   if (!stats && loading)
     return (
-      <div className="tiles" aria-busy="true" aria-label="Loading">
-        {Array.from({ length: 6 }, (_, i) => (
-          <div key={i} className="tile skeleton" />
+      <div className="figures" aria-busy="true">
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="figure skeleton" />
         ))}
       </div>
     )
   if (!stats) return null
   const [a, b] = stats
-  const tiles = [
+  const main: Fig[] = [
     {
-      label: 'Green cover (avg)',
-      a: fmt(a.meanCover),
-      b: fmt(b.meanCover),
-      d: signed(b.meanCover - a.meanCover),
+      key: 'fig.cover',
+      a: a.meanCover,
+      b: b.meanCover,
       unit: '%',
-      key: true,
+      better: 'up',
     },
     {
-      label: 'Rainfall',
-      a: fmt(a.totalRain),
-      b: fmt(b.totalRain),
-      d: signed(b.totalRain - a.totalRain),
+      key: 'fig.rain',
+      a: a.totalRain,
+      b: b.totalRain,
       unit: 'mm',
-      key: true,
+      better: 'up',
     },
     {
-      label: 'Longest dry spell',
-      a: fmt(a.longestDrySpell),
-      b: fmt(b.longestDrySpell),
-      d: signed(b.longestDrySpell - a.longestDrySpell),
-      unit: 'days',
-      key: true,
+      key: 'fig.dry',
+      a: a.longestDrySpell,
+      b: b.longestDrySpell,
+      unit: t('unit.days'),
+      better: 'down',
     },
+    { key: 'fig.hot', a: a.hotDays, b: b.hotDays, unit: '', better: 'down' },
+  ]
+  const extra: Fig[] = [
+    { key: 'fig.high', a: a.meanTmax, b: b.meanTmax, unit: '°C', d: 1 },
     {
-      label: 'Avg daily high',
-      a: fmt(a.meanTmax, 1),
-      b: fmt(b.meanTmax, 1),
-      d: signed(b.meanTmax - a.meanTmax, 1),
-      unit: '°C',
-      key: true,
-    },
-    {
-      label: 'Peak green cover',
-      a: fmt(coverFromNdvi(a.peakNdvi)),
-      b: fmt(coverFromNdvi(b.peakNdvi)),
-      d: signed(coverFromNdvi(b.peakNdvi) - coverFromNdvi(a.peakNdvi)),
+      key: 'fig.peak',
+      a: coverFromNdvi(a.peakNdvi),
+      b: coverFromNdvi(b.peakNdvi),
       unit: '%',
+      better: 'up',
     },
     {
-      label: 'Rain days (≥ 1 mm)',
-      a: fmt(a.rainDays),
-      b: fmt(b.rainDays),
-      d: signed(b.rainDays - a.rainDays),
+      key: 'fig.rainDays',
+      a: a.rainDays,
+      b: b.rainDays,
       unit: '',
+      better: 'up',
     },
     {
-      label: 'Days ≥ 35 °C',
-      a: fmt(a.hotDays),
-      b: fmt(b.hotDays),
-      d: signed(b.hotDays - a.hotDays),
+      key: 'fig.frost',
+      a: a.frostDays,
+      b: b.frostDays,
       unit: '',
+      better: 'down',
     },
     {
-      label: 'Frost days (≤ 0 °C)',
-      a: fmt(a.frostDays),
-      b: fmt(b.frostDays),
-      d: signed(b.frostDays - a.frostDays),
-      unit: '',
-    },
-    {
-      label: 'Rain minus evaporation',
-      a: fmt(a.waterBalance),
-      b: fmt(b.waterBalance),
-      d: signed(b.waterBalance - a.waterBalance),
+      key: 'fig.balance',
+      a: a.waterBalance,
+      b: b.waterBalance,
       unit: 'mm',
+      better: 'up',
     },
     {
-      label: 'NDVI (avg)',
-      a: fmt(a.meanNdvi, 2),
-      b: fmt(b.meanNdvi, 2),
-      d: signed(b.meanNdvi - a.meanNdvi, 2),
+      key: 'fig.ndvi',
+      a: a.meanNdvi,
+      b: b.meanNdvi,
       unit: '',
+      d: 2,
+      better: 'up',
     },
   ]
-  const lines = describe(a, b, names[0], names[1])
+  const lines = describe(a, b, names[0], names[1], t)
   return (
     <section className="overview">
-      {lines.length > 0 && (
-        <ul className="summary">
-          {lines.map((s) => (
-            <li key={s}>{s}</li>
-          ))}
-        </ul>
-      )}
-      <div className="tiles">
-        {tiles.map((t) => (
-          <div key={t.label} className={`tile ${t.key ? 'key' : ''}`}>
-            <div className="tile-label">{t.label}</div>
-            <div className="tile-values">
-              <span title={names[0]}>
-                <i className="dot d1" />
-                {t.a}
-              </span>
-              <span title={names[1]}>
-                <i className="dot d2" />
-                {t.b}
-              </span>
-              <span className="unit">{t.unit}</span>
-            </div>
-            <div className="tile-delta">change {t.d}</div>
-          </div>
+      <div className="figures">
+        {main.map((f) => (
+          <Figure key={f.key} f={f} names={names} t={t} />
         ))}
       </div>
-      {loading && <p className="hint">Still loading some data…</p>}
+      <button
+        type="button"
+        className="link more no-print"
+        aria-expanded={more}
+        onClick={() => setMore((m) => !m)}
+      >
+        {more ? `▲ ${t('fig.less')}` : `▼ ${t('fig.more')}`}
+      </button>
+      {more && (
+        <>
+          <div className="figures small">
+            {extra.map((f) => (
+              <Figure key={f.key} f={f} names={names} t={t} />
+            ))}
+          </div>
+          {lines.length > 0 && (
+            <ul className="summary">
+              {lines.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+      {loading && <p className="hint">{t('fig.stillLoading')}</p>}
+    </section>
+  )
+}
+
+function Figure({ f, names, t }: { f: Fig; names: [string, string]; t: T }) {
+  const digits = f.d ?? 0
+  const fmt = (n: number) => (Number.isFinite(n) ? n.toFixed(digits) : '—')
+  const diff = f.b - f.a
+  const known = Number.isFinite(diff)
+  const small =
+    known && Math.abs(diff) < (digits ? 0.5 * 10 ** -digits * 10 : 0.5)
+  const good =
+    !known || small || !f.better ? null : diff > 0 === (f.better === 'up')
+  const arrow = !known || small ? '' : diff > 0 ? '↑' : '↓'
+  const words = !known
+    ? ''
+    : small
+      ? t('fig.same_as', { a: names[0] })
+      : `${Math.abs(diff).toFixed(digits)} ${t(diff > 0 ? 'fig.more_than' : 'fig.less_than', { a: names[0] })}`
+  return (
+    <div
+      className={`figure ${good === true ? 'good' : good === false ? 'bad' : ''}`}
+    >
+      <div className="figure-label">{t(f.key)}</div>
+      <div className="figure-main">
+        <span className="figure-value">
+          {fmt(f.b)}
+          <small> {f.unit}</small>
+        </span>
+        <span className="figure-period">{names[1]}</span>
+      </div>
+      <div className="figure-change">
+        {arrow && <b aria-hidden="true">{arrow} </b>}
+        {words}
+      </div>
+      <div className="figure-prev">
+        {names[0]}: {fmt(f.a)} {f.unit}
+      </div>
+    </div>
+  )
+}
+
+const roundStats = (s: PeriodStats) =>
+  Object.fromEntries(
+    Object.entries(s).map(([k, v]) => [
+      k,
+      Number.isFinite(v) ? Math.round(v * 100) / 100 : null,
+    ])
+  )
+
+function Explain({ run, t }: { run: () => Promise<string>; t: T }) {
+  const [state, setState] = useState<{
+    kind: 'idle' | 'busy' | 'done' | 'error'
+    text?: string
+  }>({ kind: 'idle' })
+  const go = async () => {
+    setState({ kind: 'busy' })
+    try {
+      setState({ kind: 'done', text: await run() })
+    } catch {
+      setState({ kind: 'error', text: t('explain.error') })
+    }
+  }
+  return (
+    <section className="explain" aria-live="polite">
+      {state.kind === 'done' ? (
+        <>
+          <p className="explain-text">{state.text}</p>
+          <p className="explain-foot">{t('explain.foot')}</p>
+        </>
+      ) : (
+        <button
+          type="button"
+          className="explain-btn no-print"
+          onClick={go}
+          disabled={state.kind === 'busy'}
+        >
+          {state.kind === 'busy' ? t('explain.busy') : t('explain.button')}
+        </button>
+      )}
+      {state.kind === 'error' && (
+        <p className="notice small error">{state.text}</p>
+      )}
     </section>
   )
 }
@@ -457,14 +599,14 @@ function Charts({
   data: FarmData
   diary: DiaryEntry[]
 }) {
+  const { t, lang } = useI18n()
   const [table, setTable] = useState(false)
   const xMax = Math.max(periodDays(periods[0]), periodDays(periods[1])) - 1
   const color = (i: number) => `var(--series-${i + 1})`
-  // Label days by period B's calendar (e.g. "1 Jun"); periods usually share a season.
   const xLabel = (x: number) =>
     new Date(
       Date.parse(periods[1].start + 'T00:00:00Z') + x * 86_400_000
-    ).toLocaleDateString('en-ZA', {
+    ).toLocaleDateString(locale(lang), {
       day: 'numeric',
       month: 'short',
       timeZone: 'UTC',
@@ -509,15 +651,10 @@ function Charts({
 
   return (
     <section className="charts">
-      {data.ndvi.loading && (
-        <div
-          className="chart skeleton tall"
-          aria-label="Loading satellite data"
-        />
-      )}
+      {data.ndvi.loading && <div className="chart skeleton tall" />}
       {cover.length > 0 && (
         <LineChart
-          title="Estimated green cover (%)"
+          title={t('chart.cover')}
           series={cover}
           xMax={xMax}
           xLabel={xLabel}
@@ -525,23 +662,20 @@ function Charts({
           yMaxFloor={50}
           markers
           events={events}
+          eventLabel={t('chart.note')}
         />
       )}
-      {data.weather.loading && (
-        <div
-          className="chart skeleton tall"
-          aria-label="Loading weather data"
-        />
-      )}
+      {data.weather.loading && <div className="chart skeleton tall" />}
       {rain.length > 0 && (
         <LineChart
-          title="Rainfall so far (mm)"
+          title={t('chart.rain')}
           series={rain}
           xMax={xMax}
           xLabel={xLabel}
           format={(v) => v.toFixed(0)}
           yMaxFloor={50}
           events={events}
+          eventLabel={t('chart.note')}
         />
       )}
       {data.ndvi.data && (
@@ -551,17 +685,17 @@ function Charts({
             className="link no-print"
             onClick={() => setTable((s) => !s)}
           >
-            {table ? 'Hide' : 'Show'} satellite readings as a table
+            {table ? t('chart.hideTable') : t('chart.table')}
           </button>
           {table && (
             <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Period</th>
-                    <th>Reading from</th>
+                    <th>{t('chart.period')}</th>
+                    <th>{t('chart.date')}</th>
                     <th>NDVI</th>
-                    <th>Green cover</th>
+                    <th>{t('fig.cover')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -596,16 +730,14 @@ function DiaryPanel({
   onAdd: (day: string, note: string) => void
   onRemove: (e: DiaryEntry) => void
 }) {
+  const { t } = useI18n()
   const [day, setDay] = useState(LATEST)
   const [note, setNote] = useState('')
   const inPeriod = (d: string) =>
     periods.some((p) => d >= p.start && d <= p.end)
   return (
     <section className="diary">
-      <p className="hint">
-        Note what happened on the farm: planting, spraying, harvest, hail, fire,
-        flooding. Notes inside the compared periods show as ◆ on the charts.
-      </p>
+      <p className="hint">{t('diary.hint')}</p>
       <form
         className="diary-form no-print"
         onSubmit={(e) => {
@@ -621,22 +753,24 @@ function DiaryPanel({
           max={new Date().toISOString().slice(0, 10)}
           min="2000-01-01"
           onChange={(e) => setDay(e.target.value)}
-          aria-label="Date"
+          aria-label={t('diary.date')}
           required
         />
         <input
           type="text"
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="e.g. Planted wheat, 120 kg/ha"
+          placeholder={t('diary.placeholder')}
           maxLength={500}
-          aria-label="Note"
+          aria-label={t('diary.note')}
           required
         />
-        <button type="submit">Add note</button>
+        <button type="submit" className="primary">
+          {t('diary.add')}
+        </button>
       </form>
       {!diary.length ? (
-        <p className="muted">No notes yet.</p>
+        <p className="muted">{t('diary.none')}</p>
       ) : (
         <ul className="diary-list">
           {[...diary].reverse().map((e) => (
@@ -647,64 +781,13 @@ function DiaryPanel({
                 type="button"
                 className="remove no-print"
                 onClick={() => onRemove(e)}
-                aria-label={`Delete note from ${e.day}`}
+                aria-label={`${t('diary.delete')} ${e.day}`}
               >
                 ×
               </button>
             </li>
           ))}
         </ul>
-      )}
-    </section>
-  )
-}
-
-const roundStats = (s: PeriodStats) =>
-  Object.fromEntries(
-    Object.entries(s).map(([k, v]) => [
-      k,
-      Number.isFinite(v) ? Math.round(v * 100) / 100 : null,
-    ])
-  )
-
-function Explain({ run }: { run: () => Promise<string> }) {
-  const [state, setState] = useState<{
-    kind: 'idle' | 'busy' | 'done' | 'error'
-    text?: string
-  }>({ kind: 'idle' })
-  const go = async () => {
-    setState({ kind: 'busy' })
-    try {
-      setState({ kind: 'done', text: await run() })
-    } catch (e) {
-      setState({
-        kind: 'error',
-        text: e instanceof Error ? e.message : String(e),
-      })
-    }
-  }
-  return (
-    <section className="explain" aria-live="polite">
-      {state.kind === 'done' ? (
-        <>
-          <p className="explain-text">{state.text}</p>
-          <p className="explain-foot">
-            Written by Claude (AI) from the figures above. Check anything
-            important.
-          </p>
-        </>
-      ) : (
-        <button
-          type="button"
-          className="explain-btn no-print"
-          onClick={go}
-          disabled={state.kind === 'busy'}
-        >
-          {state.kind === 'busy' ? 'Writing…' : '✦ Explain this season'}
-        </button>
-      )}
-      {state.kind === 'error' && (
-        <p className="notice small error">{state.text}</p>
       )}
     </section>
   )

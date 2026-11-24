@@ -21,6 +21,8 @@ type Props = {
   yMaxFloor?: number
   markers?: boolean
   events?: ChartEvent[]
+  /** Legend text for diary markers. */
+  eventLabel?: string
 }
 
 const H = 240
@@ -49,6 +51,7 @@ export default function LineChart({
   yMaxFloor = 0,
   markers,
   events = [],
+  eventLabel = 'diary note',
 }: Props) {
   const wrap = useRef<HTMLDivElement>(null)
   const [w, setW] = useState(600)
@@ -110,7 +113,8 @@ export default function LineChart({
           ))}
           {events.length > 0 && (
             <span className="legend-item">
-              <b className="event-key">◆</b>diary note
+              <b className="event-key">◆</b>
+              {eventLabel}
             </span>
           )}
         </span>

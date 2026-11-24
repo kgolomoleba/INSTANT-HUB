@@ -20,6 +20,7 @@ type Row = {
   boundary: Farm['boundary'] | null
   area_ha: number | null
   source: Farm['source'] | null
+  season?: Farm['season'] | null
 }
 
 const toFarm = (r: Row): Farm => ({
@@ -30,6 +31,7 @@ const toFarm = (r: Row): Farm => ({
   boundary: r.boundary ?? undefined,
   areaHa: r.area_ha ?? undefined,
   source: r.source ?? undefined,
+  season: r.season ?? undefined,
 })
 
 const toRow = (f: Farm): Row => ({
@@ -40,6 +42,7 @@ const toRow = (f: Farm): Row => ({
   boundary: f.boundary ?? null,
   area_ha: f.areaHa ?? null,
   source: f.source ?? null,
+  season: f.season ?? null,
 })
 
 function need(): SupabaseClient {
@@ -48,24 +51,49 @@ function need(): SupabaseClient {
 }
 
 export async function fetchFarms(): Promise<Farm[]> {
-  const { data, error } = await need()
-    .from('berg_farms')
-    .select('id,name,lat,lon,boundary,area_ha,source')
-    .order('created_at', { ascending: false })
-  if (error) throw new Error(error.message)
-  return (data as Row[]).map(toFarm)
+  const sb = need()
+  const cols = 'id,name,lat,lon,boundary,area_ha,source'
+  const load = (select: string) =>
+    sb
+      .from('berg_farms')
+      .select(select)
+      .order('created_at', { ascending: false })
+  let res = await load(`${cols},season`)
+  // Database without the season column yet (migration not applied): load without it.
+  if (res.error && /season/i.test(res.error.message)) res = await load(cols)
+  if (res.error) throw new Error(res.error.message)
+  return (res.data as unknown as Row[]).map(toFarm)
 }
 
 export async function insertFarms(farms: Farm[]): Promise<void> {
   if (!farms.length) return
-  const { error } = await need()
+  const sb = need()
+  const rows = farms.map(toRow)
+  let { error } = await sb
     .from('berg_farms')
-    .upsert(farms.map(toRow), { onConflict: 'id', ignoreDuplicates: true })
+    .upsert(rows, { onConflict: 'id', ignoreDuplicates: true })
+  // Database without the season column yet: save without it.
+  if (error && /season/i.test(error.message))
+    ({ error } = await sb.from('berg_farms').upsert(
+      rows.map(({ season: _s, ...r }) => r),
+      { onConflict: 'id', ignoreDuplicates: true }
+    ))
   if (error) throw new Error(error.message)
 }
 
 export async function deleteFarm(id: string): Promise<void> {
   const { error } = await need().from('berg_farms').delete().eq('id', id)
+  if (error) throw new Error(error.message)
+}
+
+export async function setFarmSeason(
+  id: string,
+  season: Farm['season']
+): Promise<void> {
+  const { error } = await need()
+    .from('berg_farms')
+    .update({ season })
+    .eq('id', id)
   if (error) throw new Error(error.message)
 }
 
@@ -161,7 +189,9 @@ export async function deleteDiary(id: string): Promise<void> {
 
 // ---------------------------------------------------------- explanations
 /** Ask the farm-explain function (Claude) for a plain-language summary. Signed-in users only. */
-export async function explainSeason(payload: Record<string, unknown>): Promise<string> {
+export async function explainSeason(
+  payload: Record<string, unknown>
+): Promise<string> {
   const { data, error } = await need().functions.invoke<{
     text?: string
     error?: string

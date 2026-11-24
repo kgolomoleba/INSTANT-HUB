@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { allFarmsCsv, download } from './exports'
+import { useI18n } from './i18n'
 import type { Farm } from './farms'
 import type { PeriodStats, Period } from './stats'
 import { loadFarmStats, mapLimit } from './useFarmData'
@@ -35,6 +36,7 @@ export default function AllFarms({
   disabled,
   onSelect,
 }: Props) {
+  const { t } = useI18n()
   const [rows, setRows] = useState<Row[] | null>(null)
   const [busy, setBusy] = useState(false)
   const [sort, setSort] = useState<SortKey>('cover')
@@ -73,10 +75,8 @@ export default function AllFarms({
     <section className="all">
       <div className="all-head">
         <div>
-          <h3>All farms</h3>
-          <p className="hint">
-            Same periods, every farm. Biggest drop in green cover first.
-          </p>
+          <h3>{t('all.title')}</h3>
+          <p className="hint">{t('all.hint')}</p>
         </div>
         <div className="all-actions">
           {rows && done > 0 && (
@@ -89,7 +89,7 @@ export default function AllFarms({
                 )
               }
             >
-              Download (CSV)
+              {t('all.download')}
             </button>
           )}
           <button
@@ -99,10 +99,10 @@ export default function AllFarms({
             disabled={busy || disabled}
           >
             {busy
-              ? `Comparing… ${done}/${farms.length}`
+              ? t('all.busy', { done, total: farms.length })
               : rows
-                ? 'Compare again'
-                : 'Compare all farms'}
+                ? t('all.again')
+                : t('all.run')}
           </button>
         </div>
       </div>
@@ -118,11 +118,15 @@ export default function AllFarms({
                     onClick={() => setSort('name')}
                     aria-pressed={sort === 'name'}
                   >
-                    Farm
+                    {t('all.farm')}
                   </button>
                 </th>
-                <th>Cover {names[0]}</th>
-                <th>Cover {names[1]}</th>
+                <th>
+                  {t('all.cover')} {names[0]}
+                </th>
+                <th>
+                  {t('all.cover')} {names[1]}
+                </th>
                 <th>
                   <button
                     type="button"
@@ -130,11 +134,15 @@ export default function AllFarms({
                     onClick={() => setSort('cover')}
                     aria-pressed={sort === 'cover'}
                   >
-                    Change
+                    {t('all.change')}
                   </button>
                 </th>
-                <th>Rain {names[0]}</th>
-                <th>Rain {names[1]}</th>
+                <th>
+                  {t('all.rain')} {names[0]}
+                </th>
+                <th>
+                  {t('all.rain')} {names[1]}
+                </th>
                 <th>
                   <button
                     type="button"
@@ -142,10 +150,10 @@ export default function AllFarms({
                     onClick={() => setSort('rain')}
                     aria-pressed={sort === 'rain'}
                   >
-                    Rain change
+                    {t('all.rain')} %
                   </button>
                 </th>
-                <th>Dry spell (days)</th>
+                <th>{t('all.dry')}</th>
               </tr>
             </thead>
             <tbody>
@@ -177,7 +185,7 @@ export default function AllFarms({
                     </>
                   ) : (
                     <td colSpan={7} className="muted">
-                      {r.error ? `Couldn't load: ${r.error}` : 'Waiting…'}
+                      {r.error ? t('all.failed') : t('all.waiting')}
                     </td>
                   )}
                 </tr>

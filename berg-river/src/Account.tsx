@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
+import { useI18n } from './i18n'
 import * as store from './store'
 
 export default function Account({ session }: { session: Session | null }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const [email, setEmail] = useState('')
   const [state, setState] = useState<{
@@ -11,16 +13,14 @@ export default function Account({ session }: { session: Session | null }) {
   }>({ kind: 'idle' })
 
   if (!store.supabase)
-    return (
-      <span className="account muted">Farms are saved in this browser</span>
-    )
+    return <span className="account muted">{t('account.local')}</span>
 
   if (session)
     return (
       <span className="account">
         <span className="muted">{session.user.email}</span>
         <button type="button" onClick={() => void store.signOut()}>
-          Sign out
+          {t('account.signOut')}
         </button>
       </span>
     )
@@ -29,7 +29,7 @@ export default function Account({ session }: { session: Session | null }) {
     return (
       <span className="account">
         <button type="button" onClick={() => setOpen(true)}>
-          Sign in to save farms
+          {t('account.signIn')}
         </button>
       </span>
     )
@@ -51,23 +51,29 @@ export default function Account({ session }: { session: Session | null }) {
   return (
     <form className="account signin" onSubmit={send}>
       {state.kind === 'sent' ? (
-        <span>Check {email} for a sign-in link.</span>
+        <span>{t('account.sent', { email })}</span>
       ) : (
         <>
           <input
             type="email"
             required
-            placeholder="you@example.com"
+            placeholder={t('account.email')}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            aria-label="Email address"
+            aria-label={t('account.email')}
             autoFocus
           />
-          <button type="submit" disabled={state.kind === 'sending'}>
-            {state.kind === 'sending' ? 'Sending…' : 'Email me a link'}
+          <button
+            type="submit"
+            className="primary"
+            disabled={state.kind === 'sending'}
+          >
+            {state.kind === 'sending'
+              ? t('account.sending')
+              : t('account.send')}
           </button>
           <button type="button" className="link" onClick={() => setOpen(false)}>
-            Cancel
+            {t('account.cancel')}
           </button>
         </>
       )}

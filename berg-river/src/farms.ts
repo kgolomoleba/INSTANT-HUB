@@ -11,7 +11,11 @@ export type Farm = {
   boundary?: MultiPolygon
   areaHa?: number
   source?: 'map point' | 'Cape Farm Mapper' | 'file'
+  /** Main growing season: picks the default comparison for this farm. */
+  season?: Season
 }
+
+export type Season = 'winter' | 'summer' | 'year'
 
 /** The Berg River's course, roughly, for drawing on the map. */
 export const RIVER_LINE: [number, number][] = [

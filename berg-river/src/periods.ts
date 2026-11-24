@@ -24,8 +24,9 @@ export const shiftPeriod = (p: Period, by: number): Period => ({
   end: shiftYears(p.end, by),
 })
 
+export type PresetId = 'winter' | 'summer' | '90d' | '12m'
 export type Preset = {
-  id: string
+  id: PresetId
   label: string
   hint: string
   periods: [Period, Period]
@@ -84,8 +85,47 @@ export function defaultPeriods(): [Period, Period] {
   return presets()[0].periods
 }
 
+/** The comparison that fits a farm's main season. */
+export function seasonPeriods(
+  season: 'winter' | 'summer' | 'year' | undefined
+): [Period, Period] {
+  const id =
+    season === 'summer' ? 'summer' : season === 'year' ? '12m' : 'winter'
+  return presets().find((p) => p.id === id)!.periods
+}
+
+export function presetSeason(
+  id: PresetId
+): 'winter' | 'summer' | 'year' | null {
+  return id === 'winter'
+    ? 'winter'
+    : id === 'summer'
+      ? 'summer'
+      : id === '12m'
+        ? 'year'
+        : null
+}
+
+/** Period problems as translation keys. */
+export function periodErrorKey(p: Period): {
+  key:
+    | 'err.dates'
+    | 'err.backwards'
+    | 'err.tooLate'
+    | 'err.tooEarly'
+    | 'err.tooLong'
+  date?: string
+} | null {
+  if (!p.start || !p.end) return { key: 'err.dates' }
+  if (p.end < p.start) return { key: 'err.backwards' }
+  if (p.end > LATEST) return { key: 'err.tooLate', date: LATEST }
+  if (p.start < EARLIEST) return { key: 'err.tooEarly' }
+  if (periodDays(p) > 366) return { key: 'err.tooLong' }
+  return null
+}
+
 /** Short name for a period: "2025", "2025–26", or "1 Mar–29 May 2026". */
-export function periodName(p: Period, other?: Period): string {
+export function periodName(p: Period, other?: Period, loc = 'en-ZA'): string {
   const ys = p.start.slice(0, 4)
   const ye = p.end.slice(0, 4)
   const wholeSeason =
@@ -94,7 +134,7 @@ export function periodName(p: Period, other?: Period): string {
   if (other && wholeSeason && ys !== other.start.slice(0, 4))
     return ys === ye ? ys : `${ys}–${ye.slice(2)}`
   const fmt = (d: string, withYear: boolean) =>
-    new Date(d + 'T00:00:00Z').toLocaleDateString('en-ZA', {
+    new Date(d + 'T00:00:00Z').toLocaleDateString(loc, {
       day: 'numeric',
       month: 'short',
       ...(withYear ? { year: 'numeric' } : {}),

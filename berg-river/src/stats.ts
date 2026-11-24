@@ -1,3 +1,4 @@
+import { makeT, type T } from './i18n'
 import type { DailyWeather, NdviPoint } from './api'
 
 export type Period = { label: string; start: string; end: string }
@@ -103,48 +104,144 @@ export function periodDays(p: Period): number {
   return dayIndex(p.start, p.end) + 1
 }
 
-const pct = (a: number, b: number) => ((b - a) / Math.abs(a)) * 100
-
 /** Plain-language summary of how period B compares with period A. */
 export function describe(
   a: PeriodStats,
   b: PeriodStats,
   la: string,
-  lb: string
+  lb: string,
+  t: T = makeT('en')
 ): string[] {
   const out: string[] = []
+  const r0 = (n: number) => n.toFixed(0)
   if (Number.isFinite(a.meanCover) && Number.isFinite(b.meanCover)) {
     const d = b.meanCover - a.meanCover
     out.push(
       Math.abs(d) < 3
-        ? `Green cover was about the same in ${lb} as in ${la} (${b.meanCover.toFixed(0)}% vs ${a.meanCover.toFixed(0)}%).`
-        : `Green cover was ${Math.abs(d).toFixed(0)} points ${d > 0 ? 'higher' : 'lower'} in ${lb} (${b.meanCover.toFixed(0)}%) than in ${la} (${a.meanCover.toFixed(0)}%).`
+        ? t('sum.coverSame', {
+            a: la,
+            b: lb,
+            va: r0(a.meanCover),
+            vb: r0(b.meanCover),
+          })
+        : t('sum.coverDiff', {
+            n: r0(Math.abs(d)),
+            dir: t(d > 0 ? 'sum.higher' : 'sum.lower'),
+            a: la,
+            b: lb,
+            va: r0(a.meanCover),
+            vb: r0(b.meanCover),
+          })
     )
   }
   if (a.totalRain > 0) {
-    const d = pct(a.totalRain, b.totalRain)
+    const d = ((b.totalRain - a.totalRain) / Math.abs(a.totalRain)) * 100
     out.push(
       Math.abs(d) < 10
-        ? `Rainfall was similar: ${b.totalRain.toFixed(0)} mm vs ${a.totalRain.toFixed(0)} mm.`
-        : `${lb} had ${Math.abs(d).toFixed(0)}% ${d > 0 ? 'more' : 'less'} rain: ${b.totalRain.toFixed(0)} mm vs ${a.totalRain.toFixed(0)} mm.`
+        ? t('sum.rainSame', { va: r0(a.totalRain), vb: r0(b.totalRain) })
+        : t('sum.rainDiff', {
+            b: lb,
+            n: r0(Math.abs(d)),
+            dir: t(d > 0 ? 'sum.more' : 'sum.less'),
+            va: r0(a.totalRain),
+            vb: r0(b.totalRain),
+          })
     )
   }
   if (b.longestDrySpell - a.longestDrySpell >= 7)
     out.push(
-      `The longest dry spell grew from ${a.longestDrySpell} to ${b.longestDrySpell} days.`
+      t('sum.dryLonger', { va: a.longestDrySpell, vb: b.longestDrySpell })
     )
   else if (a.longestDrySpell - b.longestDrySpell >= 7)
     out.push(
-      `The longest dry spell shrank from ${a.longestDrySpell} to ${b.longestDrySpell} days.`
+      t('sum.dryShorter', { va: a.longestDrySpell, vb: b.longestDrySpell })
     )
-  if (b.hotDays !== a.hotDays && (a.hotDays > 0 || b.hotDays > 0))
-    out.push(
-      `Days at 35 °C or hotter: ${b.hotDays} in ${lb}, ${a.hotDays} in ${la}.`
-    )
+  if (
+    Number.isFinite(a.hotDays) &&
+    Number.isFinite(b.hotDays) &&
+    b.hotDays !== a.hotDays &&
+    (a.hotDays > 0 || b.hotDays > 0)
+  )
+    out.push(t('sum.hot', { a: la, b: lb, va: a.hotDays, vb: b.hotDays }))
   const tempD = b.meanTmax - a.meanTmax
   if (Math.abs(tempD) >= 1)
     out.push(
-      `Average daily high was ${Math.abs(tempD).toFixed(1)} °C ${tempD > 0 ? 'warmer' : 'cooler'} in ${lb}.`
+      t('sum.temp', {
+        n: Math.abs(tempD).toFixed(1),
+        dir: t(tempD > 0 ? 'sum.warmer' : 'sum.cooler'),
+        b: lb,
+      })
     )
   return out
+}
+
+export type Verdict = {
+  tone: 'good' | 'bad' | 'same' | 'unknown'
+  title: string
+  reasons: string[]
+}
+
+/**
+ * One headline answer: is the later period better or worse? Green cover
+ * decides when it's known (±5 points); otherwise rain does (±15%).
+ */
+export function verdict(
+  a: PeriodStats,
+  b: PeriodStats,
+  la: string,
+  t: T = makeT('en')
+): Verdict {
+  const reasons: string[] = []
+  const cover = b.meanCover - a.meanCover
+  const rainPct =
+    a.totalRain > 0 ? ((b.totalRain - a.totalRain) / a.totalRain) * 100 : NaN
+  if (Number.isFinite(cover))
+    reasons.push(
+      t('verdict.why.cover', {
+        dir: t(cover >= 0 ? 'verdict.up' : 'verdict.down'),
+        n: Math.abs(cover).toFixed(0),
+        a: a.meanCover.toFixed(0),
+        b: b.meanCover.toFixed(0),
+      })
+    )
+  if (Number.isFinite(rainPct))
+    reasons.push(
+      t('verdict.why.rain', {
+        dir: t(rainPct >= 0 ? 'verdict.up' : 'verdict.down'),
+        pct: Math.abs(rainPct).toFixed(0),
+        a: a.totalRain.toFixed(0),
+        b: b.totalRain.toFixed(0),
+      })
+    )
+  if (Number.isFinite(cover)) {
+    const tone = cover >= 5 ? 'good' : cover <= -5 ? 'bad' : 'same'
+    return {
+      tone,
+      title: t(
+        tone === 'good'
+          ? 'verdict.better'
+          : tone === 'bad'
+            ? 'verdict.worse'
+            : 'verdict.same',
+        { a: la }
+      ),
+      reasons,
+    }
+  }
+  if (Number.isFinite(rainPct)) {
+    const tone = rainPct >= 15 ? 'good' : rainPct <= -15 ? 'bad' : 'same'
+    return {
+      tone,
+      title: t(
+        tone === 'good'
+          ? 'verdict.wetter'
+          : tone === 'bad'
+            ? 'verdict.drier'
+            : 'verdict.sameRain',
+        { a: la }
+      ),
+      reasons,
+    }
+  }
+  return { tone: 'unknown', title: '', reasons }
 }

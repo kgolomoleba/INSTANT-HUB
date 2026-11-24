@@ -82,6 +82,6 @@ group('describe', () => {
     ])
     const text = describe(a, b, 'A', 'B').join(' ')
     expect(text).toMatch(/about the same/)
-    expect(text).toMatch(/Rainfall was similar/)
+    expect(text).toMatch(/Rain was similar/)
   })
 })
