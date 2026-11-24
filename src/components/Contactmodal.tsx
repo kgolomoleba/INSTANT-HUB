@@ -80,21 +80,21 @@ export default function ContactModal({
         {sent ? (
           <div className="modal-sent">
             <span className="modal-sent-icon">Sent</span>
-            <h3>Inquiry Sent</h3>
+            <h3>Inquiry sent</h3>
             <p>Your inquiry about <strong>{listingTitle}</strong> has been sent to <strong>{recipientUsername}</strong>.</p>
             <button className="btn-modal-gold" onClick={onClose}>Done</button>
           </div>
         ) : (
           <>
             <div className="modal-header">
-              <h3>Send Inquiry</h3>
+              <h3>Send an inquiry</h3>
               <p>Sending inquiry to <strong>{recipientUsername}</strong> about <strong>{listingTitle}</strong></p>
             </div>
 
             {error && <div className="modal-error">{error}</div>}
 
             <form onSubmit={handleSend} className="modal-form">
-              <label htmlFor="message">Your Message</label>
+              <label htmlFor="message">Your message</label>
               <textarea
                 id="message"
                 value={message}
@@ -107,7 +107,7 @@ export default function ContactModal({
               />
               <span className="modal-hint">{message.length}/500</span>
               <button type="submit" className="btn-modal-gold" disabled={sending || !message.trim()}>
-                {sending ? 'Sending...' : 'Send Inquiry'}
+                {sending ? 'Sending...' : 'Send inquiry'}
               </button>
             </form>
           </>

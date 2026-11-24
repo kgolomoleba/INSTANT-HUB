@@ -1,0 +1,51 @@
+/* Instant Hub shared UI: one look for buttons, cards, headings, notices and forms. */
+.ui-page { max-width: 1040px; margin: 0 auto; padding: 1.5rem 1.25rem 4rem; display: flex; flex-direction: column; gap: 1.25rem; color: var(--white); }
+.ui-page-header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 0.75rem 1.5rem; }
+.ui-page-header h1 { font-family: var(--font-display); font-size: clamp(2rem, 5vw, 2.6rem); letter-spacing: 2px; line-height: 1; margin: 0; color: var(--white); }
+.ui-page-header p { margin: 0.4rem 0 0; color: var(--gray); max-width: 640px; }
+.ui-page-header .ui-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.ui-card { background: var(--dark); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-lg); padding: 1.25rem; }
+.ui-card > h2 { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.75rem; color: var(--white); }
+.ui-card > p.ui-sub { margin: -0.4rem 0 0.9rem; color: var(--gray); font-size: 0.92rem; }
+
+.ui-btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem; min-height: 42px; padding: 0.55rem 1.1rem; border-radius: var(--radius-full); border: 1px solid rgba(255, 255, 255, 0.14); background: transparent; color: var(--white); font: inherit; font-weight: 600; font-size: 0.95rem; cursor: pointer; text-decoration: none; transition: background 0.15s, border-color 0.15s, opacity 0.15s; }
+.ui-btn:hover:not(:disabled) { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.04); }
+.ui-btn:disabled { opacity: 0.55; cursor: default; }
+.ui-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ui-btn.primary { background: var(--gold); border-color: var(--gold); color: #111; }
+.ui-btn.primary:hover:not(:disabled) { background: var(--gold-dark); border-color: var(--gold-dark); }
+.ui-btn.danger { color: #fca5a5; border-color: rgba(239, 68, 68, 0.4); }
+.ui-btn.small { min-height: 34px; padding: 0.3rem 0.8rem; font-size: 0.85rem; }
+.ui-btn.link { border: 0; padding: 0; min-height: 0; color: var(--gold); background: none; }
+
+.ui-notice { border-radius: var(--radius); padding: 0.75rem 1rem; font-size: 0.95rem; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--white); }
+.ui-notice.error { background: rgba(239, 68, 68, 0.12); border-color: rgba(239, 68, 68, 0.35); color: #fecaca; }
+.ui-notice.ok { background: rgba(16, 185, 129, 0.12); border-color: rgba(16, 185, 129, 0.35); color: #a7f3d0; }
+
+.ui-empty { text-align: center; padding: 2rem 1rem; color: var(--gray); border: 1px dashed rgba(255, 255, 255, 0.15); border-radius: var(--radius-lg); }
+.ui-empty h3 { color: var(--white); margin: 0 0 0.4rem; font-size: 1.1rem; }
+
+.ui-field { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.9rem; color: var(--gray); }
+.ui-field > span { font-weight: 600; color: #d4d4d8; }
+.ui-field input, .ui-field select, .ui-field textarea { min-height: 42px; padding: 0.55rem 0.75rem; border-radius: var(--radius); border: 1px solid rgba(255, 255, 255, 0.14); background: var(--black); color: var(--white); font: inherit; font-size: 1rem; }
+.ui-field input:focus, .ui-field select:focus, .ui-field textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(var(--gold-rgb), 0.2); }
+.ui-field small { color: var(--gray-dim); }
+.ui-grid { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); align-items: end; }
+
+.ui-table-wrap { overflow-x: auto; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius); }
+.ui-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; font-variant-numeric: tabular-nums; }
+.ui-table th, .ui-table td { text-align: left; padding: 0.6rem 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); white-space: nowrap; }
+.ui-table th { color: var(--gray); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.ui-table td.num, .ui-table th.num { text-align: right; }
+.ui-table tr:last-child td { border-bottom: 0; }
+
+.ui-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.15rem 0.6rem; border-radius: var(--radius-full); font-size: 0.78rem; font-weight: 700; background: rgba(255, 255, 255, 0.08); color: #d4d4d8; }
+.ui-badge.gold { background: rgba(var(--gold-rgb), 0.15); color: var(--gold); }
+.ui-badge.green { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+
+@media (max-width: 600px) {
+  .ui-page { padding: 1rem 0.75rem 3rem; }
+  .ui-card { padding: 1rem; }
+  .ui-btn { min-height: 44px; }
+}

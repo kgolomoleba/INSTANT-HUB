@@ -69,7 +69,7 @@ const AdminPage = () => {
   return (
     <div className="admin-container">
       <div className="admin-header">
-        <h1>Verification Requests</h1>
+        <h1>Verification requests</h1>
         <p>Review and approve pending business verification submissions.</p>
       </div>
 

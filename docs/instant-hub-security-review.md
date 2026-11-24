@@ -59,7 +59,8 @@ errors, no sideways scrolling.
    - unexpected admins or verified users (possible use of holes 1–2).
 2. **Apply the migrations**: `supabase db push`, or paste
    `supabase/migrations/20261124010000_lock_down_profile_and_inquiry_fields.sql`
-   and then `20261124040000_protect_legacy_verified_flag.sql` into the SQL editor.
+   then `20261124040000_protect_legacy_verified_flag.sql`, then
+   `20261124050000_financial_health.sql` (the financial tracker) into the SQL editor.
 3. **Email function**: set a secret `INQUIRY_WEBHOOK_SECRET` (Edge Functions →
    Secrets), add the same value as an `x-webhook-secret` header on the
    inquiries database webhook, then redeploy `send-inquiry-email`. Until both
@@ -71,3 +72,23 @@ The `products`, `services`, `posts` and `events` tables, their policies and the
 `listings` storage bucket were created outside the migrations folder, so their
 security can't be checked from the code. `check_security.sql` lists their
 policies.
+
+## Financial health tracker (2026-11-24)
+
+New: `/finance` for business owners, `/report/<token>` for shared links,
+`/finance/shared/<owner>` for funders with an account.
+
+- **Data:** monthly totals only (`fin_months`). Bank statements are added up in
+  the browser; individual transactions are never sent or stored.
+- **Access:** owners only, by row-level security. Shared reports are served
+  only by `fin_report_by_link` / `fin_report_by_grant`, which check the link
+  or grant, its expiry and whether it was switched off, apply the scope
+  (summary only, or month-by-month) and log each view. Links are 64 random hex
+  characters, last at most a year, and are hidden from search engines and
+  referrers. Owners can't fake view counts; funders can't widen their access.
+- **Owner controls:** create/switch off links, share with/remove a user, see
+  view counts, delete all financial data.
+- **Tests:** `supabase/tests/finance_test.sql` (24 checks), plus unit tests for
+  the health rules and bank-statement reading (`src/__tests__/finance.test.ts`).
+- **Later:** accounting software (Xero, Sage, QuickBooks) needs developer
+  agreements with each provider; shown as "coming soon".

@@ -11,6 +11,8 @@ const ServicesPage = lazy(() => import('./pages/ServicesPage'))
 const FeedPage = lazy(() => import('./pages/FeedPage'))
 const Marketplace = lazy(() => import('./pages/Marketplace'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
+const FinancePage = lazy(() => import('./pages/FinancePage'))
+const SharedReportPage = lazy(() => import('./pages/SharedReportPage'))
 import PrivateRoute from './components/PrivateRoute'
 import AdminRoute from './components/AdminRoute'
 import Layout from './components/Layout'
@@ -51,6 +53,7 @@ function App() {
           <Route path="/" element={<RouteWrapper><PageShell><Home /></PageShell></RouteWrapper>} />
           <Route path="/login" element={<RouteWrapper><PageShell><Login /></PageShell></RouteWrapper>} />
           <Route path="/register" element={<RouteWrapper><PageShell><Register /></PageShell></RouteWrapper>} />
+          <Route path="/report/:token" element={<RouteWrapper><PageShell><SharedReportPage mode="link" /></PageShell></RouteWrapper>} />
 
           <Route element={<PrivateRoute />}>
             <Route path="/dashboard" element={<RouteWrapper><PageShell><Dashboard /></PageShell></RouteWrapper>} />
@@ -59,6 +62,8 @@ function App() {
             <Route path="/products" element={<RouteWrapper><PageShell><ProductsPage /></PageShell></RouteWrapper>} />
             <Route path="/services" element={<RouteWrapper><PageShell><ServicesPage /></PageShell></RouteWrapper>} />
             <Route path="/feed" element={<RouteWrapper><PageShell><FeedPage /></PageShell></RouteWrapper>} />
+            <Route path="/finance" element={<RouteWrapper><PageShell><FinancePage /></PageShell></RouteWrapper>} />
+            <Route path="/finance/shared/:ownerId" element={<RouteWrapper><PageShell><SharedReportPage mode="grant" /></PageShell></RouteWrapper>} />
           </Route>
 
           <Route element={<AdminRoute />}>

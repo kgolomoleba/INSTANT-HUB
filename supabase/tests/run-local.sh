@@ -17,10 +17,19 @@ trap cleanup EXIT
 "${RUN[@]}" "$BIN/initdb" -D "$DIR/data" -A trust -U postgres >/dev/null
 "${RUN[@]}" "$BIN/pg_ctl" -D "$DIR/data" -o "-k $DIR -p $PORT -c listen_addresses=" -l "$DIR/log" -w start >/dev/null
 
-PSQL=(psql -h "$DIR" -p "$PORT" -U postgres -d postgres -v ON_ERROR_STOP=1 -q -X)
+"${RUN[@]}" true # (keeps shellcheck quiet about RUN when not root)
+psql -h "$DIR" -p "$PORT" -U postgres -d postgres -q -X -c "create database base"
+PSQL=(psql -h "$DIR" -p "$PORT" -U postgres -d base -v ON_ERROR_STOP=1 -q -X)
 "${PSQL[@]}" -f supabase/tests/supabase_stub.sql
 for f in supabase/migrations/*.sql; do
   echo "migrate  $(basename "$f")"
   "${PSQL[@]}" -c "set client_min_messages = warning" -f "$f"
 done
-"${PSQL[@]}" -f supabase/tests/security_test.sql 2>&1 | sed 's/^psql:[^ ]* NOTICE:  /  /'
+# Each test file gets a fresh copy of the migrated database.
+for t in supabase/tests/*_test.sql; do
+  echo "test     $(basename "$t")"
+  db="t_$(basename "$t" .sql)"
+  psql -h "$DIR" -p "$PORT" -U postgres -d postgres -q -X -c "create database $db template base"
+  psql -h "$DIR" -p "$PORT" -U postgres -d "$db" -v ON_ERROR_STOP=1 -q -X -f "$t" 2>&1 | sed 's/^psql:[^ ]* NOTICE:  /  /'
+  [ "${PIPESTATUS[0]}" = 0 ] || exit 1
+done

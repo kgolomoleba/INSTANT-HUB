@@ -37,6 +37,7 @@ export default function Navbar() {
             <li><NavLink to="/products" className={({ isActive }) => isActive ? 'active' : ''}>Products</NavLink></li>
             <li><NavLink to="/services" className={({ isActive }) => isActive ? 'active' : ''}>Services</NavLink></li>
             <li><NavLink to="/feed" className={({ isActive }) => isActive ? 'active' : ''}>Community Feed</NavLink></li>
+            <li><NavLink to="/finance" className={({ isActive }) => isActive ? 'active' : ''}>Finances</NavLink></li>
             <li><NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink></li>
           </>
         ) : (
@@ -94,6 +95,7 @@ export default function Navbar() {
                 <li><NavLink to="/products" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Products</NavLink></li>
                 <li><NavLink to="/services" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Services</NavLink></li>
                 <li><NavLink to="/feed" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Community Feed</NavLink></li>
+                <li><NavLink to="/finance" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Finances</NavLink></li>
                 <li><NavLink to="/dashboard" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink></li>
                 <li><NavLink to="/profile" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Profile</NavLink></li>
               </>

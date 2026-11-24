@@ -77,7 +77,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               setShowContact(true)
             }}
           >
-            Send Inquiry
+            Send inquiry
           </button>
         )}
       </div>

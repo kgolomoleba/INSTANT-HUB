@@ -77,7 +77,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
               setShowContact(true)
             }}
           >
-            Send Inquiry
+            Send inquiry
           </button>
         )}
       </div>

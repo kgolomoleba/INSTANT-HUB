@@ -175,7 +175,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({ isOpen, 
           </div>
 
           <button type="submit" disabled={isSubmitting} className="submit-btn">
-            {isSubmitting ? 'Publishing...' : 'Publish Listing'}
+            {isSubmitting ? 'Publishing...' : 'Publish listing'}
           </button>
         </form>
       </div>

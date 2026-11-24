@@ -336,7 +336,7 @@ export default function Dashboard() {
           <div className="stat-card">
             <div className="stat-icon-wrap"><Bell size={18} /></div>
             <strong>{unreadCount}</strong>
-            <span>Unread Inquiries</span>
+            <span>Unread inquiries</span>
           </div>
         </div>
       </section>
@@ -465,7 +465,7 @@ export default function Dashboard() {
 
       {/* Sent Inquiries Folder */}
       <section className="dashboard-inquiries">
-        <h2>Your Sent Inquiries</h2>
+        <h2>Inquiries you sent</h2>
         {sentInquiries.length === 0 ? (
           <p className="empty-hint">You have not sent any inquiries yet.</p>
         ) : (

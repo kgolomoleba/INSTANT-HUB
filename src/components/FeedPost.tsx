@@ -91,7 +91,7 @@ const FeedPost: React.FC<FeedPostProps> = ({
       setMessageText('')
       setTimeout(() => setIsInquiring(false), 2000)
     } catch (err) {
-      setActionStatus({ error: errorMessage(err, 'Failed to dispatch your request link.') })
+      setActionStatus({ error: errorMessage(err, "Couldn't send your message. Please try again.") })
     }
   }
 
@@ -160,7 +160,7 @@ const FeedPost: React.FC<FeedPostProps> = ({
         )}
         {type === 'product' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">Buy Now</button>}
         {type === 'service' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">Hire</button>}
-        {type === 'request' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">Help Out</button>}
+        {type === 'request' && <button className="feed-action-btn btn-accent" onClick={() => setIsInquiring(true)} type="button">Offer to help</button>}
         {type === 'general' && <button className="feed-action-btn" type="button">Like</button>}
       </div>
 
@@ -168,7 +168,7 @@ const FeedPost: React.FC<FeedPostProps> = ({
       {isInquiring && (
         <div className="feed-post-inquiry-box">
           <h4>Inquire about this {type}</h4>
-          {actionStatus.success && <p className="success-text">Message dispatched successfully!</p>}
+          {actionStatus.success && <p className="success-text">Message sent. They'll see it on their dashboard.</p>}
           {actionStatus.error && <p className="error-text">{actionStatus.error}</p>}
           
           <form onSubmit={handleInquirySubmit}>
