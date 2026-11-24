@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, MemoryRouter } from 'react-router-dom'
 import App from './App'
 import { AuthProvider } from './context/AuthContext'
 import { supabaseConfigured } from './supabaseClient'
@@ -21,24 +21,25 @@ function NotConfigured() {
   )
 }
 
+const app = (
+  <AuthProvider>
+    <ToastProvider>
+      <App />
+    </ToastProvider>
+  </AuthProvider>
+)
+
+// The demo runs where the address bar can't follow the app, so it keeps its own page history.
+const demo = import.meta.env.VITE_DEMO === '1'
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    {supabaseConfigured ? (
-      <BrowserRouter>
-        <AuthProvider>
-          <ToastProvider>
-            <App />
-          </ToastProvider>
-        </AuthProvider>
-      </BrowserRouter>
-    ) : (
-      <NotConfigured />
-    )}
+    {supabaseConfigured ? demo ? <MemoryRouter initialEntries={['/dashboard']}>{app}</MemoryRouter> : <BrowserRouter>{app}</BrowserRouter> : <NotConfigured />}
   </React.StrictMode>,
 )
 
 // Installable app that opens offline. Only in the built site, not while developing.
-if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+if (import.meta.env.PROD && !demo && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {
       /* not supported here; the site still works */

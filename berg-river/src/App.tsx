@@ -143,7 +143,11 @@ function Main({ onLang }: { onLang: (l: Lang) => void }) {
 
   const hash = toHash(periods, selected?.id)
   useEffect(() => {
-    if (window.location.hash !== hash) history.replaceState(null, '', hash)
+    try {
+      if (window.location.hash !== hash) history.replaceState(null, '', hash)
+    } catch {
+      /* some embedded pages don't let the app change their address */
+    }
   }, [hash])
   useEffect(() => {
     if (!notice || notice.error) return

@@ -94,3 +94,22 @@ weather effects across different time periods.
   certificate chains to the emSign root, which the build machine's network
   gateway doesn't accept). Browsers trust it; whether it sends CORS headers is
   still unconfirmed.
+
+## Demo builds (2026-11-24)
+
+Both apps have a demo mode with clearly labelled sample data, for showing them
+on a page that has no database and cannot reach other websites (for example a
+claude.ai artifact):
+
+```bash
+# Berg River
+cd berg-river && VITE_DEMO=1 npx vite build -c vite.demo.config.ts
+node ../scripts/inline-html.mjs dist-demo berg-river.html
+# Instant Hub
+VITE_DEMO=1 npx vite build -c vite.demo.config.ts
+node scripts/inline-html.mjs dist-demo instant-hub.html
+```
+
+The demo code (`src/demo.ts` in Berg River, `src/demo/mock.ts` in Instant Hub)
+is only included when `VITE_DEMO=1`; the normal build contains none of it
+(checked). Demo data is made up and each demo shows a "DEMO" label.

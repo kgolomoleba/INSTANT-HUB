@@ -1,5 +1,6 @@
 import type { DiaryEntry } from './store'
 import type { MultiPolygon } from './geo'
+import { DEMO_FARMS } from './demo'
 import { CFM_SG_SERVICE } from './boundaries'
 
 export type Farm = {
@@ -37,6 +38,12 @@ export const RIVER_LINE: [number, number][] = [
 const STORE_KEY = 'berg-river:farms'
 
 export function loadUserFarms(): Farm[] {
+  const found = readStoredFarms()
+  // Demo build only: start with two example farms. Dead code in the real site.
+  return found.length || import.meta.env.VITE_DEMO !== '1' ? found : DEMO_FARMS
+}
+
+function readStoredFarms(): Farm[] {
   try {
     const raw = localStorage.getItem(STORE_KEY)
     if (!raw) return []

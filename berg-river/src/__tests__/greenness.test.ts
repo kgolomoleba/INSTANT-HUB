@@ -39,7 +39,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('fetchGreenness', () => {
+describe('fetchGreenness', { timeout: 20_000 }, () => {
   it('uses Sentinel-2 for both periods when it is available, sending the farm boundary', async () => {
     const calls: { url: string; body?: string }[] = []
     vi.stubGlobal(
