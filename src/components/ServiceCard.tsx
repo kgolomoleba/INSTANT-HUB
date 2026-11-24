@@ -1,4 +1,5 @@
 import { placeholderImage } from '../utils/placeholder'
+import ShareButton from './ui/ShareButton'
 import React, { useState } from 'react'
 import { trackEvent } from '../utils/analytics'
 import './ServiceCard.css'
@@ -68,7 +69,9 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             {location && <span className="service-location">{location}</span>}
           </div>
         </div>
-        {userId && (
+        <div className="card-actions">
+          <ShareButton title={title} text={`${title} on Instant Hub`} url={`${window.location.origin}/services?q=${encodeURIComponent(title)}`} className="btn-share" />
+          {userId && (
           <button
             className="btn-contact"
             onClick={e => {
@@ -80,6 +83,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
             Send inquiry
           </button>
         )}
+          </div>
       </div>
 
       {showContact && userId && (

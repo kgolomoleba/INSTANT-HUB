@@ -24,7 +24,7 @@ export default function Navbar() {
   return (
     <nav className="navbar" aria-label="Primary navigation">
       {/* Logo */}
-      <NavLink to="/" className="nav-logo" aria-label="Instant Hub Home" onClick={closeMobile}>
+      <NavLink viewTransition to="/" className="nav-logo" aria-label="Instant Hub Home" onClick={closeMobile}>
         <Logo className="nav-logo-icon" />
         <span className="nav-wordmark">INSTANT <span>HUB</span></span>
       </NavLink>
@@ -33,12 +33,12 @@ export default function Navbar() {
       <ul className="nav-list">
         {isAuthenticated ? (
           <>
-            <li><NavLink to="/marketplace" className={({ isActive }) => isActive ? 'active' : ''}>Marketplace</NavLink></li>
-            <li><NavLink to="/products" className={({ isActive }) => isActive ? 'active' : ''}>Products</NavLink></li>
-            <li><NavLink to="/services" className={({ isActive }) => isActive ? 'active' : ''}>Services</NavLink></li>
-            <li><NavLink to="/feed" className={({ isActive }) => isActive ? 'active' : ''}>Community Feed</NavLink></li>
-            <li><NavLink to="/finance" className={({ isActive }) => isActive ? 'active' : ''}>Finances</NavLink></li>
-            <li><NavLink to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink></li>
+            <li><NavLink viewTransition to="/marketplace" className={({ isActive }) => isActive ? 'active' : ''}>Marketplace</NavLink></li>
+            <li><NavLink viewTransition to="/products" className={({ isActive }) => isActive ? 'active' : ''}>Products</NavLink></li>
+            <li><NavLink viewTransition to="/services" className={({ isActive }) => isActive ? 'active' : ''}>Services</NavLink></li>
+            <li><NavLink viewTransition to="/feed" className={({ isActive }) => isActive ? 'active' : ''}>Community Feed</NavLink></li>
+            <li><NavLink viewTransition to="/finance" className={({ isActive }) => isActive ? 'active' : ''}>Finances</NavLink></li>
+            <li><NavLink viewTransition to="/dashboard" className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink></li>
           </>
         ) : (
           <>
@@ -53,7 +53,7 @@ export default function Navbar() {
       <div className="nav-actions">
         {isAuthenticated ? (
           <>
-            <NavLink to="/profile" className="nav-avatar" title={displayName} aria-label="Profile">
+            <NavLink viewTransition to="/profile" className="nav-avatar" title={displayName} aria-label="Profile">
               {avatarLetter}
             </NavLink>
             <button className="btn-nav-ghost nav-desktop-only" onClick={handleLogout} aria-label="Logout" type="button">
@@ -62,8 +62,8 @@ export default function Navbar() {
           </>
         ) : (
           <>
-            <NavLink to="/login" className="btn-nav-ghost nav-desktop-only">Log In</NavLink>
-            <NavLink to="/register" className="btn-nav-gold nav-desktop-only">Join Free</NavLink>
+            <NavLink viewTransition to="/login" className="btn-nav-ghost nav-desktop-only">Log In</NavLink>
+            <NavLink viewTransition to="/register" className="btn-nav-gold nav-desktop-only">Join Free</NavLink>
           </>
         )}
 
@@ -91,13 +91,13 @@ export default function Navbar() {
           <ul className="nav-mobile-list">
             {isAuthenticated ? (
               <>
-                <li><NavLink to="/marketplace" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Marketplace</NavLink></li>
-                <li><NavLink to="/products" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Products</NavLink></li>
-                <li><NavLink to="/services" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Services</NavLink></li>
-                <li><NavLink to="/feed" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Community Feed</NavLink></li>
-                <li><NavLink to="/finance" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Finances</NavLink></li>
-                <li><NavLink to="/dashboard" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink></li>
-                <li><NavLink to="/profile" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Profile</NavLink></li>
+                <li><NavLink viewTransition to="/marketplace" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Marketplace</NavLink></li>
+                <li><NavLink viewTransition to="/products" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Products</NavLink></li>
+                <li><NavLink viewTransition to="/services" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Services</NavLink></li>
+                <li><NavLink viewTransition to="/feed" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Community Feed</NavLink></li>
+                <li><NavLink viewTransition to="/finance" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Finances</NavLink></li>
+                <li><NavLink viewTransition to="/dashboard" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Dashboard</NavLink></li>
+                <li><NavLink viewTransition to="/profile" onClick={closeMobile} className={({ isActive }) => isActive ? 'active' : ''}>Profile</NavLink></li>
               </>
             ) : (
               <>
@@ -112,8 +112,8 @@ export default function Navbar() {
               <button className="btn-nav-ghost" onClick={handleLogout} type="button">Logout</button>
             ) : (
               <>
-                <NavLink to="/login" className="btn-nav-ghost" onClick={closeMobile}>Log In</NavLink>
-                <NavLink to="/register" className="btn-nav-gold" onClick={closeMobile}>Join Free</NavLink>
+                <NavLink viewTransition to="/login" className="btn-nav-ghost" onClick={closeMobile}>Log In</NavLink>
+                <NavLink viewTransition to="/register" className="btn-nav-gold" onClick={closeMobile}>Join Free</NavLink>
               </>
             )}
           </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { timeAgo } from '../utils/time'
 import FeedPost from '../components/FeedPost'
 import './FeedPage.css'
 import { errorMessage } from '../utils/errors'
@@ -149,8 +150,7 @@ const FeedPage: React.FC = () => {
 
   const filtered = filter === 'All' ? posts : posts.filter(p => p.type === filter)
 
-  const formatDate = (iso: string) =>
-    new Date(iso).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })
+  const formatDate = (iso: string) => timeAgo(iso)
 
   return (
     <main className="feed-container">

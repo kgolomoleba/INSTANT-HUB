@@ -1,0 +1,2 @@
+# Netlify: send every app route (e.g. /report/<token>) to the app.
+/*  /index.html  200

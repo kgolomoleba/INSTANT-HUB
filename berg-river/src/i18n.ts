@@ -12,6 +12,8 @@ const en = {
   'app.tagline':
     'How green your farm is, compared with last year, next to the weather.',
   'app.lang': 'Taal: Afrikaans',
+  'app.offline':
+    "You're offline. You can still look at farms you've already opened.",
   'app.howItWorks':
     'How it works: green cover is measured by satellite and is best read as a trend, not an exact figure. Weather comes from Open-Meteo, crops from the Western Cape crop census. Data you have looked at is kept on this phone so it opens faster.',
   // account
@@ -121,6 +123,9 @@ const en = {
   'farm.print': 'Print',
   'farm.share': 'Share',
   'farm.copied': 'Link copied',
+  'farm.updated': 'Numbers updated {when}',
+  'farm.refresh': 'Refresh',
+  'farm.refreshing': 'Refreshing…',
   'tab.overview': 'Summary',
   'tab.charts': 'Charts',
   'tab.crops': 'Crops',
@@ -244,6 +249,8 @@ const af: Record<Key, string> = {
   'app.title': 'Bergrivier-plase',
   'app.tagline': 'Hoe groen jou plaas is teenoor verlede jaar, langs die weer.',
   'app.lang': 'Language: English',
+  'app.offline':
+    'Jy is vanlyn. Jy kan nog plase bekyk wat jy reeds oopgemaak het.',
   'app.howItWorks':
     'Hoe dit werk: groenbedekking word met satelliet gemeet en lees die beste as ’n neiging, nie ’n presiese syfer nie. Die weer kom van Open-Meteo, gewasse van die Wes-Kaapse gewassensus. Data wat jy bekyk het, word op hierdie foon gehou sodat dit vinniger oopmaak.',
   'account.local': 'Plase op hierdie toestel gestoor',
@@ -348,6 +355,9 @@ const af: Record<Key, string> = {
   'farm.print': 'Druk',
   'farm.share': 'Deel',
   'farm.copied': 'Skakel gekopieer',
+  'farm.updated': 'Syfers opgedateer {when}',
+  'farm.refresh': 'Verfris',
+  'farm.refreshing': 'Verfris…',
   'tab.overview': 'Opsomming',
   'tab.charts': 'Grafieke',
   'tab.crops': 'Gewasse',

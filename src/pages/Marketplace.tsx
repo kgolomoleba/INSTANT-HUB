@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { withProfiles } from '../utils/publicProfiles'
+import { ListingSkeletons } from '../components/ui/Skeleton'
 import ProductCard from '../components/ProductCard'
 import ServiceCard from '../components/ServiceCard'
 import './Marketplace.css'
@@ -145,7 +146,7 @@ export default function Marketplace() {
       </div>
 
       {loading ? (
-        <p className="marketplace-loading">Loading marketplace...</p>
+        <ListingSkeletons />
       ) : (
         <>
           {showProducts && (

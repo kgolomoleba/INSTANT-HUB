@@ -21,8 +21,7 @@ export type NdviPoint = { date: string; ndvi: number }
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as
-  | string
-  | undefined
+  string | undefined
 let modisDirectBlocked = false
 
 /**
@@ -124,8 +123,7 @@ export function modisDatesBetween(start: string, end: string): string[] {
 }
 
 export type NdviArea =
-  | { kind: 'square'; km: 0 | 1 }
-  | { kind: 'boundary'; boundary: MultiPolygon }
+  { kind: 'square'; km: 0 | 1 } | { kind: 'boundary'; boundary: MultiPolygon }
 
 /** Earth radius used by the MODIS sinusoidal projection. */
 const MODIS_R = 6371007.181

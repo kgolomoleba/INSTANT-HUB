@@ -92,3 +92,16 @@ New: `/finance` for business owners, `/report/<token>` for shared links,
   the health rules and bank-statement reading (`src/__tests__/finance.test.ts`).
 - **Later:** accounting software (Xero, Sage, QuickBooks) needs developer
   agreements with each provider; shown as "coming soon".
+
+## Modern feel (2026-11-24)
+
+- **Instant Hub:** installable app (icon, offline start; the offline cache now
+  saves every page file, so a first visit is enough), phone bottom tab bar,
+  page transitions (off for "reduce motion"), card-shaped loading
+  placeholders, "2 hours ago" times, share button on listings (phone share
+  sheet), toast confirmations, offline banner.
+- **Berg River:** "Numbers updated 5 minutes ago" with a Refresh button (shows
+  the age of the oldest data on screen, even when it came from the device
+  cache), tab transitions, offline banner (English and Afrikaans).
+- Fixed on the way: Berg River's offline cache missed the app's script files on
+  a first visit (blank screen offline).

@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { PRODUCT_CATEGORIES, SERVICE_CATEGORIES } from '../utils/categories'
 import { errorMessage } from '../utils/errors'
+import { useToast } from './ui/Toast'
 import './CreateListingModal.css'
 
 interface CreateListingModalProps {
@@ -17,6 +18,7 @@ const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
 export const CreateListingModal: React.FC<CreateListingModalProps> = ({ isOpen, onClose, onSuccess, type }) => {
   const { user } = useAuth()
+  const { toast } = useToast()
   const id = useId()
   const categories = type === 'product' ? PRODUCT_CATEGORIES : SERVICE_CATEGORIES
   const [title, setTitle] = useState('')
@@ -95,6 +97,7 @@ export const CreateListingModal: React.FC<CreateListingModalProps> = ({ isOpen, 
       setCategory('')
       setLocation('')
       setImageFile(null)
+      toast(`Your ${type} is live.`)
       onSuccess()
       onClose()
     } catch (err) {

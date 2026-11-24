@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { withProfiles } from '../utils/publicProfiles'
+import { ListingSkeletons } from '../components/ui/Skeleton'
 import { SERVICE_CATEGORIES, matchesCategory } from '../utils/categories'
 import { trackEvent } from '../utils/analytics'
 import ServiceCard from '../components/ServiceCard'
@@ -38,7 +39,8 @@ const ServicesPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   
   const [selectedCategory, setSelectedCategory] = useState('All')
-  const [search, setSearch] = useState('')
+  // A shared listing link opens with its name in the search box.
+  const [search, setSearch] = useState(() => new URLSearchParams(window.location.search).get('q') ?? '')
 
   const fetchServices = async () => {
     setLoading(true)
@@ -137,7 +139,7 @@ const ServicesPage: React.FC = () => {
 
       <section className="services-list">
         {loading ? (
-          <p className="loading-text">Loading services...</p>
+          <ListingSkeletons />
         ) : error ? (
           <p className="error-text">{error}</p>
         ) : filtered.length === 0 ? (

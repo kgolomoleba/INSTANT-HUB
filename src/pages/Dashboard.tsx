@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react'
 import type { User } from '@supabase/auth-js'
 import { Bell, BriefcaseBusiness, Compass, MessageCircleMore, Sparkles, UserRound } from 'lucide-react'
 import { supabase } from '../supabaseClient'
+import { timeAgo } from '../utils/time'
 import { trackEvent } from '../utils/analytics'
 import OnboardingPanel from '../components/OnboardingPanel'
 import './Dashboard.css'
@@ -68,8 +69,7 @@ const ROLE_LABELS: Record<string, string> = {
 }
 
 // Unified global date formatter to prevent duplicate declarations
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })
+const formatDate = (iso: string) => timeAgo(iso)
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null)

@@ -37,6 +37,8 @@ import {
 import type { Period } from './stats'
 import * as store from './store'
 import { useFarmData } from './useFarmData'
+import { store as dataCache } from './net'
+import OfflineBanner from './OfflineBanner'
 import { useFarms, type Notice } from './useFarms'
 
 function farmFromFeature(f: BoundaryFeature, source: Farm['source']): Farm {
@@ -244,6 +246,7 @@ function Main({ onLang }: { onLang: (l: Lang) => void }) {
 
   return (
     <div className="app">
+      <OfflineBanner />
       <header className="top">
         <div className="top-row">
           <div>
@@ -342,6 +345,10 @@ function Main({ onLang }: { onLang: (l: Lang) => void }) {
                 onSize={setSize}
                 data={data}
                 onRetry={() => setReloadKey((k) => k + 1)}
+                onRefresh={async () => {
+                  await dataCache.clear()
+                  setReloadKey((k) => k + 1)
+                }}
                 diary={farmDiary}
                 onAddDiary={(day, note) => addDiary(selected.id, day, note)}
                 onRemoveDiary={removeDiary}

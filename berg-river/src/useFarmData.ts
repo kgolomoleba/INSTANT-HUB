@@ -7,6 +7,7 @@ import {
   type Satellite,
 } from './api'
 import type { Farm } from './farms'
+import { trackAge } from './net'
 import {
   computeStats,
   partialStats,
@@ -23,6 +24,8 @@ export type Part<T> = {
 }
 
 export type FarmData = {
+  /** When the oldest data on screen was fetched (ms), or null while loading. */
+  updatedAt: number | null
   weather: Part<DailyWeather>
   ndvi: Part<NdviPoint[]>
   /** Available as soon as either source has loaded; missing values show as —. */
@@ -48,39 +51,50 @@ export function useFarmData(
 ): FarmData {
   const [weather, setWeather] = useState<Part<DailyWeather>>(empty)
   const [ndvi, setNdvi] = useState<Part<NdviPoint[]>>(empty)
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null)
   const [a, b] = periods
 
   useEffect(() => {
     if (!farm || !enabled) {
       setWeather(empty())
       setNdvi(empty())
+      setUpdatedAt(null)
       return
     }
     let live = true
+    setUpdatedAt(null)
     setWeather({ data: null, loading: true, error: null })
     setNdvi({ data: null, loading: true, error: null })
-    Promise.all([
-      fetchWeather(farm.lat, farm.lon, a.start, a.end),
-      fetchWeather(farm.lat, farm.lon, b.start, b.end),
-    ])
-      .then((d) => live && setWeather({ data: d, loading: false, error: null }))
-      .catch(
-        (e) => live && setWeather({ data: null, loading: false, error: msg(e) })
-      )
-    fetchGreenness(farm.lat, farm.lon, [a, b], ndviArea(farm, size))
-      .then(
-        (g) =>
-          live &&
+    // Both requests start inside trackAge so their data ages are collected.
+    const age = trackAge(() => {
+      Promise.all([
+        fetchWeather(farm.lat, farm.lon, a.start, a.end),
+        fetchWeather(farm.lat, farm.lon, b.start, b.end),
+      ])
+        .then((d) => {
+          if (!live) return
+          setWeather({ data: d, loading: false, error: null })
+          if (Number.isFinite(age.oldest)) setUpdatedAt(age.oldest)
+        })
+        .catch(
+          (e) =>
+            live && setWeather({ data: null, loading: false, error: msg(e) })
+        )
+      fetchGreenness(farm.lat, farm.lon, [a, b], ndviArea(farm, size))
+        .then((g) => {
+          if (!live) return
           setNdvi({
             data: g.points,
             loading: false,
             error: null,
             satellite: g.satellite,
           })
-      )
-      .catch(
-        (e) => live && setNdvi({ data: null, loading: false, error: msg(e) })
-      )
+          if (Number.isFinite(age.oldest)) setUpdatedAt(age.oldest)
+        })
+        .catch(
+          (e) => live && setNdvi({ data: null, loading: false, error: msg(e) })
+        )
+    })
     return () => {
       live = false
     }
@@ -93,7 +107,7 @@ export function useFarmData(
           partialStats(weather.data?.[i] ?? null, ndvi.data?.[i] ?? null)
         ) as [PeriodStats, PeriodStats])
       : null
-  return { weather, ndvi, stats }
+  return { updatedAt, weather, ndvi, stats }
 }
 
 /** Load several farms a few at a time (for the all-farms table). */

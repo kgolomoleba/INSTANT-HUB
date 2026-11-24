@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
+import { timeAgo } from './time'
 import CropsPanel from './CropsPanel'
 import LineChart, { type ChartEvent, type ChartSeries } from './LineChart'
 import { LATEST, periodName } from './periods'
@@ -33,6 +35,8 @@ type Props = {
   onSize: (s: 0 | 1) => void
   data: FarmData
   onRetry: () => void
+  /** Throws away saved data and loads fresh numbers. */
+  onRefresh: () => Promise<void>
   diary: DiaryEntry[]
   onAddDiary: (day: string, note: string) => void
   onRemoveDiary: (e: DiaryEntry) => void
@@ -96,6 +100,19 @@ export default function FarmView(p: Props) {
     }
   }
 
+  // Smooth cross-fade between tabs where the browser supports it.
+  const changeTab = (next: Tab) => {
+    const doc = document as Document & {
+      startViewTransition?: (cb: () => void) => unknown
+    }
+    if (
+      doc.startViewTransition &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
+      doc.startViewTransition(() => flushSync(() => setTab(next)))
+    else setTab(next)
+  }
+
   const show = (x: Tab) => printing || tab === x
 
   return (
@@ -118,7 +135,7 @@ export default function FarmView(p: Props) {
             role="tab"
             aria-selected={tab === x.id}
             className={tab === x.id ? 'on' : ''}
-            onClick={() => setTab(x.id)}
+            onClick={() => changeTab(x.id)}
           >
             {t(x.key)}
             {x.id === 'diary' && p.diary.length > 0 && (
@@ -192,6 +209,7 @@ export default function FarmView(p: Props) {
           ↗ {copied ? t('farm.copied') : t('farm.share')}
         </button>
       </div>
+      <FreshnessLine updatedAt={p.data.updatedAt} onRefresh={p.onRefresh} />
       {p.data.ndvi.satellite && (
         <p className="satellite-note">
           {t(`farm.satellite.${p.data.ndvi.satellite}` as Key)}
@@ -790,5 +808,43 @@ function DiaryPanel({
         </ul>
       )}
     </section>
+  )
+}
+
+function FreshnessLine({
+  updatedAt,
+  onRefresh,
+}: {
+  updatedAt: number | null
+  onRefresh: () => Promise<void>
+}) {
+  const { t, lang } = useI18n()
+  const [busy, setBusy] = useState(false)
+  const [, tick] = useState(0)
+  // Keep "5 minutes ago" current while the screen stays open.
+  useEffect(() => {
+    const id = setInterval(() => tick((n) => n + 1), 30_000)
+    return () => clearInterval(id)
+  }, [])
+  if (!updatedAt) return null
+  return (
+    <p className="freshness no-print">
+      {t('farm.updated', { when: timeAgo(updatedAt, lang) })} ·{' '}
+      <button
+        type="button"
+        className="link"
+        disabled={busy}
+        onClick={async () => {
+          setBusy(true)
+          try {
+            await onRefresh()
+          } finally {
+            setBusy(false)
+          }
+        }}
+      >
+        ↻ {busy ? t('farm.refreshing') : t('farm.refresh')}
+      </button>
+    </p>
   )
 }

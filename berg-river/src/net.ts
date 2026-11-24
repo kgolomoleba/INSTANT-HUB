@@ -31,25 +31,57 @@ type Options = {
 const DAY = 86_400_000
 export const TTL = { past: 30 * DAY, recent: DAY / 4, none: 0 }
 
-const memory = new Map<string, Promise<unknown>>()
+type Loaded<T> = { v: T; at: number }
+const memory = new Map<string, Promise<Loaded<unknown>>>()
+
+/** Collects how old the data behind one screen is (the oldest piece wins). */
+export class AgeTracker {
+  oldest = Infinity
+  add(at: number) {
+    if (at < this.oldest) this.oldest = at
+  }
+}
+let tracker: AgeTracker | null = null
+
+/**
+ * Runs `start` (which should begin its requests straight away) and tracks the
+ * age of everything those requests return: time of the network answer, or when
+ * a saved copy was originally fetched.
+ */
+export function trackAge(start: () => void): AgeTracker {
+  const t = new AgeTracker()
+  tracker = t
+  try {
+    start()
+  } finally {
+    tracker = null
+  }
+  return t
+}
 
 export function fetchJson<T>(url: string, opts: Options = {}): Promise<T> {
   const key =
     opts.body === undefined ? url : `${url} ${JSON.stringify(opts.body)}`
-  const hit = memory.get(key)
-  if (hit) return hit as Promise<T>
-  const p = (async () => {
-    if (opts.ttlMs) {
-      const saved = await store.get<T>(key)
-      if (saved !== undefined) return saved
-    }
-    const data = await fetchWithRetry<T>(url, opts)
-    if (opts.ttlMs) void store.set(key, data, opts.ttlMs)
-    return data
-  })()
-  p.catch(() => memory.delete(key))
-  memory.set(key, p)
-  return p
+  const tr = tracker
+  let p = memory.get(key) as Promise<Loaded<T>> | undefined
+  if (!p) {
+    p = (async (): Promise<Loaded<T>> => {
+      if (opts.ttlMs) {
+        const saved = await store.getEntry<T>(key)
+        if (saved) return { v: saved.v, at: saved.at }
+      }
+      const data = await fetchWithRetry<T>(url, opts)
+      const at = Date.now()
+      if (opts.ttlMs) void store.set(key, data, opts.ttlMs, at)
+      return { v: data, at }
+    })()
+    p.catch(() => memory.delete(key))
+    memory.set(key, p as Promise<Loaded<unknown>>)
+  }
+  return p.then((r) => {
+    tr?.add(r.at)
+    return r.v
+  })
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
@@ -124,7 +156,7 @@ async function fetchWithRetry<T>(url: string, opts: Options): Promise<T> {
 }
 
 // ---------------------------------------------------------------- IndexedDB
-type Entry = { v: unknown; exp: number }
+type Entry = { v: unknown; exp: number; at?: number }
 const DB = 'berg-river-cache'
 const OS = 'responses'
 let dbp: Promise<IDBDatabase | null> | null = null
@@ -165,18 +197,26 @@ function tx<R>(
 }
 
 export const store = {
-  async get<T>(key: string): Promise<T | undefined> {
+  async getEntry<T>(key: string): Promise<{ v: T; at: number } | undefined> {
     const e = (await tx('readonly', (s) => s.get(key))) as Entry | undefined
     if (!e) return undefined
     if (e.exp < Date.now()) {
       void tx('readwrite', (s) => s.delete(key))
       return undefined
     }
-    return e.v as T
+    return { v: e.v as T, at: e.at ?? e.exp - TTL.recent }
   },
-  async set(key: string, v: unknown, ttlMs: number): Promise<void> {
+  async get<T>(key: string): Promise<T | undefined> {
+    return (await store.getEntry<T>(key))?.v
+  },
+  async set(
+    key: string,
+    v: unknown,
+    ttlMs: number,
+    at = Date.now()
+  ): Promise<void> {
     await tx('readwrite', (s) =>
-      s.put({ v, exp: Date.now() + ttlMs } satisfies Entry, key)
+      s.put({ v, exp: at + ttlMs, at } satisfies Entry, key)
     )
   },
   async clear(): Promise<void> {

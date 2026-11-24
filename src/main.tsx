@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import { AuthProvider } from './context/AuthContext'
 import { supabaseConfigured } from './supabaseClient'
+import { ToastProvider } from './components/ui/Toast'
 import { initAnalytics } from './utils/analytics'
 
 initAnalytics()
@@ -25,7 +26,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     {supabaseConfigured ? (
       <BrowserRouter>
         <AuthProvider>
-          <App />
+          <ToastProvider>
+            <App />
+          </ToastProvider>
         </AuthProvider>
       </BrowserRouter>
     ) : (
@@ -33,3 +36,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     )}
   </React.StrictMode>,
 )
+
+// Installable app that opens offline. Only in the built site, not while developing.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* not supported here; the site still works */
+    })
+  })
+}

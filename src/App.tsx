@@ -16,9 +16,12 @@ const SharedReportPage = lazy(() => import('./pages/SharedReportPage'))
 import PrivateRoute from './components/PrivateRoute'
 import AdminRoute from './components/AdminRoute'
 import Layout from './components/Layout'
+import BottomNav from './components/BottomNav'
+import OfflineBanner from './components/ui/OfflineBanner'
 import PageShell from './components/PageShell'
 
 import './App.css'
+import './components/ui/ui.css'
 
 const routeFallback = (
   <PageShell>
@@ -48,6 +51,7 @@ const NotFound = () => (
 function App() {
   return (
     <>
+      <OfflineBanner />
       <Layout>
         <Routes>
           <Route path="/" element={<RouteWrapper><PageShell><Home /></PageShell></RouteWrapper>} />
@@ -74,6 +78,7 @@ function App() {
         </Routes>
       </Layout>
 
+      <BottomNav />
       <footer className="footer" role="contentinfo">
         &copy; {new Date().getFullYear()} Instant Hub. All rights reserved.
       </footer>

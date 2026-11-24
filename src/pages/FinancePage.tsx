@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import FinanceReport from '../components/finance/FinanceReport'
 import { Button, Card, EmptyState, Field, Loading, Notice, Page, PageHeader } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
+import { useToast } from '../components/ui/Toast'
 import { errorMessage } from '../utils/errors'
 import { monthLabel, parseBankCsv, rand, summarize, type CsvMonth, type FinMonth } from '../utils/finance'
 import * as api from '../utils/financeApi'
@@ -18,6 +19,7 @@ const date = (s: string | null) => (s ? new Date(s).toLocaleDateString('en-ZA', 
 
 export default function FinancePage() {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [months, setMonths] = useState<FinMonth[] | null>(null)
   const [links, setLinks] = useState<api.ShareLink[]>([])
   const [grants, setGrants] = useState<api.Grant[]>([])
@@ -45,7 +47,7 @@ export default function FinancePage() {
     setNotice(null)
     try {
       await fn()
-      setNotice({ tone: 'ok', text: ok })
+      toast(ok)
       await load()
     } catch (e) {
       setNotice({ tone: 'error', text: errorMessage(e, 'That did not work. Please try again.') })
@@ -323,6 +325,7 @@ function ShareOptions({ scope, setScope, days, setDays }: { scope: 'summary' | '
 }
 
 function LinkSharing({ links, onCreate, onRevoke }: { links: api.ShareLink[]; onCreate: (label: string, scope: 'summary' | 'monthly', days: number) => void; onRevoke: (id: string) => void }) {
+  const { toast } = useToast()
   const [label, setLabel] = useState('')
   const [scope, setScope] = useState<'summary' | 'monthly'>('summary')
   const [days, setDays] = useState(30)
@@ -371,6 +374,7 @@ function LinkSharing({ links, onCreate, onRevoke }: { links: api.ShareLink[]; on
                     variant="primary"
                     onClick={async () => {
                       await navigator.clipboard.writeText(api.shareUrl(l.token)).catch(() => window.prompt('Copy this link:', api.shareUrl(l.token)))
+                      toast('Link copied. Send it to the person it is for.')
                       setCopied(l.id)
                       setTimeout(() => setCopied(null), 2000)
                     }}
