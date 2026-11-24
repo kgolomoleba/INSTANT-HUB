@@ -30,5 +30,10 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    // Build helper scripts run in Node, not the browser.
+    files: ["scripts/**/*.mjs", "vite*.config.ts"],
+    languageOptions: { globals: globals.node },
+  },
   prettier, // disables ESLint rules that conflict with Prettier
 )
