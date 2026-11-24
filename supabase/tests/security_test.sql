@@ -40,6 +40,8 @@ insert into profiles(id, username, role, verification_status) values (auth.uid()
 select pg_temp.check((select verification_status from profiles where id = auth.uid()) = 'unverified', 'sign up as verified is downgraded');
 select pg_temp.expect_denied($$update profiles set role = 'admin' where id = auth.uid()$$, 'promote self to admin');
 select pg_temp.expect_denied($$update profiles set verification_status = 'verified' where id = auth.uid()$$, 'mark self verified');
+select pg_temp.expect_denied($$update profiles set verified = true where id = auth.uid()$$, 'set legacy verified flag');
+select pg_temp.check((select verified from profiles where id = auth.uid()) is false, 'legacy verified flag starts false');
 update profiles set verification_approved_at = now() where id = auth.uid();
 select pg_temp.check((select verification_approved_at from profiles where id = auth.uid()) is null, 'cannot set own approval date');
 update profiles set bio = 'hello', role = 'buyer', verification_status = 'pending' where id = auth.uid();

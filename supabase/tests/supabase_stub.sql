@@ -15,7 +15,8 @@ alter default privileges in schema public grant all on tables to anon, authentic
 -- (only the columns the migrations and tests rely on).
 create table public.profiles (
   id uuid primary key references auth.users,
-  username text unique, bio text, role text, location text, avatar_url text, updated_at timestamptz
+  username text unique, bio text, role text, location text, avatar_url text, updated_at timestamptz,
+  verified boolean default false
 );
 create table public.inquiries (
   id uuid primary key default gen_random_uuid(),

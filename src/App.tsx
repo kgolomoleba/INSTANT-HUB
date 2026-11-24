@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Link } from 'react-router-dom'
 
 const Home = lazy(() => import('./pages/Home'))
 const Login = lazy(() => import('./pages/Login'))
@@ -36,6 +36,9 @@ const NotFound = () => (
     <div className="empty-state" role="alert" aria-live="assertive">
       <h2>Page Not Found</h2>
       <p>The page you are looking for does not exist.</p>
+      <p>
+        <Link to="/">Go to the home page</Link>
+      </p>
     </div>
   </PageShell>
 )

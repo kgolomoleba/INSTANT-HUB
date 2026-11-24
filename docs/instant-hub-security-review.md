@@ -22,6 +22,32 @@ authenticated roles) — not on the live project.
 | 12 | Low | `catch (err: any)` + `err.message` crashed on non-Error throws. | `errorMessage()` helper. |
 | — | Tooling | ESLint parsed TypeScript as JavaScript (28 parse errors, no real checking). | typescript-eslint configured; 0 errors. |
 
+## Second pass (2026-11-24): function, health, style and sense check
+
+| Area | Problem | Fix |
+|---|---|---|
+| Security | Users could still set the older `profiles.verified` flag themselves (the badge reads it) | Migration `20261124040000` covers it; DB test added |
+| Security | 3 high-severity advisories (react-router XSS/open redirects, ws) | Updated within existing version ranges: 0 advisories in shipped code |
+| Function | Real admins were bounced from /admin to the dashboard (role check raced the redirect) | AdminRoute waits until the role is checked for the current user |
+| Function | Blank white page if the site was built without Supabase settings | Clear "not set up yet" page |
+| Function | Login state could hang on "Checking access" if loading the session failed | Treated as signed out |
+| Function | Listing categories were free text but filters used a fixed list, so listings vanished from filters | Shared category lists, a dropdown in the form, "Other" catches the rest |
+| Function | Listing form had no location (cards show one), no image limits, could hang on "Publishing..." | Location field, 5 MB / image-type check, errors handled, labelled fields |
+| Function | Marketplace counts showed at most 12 | Real totals |
+| Sense | Every listing showed made-up ratings (★ 4.8 / 4.9) and "In Stock"/"Available" | Removed |
+| Sense | Listings without a photo showed a stock photo of a stranger | Neutral placeholder with the listing's first letter |
+| Sense | Browser tab said "Vite + React + TS"; Vite logo as icon | Real title, description, share preview and logo |
+| Sense | Profile hint mentioned "Auto Care" | Generic wording |
+| Style | Two themes clashed (dark app, light page background): invisible headings on /admin and the dashboard checklist | One dark theme; light cards keep dark headings |
+| Style | Dashboard heading slid under the top bar and a white focus outline framed the page | Focus without scrolling; no ring on code-focused containers |
+| Health | Dead code and unused packages (router.tsx, old index.css, react-icons, tailwind, postcss, autoprefixer) | Removed |
+| Health | One 470 KB script | Split into app and library files (app code 70 KB gzipped) for better caching |
+
+Checked in a browser with a simulated Supabase: home, register, login, dashboard,
+marketplace, products (filter, create listing, image limit), services, feed,
+profile (save), admin (admin and non-admin), not found, and phone layouts. No
+errors, no sideways scrolling.
+
 ## To apply (needs your Supabase project)
 
 1. **Check first** (read-only): run `supabase/check_security.sql` in the SQL
@@ -33,7 +59,7 @@ authenticated roles) — not on the live project.
    - unexpected admins or verified users (possible use of holes 1–2).
 2. **Apply the migrations**: `supabase db push`, or paste
    `supabase/migrations/20261124010000_lock_down_profile_and_inquiry_fields.sql`
-   into the SQL editor.
+   and then `20261124040000_protect_legacy_verified_flag.sql` into the SQL editor.
 3. **Email function**: set a secret `INQUIRY_WEBHOOK_SECRET` (Edge Functions →
    Secrets), add the same value as an `x-webhook-secret` header on the
    inquiries database webhook, then redeploy `send-inquiry-email`. Until both

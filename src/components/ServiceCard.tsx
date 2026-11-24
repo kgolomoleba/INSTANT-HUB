@@ -1,3 +1,4 @@
+import { placeholderImage } from '../utils/placeholder'
 import React, { useState } from 'react'
 import { trackEvent } from '../utils/analytics'
 import './ServiceCard.css'
@@ -45,7 +46,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       >
         <div className="service-avatar-wrapper">
           <img
-            src={imageUrl || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80'}
+            src={imageUrl || placeholderImage(title)}
             alt={title}
             className="service-avatar"
           />
@@ -65,10 +66,6 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
               {isVerified && <span className="verified-badge">Verified</span>}
             </span>
             {location && <span className="service-location">{location}</span>}
-          </div>
-          <div className="service-extra">
-            <span className="service-rating">★ 4.9</span>
-            <span className="service-availability">Available</span>
           </div>
         </div>
         {userId && (

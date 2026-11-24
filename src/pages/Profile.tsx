@@ -451,7 +451,7 @@ export default function Profile() {
               value={verificationNote}
               onChange={(e) => setVerificationNote(e.target.value)}
               rows={3}
-              placeholder="Share a short note for Auto Care, procurement, or other proof"
+              placeholder="Anything that helps us check your business (e.g. trading name, website)"
             />
             <button
               className="btn-verify"

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { withProfiles } from '../utils/publicProfiles'
+import { PRODUCT_CATEGORIES, matchesCategory } from '../utils/categories'
 import { trackEvent } from '../utils/analytics'
 import ProductCard from '../components/ProductCard'
 import { CreateListingModal } from '../components/CreateListingModal'
@@ -26,7 +27,7 @@ interface Product {
   profiles: ProfileData | null
 }
 
-const CATEGORIES = ['All', 'Design', 'Handmade', 'Tutoring', 'Tech', 'Art', 'Other']
+const CATEGORIES = ['All', ...PRODUCT_CATEGORIES]
 
 const ProductsPage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([])
@@ -59,7 +60,7 @@ const ProductsPage: React.FC = () => {
   useEffect(() => { fetchProducts() }, [])
 
   const filtered = products.filter((p) => {
-    const matchCategory = selectedCategory === 'All' || p.category === selectedCategory
+    const matchCategory = matchesCategory(p.category, selectedCategory, PRODUCT_CATEGORIES)
     const matchSearch =
       p.title.toLowerCase().includes(search.toLowerCase()) ||
       p.description?.toLowerCase().includes(search.toLowerCase())

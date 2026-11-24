@@ -6,57 +6,31 @@ import { supabase } from '../supabaseClient'
 const AdminRoute = () => {
   const { user, isAuthenticated, loading } = useAuth()
   const location = useLocation()
-  const [checkingRole, setCheckingRole] = useState(true)
-  const [isAdmin, setIsAdmin] = useState(false)
+  // Which user the role was checked for. Until it matches the current user,
+  // we're still checking; deciding earlier sent real admins to the dashboard.
+  const [checked, setChecked] = useState<{ userId: string; isAdmin: boolean } | null>(null)
 
   useEffect(() => {
-    if (!isAuthenticated || !user) {
-      setCheckingRole(false)
-      return
-    }
-
+    if (!user) return
     let live = true
-    setCheckingRole(true)
     supabase
       .from('profiles')
       .select('role')
       .eq('id', user.id)
       .single()
       .then(
-        ({ data }) => {
-          if (!live) return
-          setIsAdmin(data?.role === 'admin')
-          setCheckingRole(false)
-        },
-        () => {
-          if (!live) return
-          setIsAdmin(false)
-          setCheckingRole(false)
-        },
+        ({ data }) => live && setChecked({ userId: user.id, isAdmin: data?.role === 'admin' }),
+        () => live && setChecked({ userId: user.id, isAdmin: false }),
       )
     return () => {
       live = false
     }
-  }, [isAuthenticated, user])
+  }, [user])
 
-  if (loading || checkingRole) {
-    return <div className="loading-text">Checking access...</div>
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <Navigate
-        to="/login"
-        replace
-        state={{ from: location.pathname }}
-      />
-    )
-  }
-
-  if (!isAdmin) {
-    return <Navigate to="/dashboard" replace />
-  }
-
+  if (loading) return <div className="loading-text">Checking access...</div>
+  if (!isAuthenticated || !user) return <Navigate to="/login" replace state={{ from: location.pathname }} />
+  if (checked?.userId !== user.id) return <div className="loading-text">Checking access...</div>
+  if (!checked.isAdmin) return <Navigate to="/dashboard" replace />
   return <Outlet />
 }
 

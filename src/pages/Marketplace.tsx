@@ -44,6 +44,7 @@ export default function Marketplace() {
   const [products, setProducts] = useState<Product[]>([])
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
+  const [totals, setTotals] = useState({ products: 0, services: 0 })
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState<Tab>('all')
 
@@ -51,10 +52,11 @@ export default function Marketplace() {
     const fetchAll = async () => {
       setLoading(true)
       try {
-        const [{ data: p }, { data: s }] = await Promise.all([
-          supabase.from('products').select('*').order('created_at', { ascending: false }).limit(12),
-          supabase.from('services').select('*').order('created_at', { ascending: false }).limit(12),
+        const [{ data: p, count: pc }, { data: s, count: sc }] = await Promise.all([
+          supabase.from('products').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(12),
+          supabase.from('services').select('*', { count: 'exact' }).order('created_at', { ascending: false }).limit(12),
         ])
+        setTotals({ products: pc ?? (p ?? []).length, services: sc ?? (s ?? []).length })
         const [pp, ss] = await Promise.all([withProfiles((p ?? []) as Product[]), withProfiles((s ?? []) as Service[])])
         setProducts(pp)
         setServices(ss)
@@ -110,12 +112,12 @@ export default function Marketplace() {
         </div>
         <div className="marketplace-stats">
           <div className="mp-stat">
-            <span className="mp-stat-num">{products.length}</span>
+            <span className="mp-stat-num">{totals.products}</span>
             <span className="mp-stat-label">Products</span>
           </div>
           <div className="mp-stat-divider" />
           <div className="mp-stat">
-            <span className="mp-stat-num">{services.length}</span>
+            <span className="mp-stat-num">{totals.services}</span>
             <span className="mp-stat-label">Services</span>
           </div>
           <div className="mp-stat-divider" />

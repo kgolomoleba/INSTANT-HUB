@@ -1,3 +1,4 @@
+import { placeholderImage } from '../utils/placeholder'
 import React, { useState } from 'react'
 import { trackEvent } from '../utils/analytics'
 import './ProductCard.css'
@@ -45,7 +46,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       >
         <div className="product-image-wrapper">
           <img
-            src={imageUrl || 'https://images.unsplash.com/photo-1511367461989-f85a21fda167?auto=format&fit=crop&w=400&q=80'}
+            src={imageUrl || placeholderImage(title)}
             alt={title}
             className="product-image"
           />
@@ -65,10 +66,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {isVerified && <span className="verified-badge">Verified</span>}
             </span>
             {location && <span className="product-location">{location}</span>}
-          </div>
-          <div className="product-extra">
-            <span className="product-rating">★ 4.8</span>
-            <span className="product-stock">In Stock</span>
           </div>
         </div>
         {userId && (

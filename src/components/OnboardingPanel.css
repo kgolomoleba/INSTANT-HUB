@@ -113,3 +113,9 @@
     text-align: left;
   }
 }
+
+/* Heading on the light card (it inherited the app's white text). */
+.onboarding-panel h2 {
+  color: #111827;
+  margin: 0;
+}

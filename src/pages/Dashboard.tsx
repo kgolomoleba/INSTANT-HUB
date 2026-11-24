@@ -186,7 +186,7 @@ export default function Dashboard() {
       setError(errorMessage(err, 'Failed to load dashboard.'))
     } finally {
       setLoading(false)
-      setTimeout(() => mainRef.current?.focus(), 100)
+      setTimeout(() => mainRef.current?.focus({ preventScroll: true }), 100)
     }
   }
 

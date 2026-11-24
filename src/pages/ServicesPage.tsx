@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { withProfiles } from '../utils/publicProfiles'
+import { SERVICE_CATEGORIES, matchesCategory } from '../utils/categories'
 import { trackEvent } from '../utils/analytics'
 import ServiceCard from '../components/ServiceCard'
 import { CreateListingModal } from '../components/CreateListingModal'
@@ -26,7 +27,7 @@ interface Service {
   profiles: ProfileData | null
 }
 
-const CATEGORIES = ['All', 'Tutoring', 'Web Development', 'Photography', 'Design', 'Consulting', 'Other']
+const CATEGORIES = ['All', ...SERVICE_CATEGORIES]
 
 const ServicesPage: React.FC = () => {
   const [services, setServices] = useState<Service[]>([])
@@ -59,7 +60,7 @@ const ServicesPage: React.FC = () => {
   useEffect(() => { fetchServices() }, [])
 
   const filtered = services.filter((s) => {
-    const matchCategory = selectedCategory === 'All' || s.category === selectedCategory
+    const matchCategory = matchesCategory(s.category, selectedCategory, SERVICE_CATEGORIES)
     const matchSearch =
       s.title.toLowerCase().includes(search.toLowerCase()) ||
       s.description?.toLowerCase().includes(search.toLowerCase())
