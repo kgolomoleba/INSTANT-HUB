@@ -9,7 +9,7 @@ import prettier from "eslint-config-prettier"
 export default tseslint.config(
   {
     // build output, and Berg River (a separate app with its own setup)
-    ignores: ["dist", "berg-river", "supabase/functions"],
+    ignores: ["dist", "dist-demo", "berg-river", "supabase/functions"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
