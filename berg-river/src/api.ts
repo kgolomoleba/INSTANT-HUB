@@ -117,7 +117,7 @@ export async function fetchWeather(
 }
 
 /** MOD13Q1 composites start on day-of-year 1, 17, 33, … 353 each year. */
-function modisDatesBetween(start: string, end: string): string[] {
+export function modisDatesBetween(start: string, end: string): string[] {
   const s = new Date(start + 'T00:00:00Z')
   const e = new Date(end + 'T00:00:00Z')
   const out: string[] = []
@@ -213,7 +213,7 @@ export async function fetchNdvi(
  * Which pixels of the returned grid lie inside the farm. The grid is in the
  * MODIS sinusoidal projection, row-major from the top (north) row.
  */
-function pixelMask(
+export function pixelMask(
   r: {
     xllcorner?: string | number
     yllcorner?: string | number

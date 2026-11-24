@@ -3,6 +3,7 @@ import './Login.css'
 import { useNavigate, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { errorMessage } from '../utils/errors'
+import { safeRedirectPath } from '../utils/navigation'
 
 const validateEmail = (email: string): boolean =>
   /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -19,11 +20,7 @@ export default function Login() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const navState = (location.state ?? {}) as { from?: unknown; message?: unknown }
-  // Only follow in-app paths, never a full URL.
-  const fromPath =
-    typeof navState.from === 'string' && navState.from.startsWith('/') && !navState.from.startsWith('//')
-      ? navState.from
-      : '/dashboard'
+  const fromPath = safeRedirectPath(navState.from)
   const successMessage = typeof navState.message === 'string' ? navState.message : null
 
   const errorRef = useRef<HTMLDivElement>(null)
