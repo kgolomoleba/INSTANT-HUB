@@ -35,6 +35,48 @@ function getJson<T>(url: string): Promise<T> {
   return p
 }
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as
+  | string
+  | undefined
+let modisDirectBlocked = false
+
+/**
+ * NASA MODIS via ORNL. Tries the browser → ORNL request first; if the browser
+ * can't make it (network/CORS error, not an HTTP error), falls back to the
+ * app's Supabase function `modis-ndvi`, when Supabase is configured.
+ */
+async function getModis<T>(q: URLSearchParams): Promise<T> {
+  if (!modisDirectBlocked) {
+    try {
+      return await getJson<T>(
+        `https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset?${q}`
+      )
+    } catch (e) {
+      const blocked = e instanceof TypeError // fetch() rejects with TypeError when blocked or offline
+      if (!blocked || !SUPABASE_URL || !SUPABASE_KEY) throw e
+      modisDirectBlocked = true
+    }
+  }
+  const url = `${SUPABASE_URL!.replace(/\/$/, '')}/functions/v1/modis-ndvi?${q}`
+  const hit = cache.get(url)
+  if (hit) return hit as Promise<T>
+  const p = fetch(url, {
+    headers: {
+      Accept: 'application/json',
+      apikey: SUPABASE_KEY!,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+    },
+  }).then(async (res) => {
+    if (!res.ok)
+      throw new Error(`satellite data service answered ${res.status}`)
+    return (await res.json()) as T
+  })
+  p.catch(() => cache.delete(url))
+  cache.set(url, p)
+  return p
+}
+
 const round = (n: number) => Math.round(n * 1000) / 1000
 
 export async function fetchWeather(
@@ -145,9 +187,7 @@ export async function fetchNdvi(
         kmAboveBelow: String(km),
         kmLeftRight: String(km),
       })
-      return getJson<Resp>(
-        `https://modis.ornl.gov/rst/api/v1/MOD13Q1/subset?${q}`
-      )
+      return getModis<Resp>(q)
     })
   )
 

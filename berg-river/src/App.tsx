@@ -25,6 +25,7 @@ import { areaHa, interiorPoint } from './geo'
 import type { Session } from '@supabase/supabase-js'
 import * as store from './store'
 import Account from './Account'
+import CropsPanel from './CropsPanel'
 import {
   computeStats,
   coverFromNdvi,
@@ -660,6 +661,7 @@ export default function App() {
                     : `${selected.lat.toFixed(3)}, ${selected.lon.toFixed(3)} · ${size ? '~2 × 2 km square' : 'single 250 m pixel'} around the point`}
                 </small>
               </h2>
+              <CropsPanel farm={selected} />
               {loading && (
                 <p className="notice">Loading satellite and weather data…</p>
               )}

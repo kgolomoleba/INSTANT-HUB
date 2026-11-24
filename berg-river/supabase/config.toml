@@ -1,0 +1,4 @@
+# Only the settings this app needs; everything else uses Supabase defaults.
+[functions.modis-ndvi]
+# Public satellite data: callable with the anon key, no signed-in user needed.
+verify_jwt = false

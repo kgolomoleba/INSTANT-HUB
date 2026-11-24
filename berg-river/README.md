@@ -38,6 +38,13 @@ Two ways to add boundaries, both under **Farm boundaries** in the sidebar:
 2. **Import a file**: KML (e.g. from Google Earth or a Cape Farm Mapper export)
    or GeoJSON. Every polygon becomes a farm.
 
+## Crops
+
+Each farm shows its crops from the Western Cape Department of Agriculture crop
+census (2013, 2017, 2023; winter and summer), the same layers Cape Farm Mapper
+uses: crop, dry land / irrigated, and hectares. A census field counts when a
+point inside it falls inside the farm boundary.
+
 ## Data sources (free, no API key)
 
 - Weather: [Open-Meteo historical API](https://open-meteo.com/en/docs/historical-weather-api) (ERA5 reanalysis, daily).
@@ -56,7 +63,9 @@ To turn on sign-in (email link) and online saving:
    lets each user see and change only their own farms.
 2. In Supabase → Authentication → URL Configuration, add the app's address
    (e.g. `http://localhost:5173`) to the redirect URLs.
-3. Create `berg-river/.env.local`:
+3. Deploy the satellite fallback function (used only if a browser can't reach
+   NASA's service directly): `supabase functions deploy modis-ndvi`.
+4. Create `berg-river/.env.local`:
    ```
    VITE_SUPABASE_URL=https://<project>.supabase.co
    VITE_SUPABASE_ANON_KEY=<anon public key>

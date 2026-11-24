@@ -582,3 +582,70 @@ tr.clickable:hover td {
 .empty-list {
   margin: 0 0 10px;
 }
+
+.crops {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+}
+.crops-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-bottom: 6px;
+}
+.crops-head h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+.crops-head .muted {
+  font-size: 0.8rem;
+}
+.crops-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+.crop-year-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.crop-season {
+  margin-bottom: 8px;
+}
+.crop-season-title {
+  font-size: 0.78rem;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.crop-season ul {
+  list-style: none;
+  margin: 2px 0 0;
+  padding: 0;
+  font-size: 0.88rem;
+}
+.crop-season li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.crop-season li:last-child {
+  border-bottom: 0;
+}
+.crop-season li b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.crop-season small {
+  color: var(--text-3);
+}
+.small {
+  font-size: 0.85rem;
+}
