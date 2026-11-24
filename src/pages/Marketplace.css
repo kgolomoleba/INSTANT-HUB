@@ -61,6 +61,7 @@
 }
 
 .marketplace-title {
+  overflow-wrap: break-word;
   font-family: 'Bebas Neue', 'Impact', 'Arial Black', sans-serif;
   font-size: clamp(2.5rem, 7vw, 5rem);
   letter-spacing: 6px;
@@ -274,4 +275,7 @@
   .mp-stat-divider { display: none; }
   .marketplace-tab-actions { margin-left: 0; width: 100%; }
   .marketplace-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .marketplace-title { letter-spacing: 2px; font-size: 2.1rem; }
 }

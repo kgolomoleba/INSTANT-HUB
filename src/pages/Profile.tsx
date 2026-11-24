@@ -156,7 +156,7 @@ export default function Profile() {
           products: productCount ?? 0,
           services: serviceCount ?? 0,
           posts: postCount ?? 0,
-          joined: new Date(user.created_at).toLocaleDateString('en-ZA', {
+          joined: !user.created_at || Number.isNaN(Date.parse(user.created_at)) ? '—' : new Date(user.created_at).toLocaleDateString('en-ZA', {
             day: 'numeric',
             month: 'long',
             year: 'numeric',

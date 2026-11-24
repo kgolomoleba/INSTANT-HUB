@@ -537,3 +537,14 @@ input::placeholder, textarea::placeholder {
     padding: 2.5rem 1.5rem;
   }
 }
+/* Keep every page within the screen width on phones: a wide child (e.g. a
+   row of filter buttons) must scroll or wrap inside its page, not widen it. */
+.page {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+div.page > * {
+  min-width: 0;
+  max-width: 100%;
+}
